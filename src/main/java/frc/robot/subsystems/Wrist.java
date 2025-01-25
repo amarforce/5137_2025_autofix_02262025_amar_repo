@@ -8,6 +8,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -37,6 +38,9 @@ public class Wrist extends SubsystemBase{
     // Simulation model for the Wrist
     private SingleJointedArmSim wristSim = new SingleJointedArmSim(WristConstants.motorSim, WristConstants.gearRatio, WristConstants.momentOfInertia, WristConstants.wristLength, WristConstants.minAngle, WristConstants.maxAngle, true, WristConstants.pos1);
 
+    // Data log
+    private DataLog dataLog;
+
     // System Identification routine for characterizing the Wrist
     public final SysIdRoutine sysIdRoutine =
         new SysIdRoutine(
@@ -55,7 +59,7 @@ public class Wrist extends SubsystemBase{
     private TalonFXSimState WristMotorSim = wristMotor.getSimState();
         
     // Constructor for the Wrist subsystem
-    public Wrist() {
+    public Wrist(DataLog dataLog) {
         // Configure the motor to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Coast;
@@ -66,6 +70,8 @@ public class Wrist extends SubsystemBase{
         
         // Display the PID controller on SmartDashboard for tuning
         SmartDashboard.putData("Wrist Controller",wristController);
+
+        this.dataLog = dataLog;
     }
 
     
@@ -139,5 +145,9 @@ public class Wrist extends SubsystemBase{
         
         // Update the RoboRIO simulation state with the new battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(wristSim.getCurrentDrawAmps()));
+    }
+
+    public void log(){
+        // TODO add logs
     }
 }

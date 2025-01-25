@@ -12,6 +12,8 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -40,6 +42,9 @@ public class Elevator extends SubsystemBase {
     // Goal position for the elevator
     private double goal = ElevatorConstants.defaultGoal;
 
+    // Data log
+    private DataLog dataLog;
+
     // SysId routine for system identification
     public final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
@@ -60,7 +65,7 @@ public class Elevator extends SubsystemBase {
                 this));
 
     // Constructor for the Elevator subsystem
-    public Elevator() {
+    public Elevator(DataLog dataLog) {
         // Configure the motors to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Coast;
@@ -72,6 +77,8 @@ public class Elevator extends SubsystemBase {
 
         // Add the PID controller to SmartDashboard for tuning
         SmartDashboard.putData("Elevator Controller", controller);
+
+        this.dataLog = dataLog;
     }
 
     // Get the current goal position of the elevator
@@ -155,5 +162,9 @@ public class Elevator extends SubsystemBase {
 
         // Update the RoboRIO simulation with the current battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps()));
+    }
+
+    public void log(){
+        // TODO add logs
     }
 }

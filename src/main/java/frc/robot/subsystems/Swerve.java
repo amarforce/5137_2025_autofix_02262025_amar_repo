@@ -29,6 +29,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -56,7 +57,10 @@ public class Swerve extends SubsystemBase {
 
     private SendableChooser<Integer> cageChoice;
 
-    public Swerve(File file, Vision vision) {
+    // Data log
+    private DataLog dataLog;
+
+    public Swerve(File file, Vision vision, DataLog dataLog) {
         SwerveFactory factory = new SwerveFactory(file);
         swerve=factory.create();
         this.vision = vision;
@@ -114,6 +118,8 @@ public class Swerve extends SubsystemBase {
 
         field = new Field2d();
         SmartDashboard.putData("Field", field);
+
+        this.dataLog = dataLog;
     }
 
     public void setControl(SwerveRequest request) {
@@ -278,5 +284,9 @@ public class Swerve extends SubsystemBase {
 
     public void registerTelemetry(Consumer<SwerveDriveState> telemetryFunction) {
         swerve.registerTelemetry(telemetryFunction);
+    }
+
+    public void log(){
+        // TODO add logs
     }
 }

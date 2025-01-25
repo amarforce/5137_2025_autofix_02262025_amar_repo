@@ -9,6 +9,7 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -57,9 +58,12 @@ public class Arm extends SubsystemBase{
     
     // Simulation state for the motor
     private TalonFXSimState armMotorSim = armMotor.getSimState();
+
+    // Data log
+    private DataLog dataLog;
         
     // Constructor for the Arm subsystem
-    public Arm() {
+    public Arm(DataLog dataLog) {
         // Configure the motor to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Coast;
@@ -70,6 +74,8 @@ public class Arm extends SubsystemBase{
         
         // Display the PID controller on SmartDashboard for tuning
         SmartDashboard.putData("Arm Controller",armController);
+
+        this.dataLog = dataLog;
     }
 
     
@@ -144,5 +150,9 @@ public class Arm extends SubsystemBase{
         
         // Update the RoboRIO simulation state with the new battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(armSim.getCurrentDrawAmps()));
+    }
+
+    public void log(){
+        // TODO add logs
     }
 }

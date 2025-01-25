@@ -11,6 +11,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.VisionConstants;
 import frc.robot.elastic.Reef;
@@ -26,7 +27,10 @@ public class Vision extends SubsystemBase {
 
     private Reef reef;
 
-    public Vision(Reef reef) {
+    // Data log
+    private DataLog dataLog;
+
+    public Vision(Reef reef,DataLog dataLog) {
         fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
         AprilTagCamera frontCamera = new AprilTagCamera("frontCamera", VisionConstants.robotToFrontCamera, fieldLayout);
@@ -44,6 +48,7 @@ public class Vision extends SubsystemBase {
         }
 
         this.reef = reef;
+        this.dataLog = dataLog;
     }
 
     public List<EstimatedRobotPose> getNewPoses(){
@@ -100,5 +105,9 @@ public class Vision extends SubsystemBase {
 
     public void updateSim(Pose2d currentPose) {
         visionSim.update(currentPose);
+    }
+
+    public void log(){
+        // TODO add logs
     }
 }

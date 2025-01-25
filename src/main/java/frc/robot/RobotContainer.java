@@ -3,6 +3,8 @@ package frc.robot;
 import java.io.File;
 import java.util.function.Supplier;
 
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -48,6 +50,8 @@ public class RobotContainer {
 
 	private AutoFactory autoFactory;
 
+	private DataLog dataLog;
+
 	public RobotContainer() {
 		driver = new CommandPS5Controller(0);
 		operator = new CommandPS5Controller(1);
@@ -57,13 +61,15 @@ public class RobotContainer {
 		SmartDashboard.putData("Reef", reef);
 		SmartDashboard.putData("ReefScoring", reefScoring);
 
-		vision = new Vision(reef);
-		swerve = new Swerve(new File(Filesystem.getDeployDirectory(),"swerve.json"), vision);
-		elevator = new Elevator();
-		arm = new Arm();
-		wrist = new Wrist();
-		intake = new Intake();
-    	hang = new Hang();
+		dataLog = DataLogManager.getLog();
+
+		vision = new Vision(reef,dataLog);
+		swerve = new Swerve(new File(Filesystem.getDeployDirectory(),"swerve.json"), vision,dataLog);
+		elevator = new Elevator(dataLog);
+		arm = new Arm(dataLog);
+		wrist = new Wrist(dataLog);
+		intake = new Intake(dataLog);
+    	hang = new Hang(dataLog);
 		armMechanism = new ArmMechanism(arm, elevator, wrist);
 
 		swerveCommands = new SwerveCommands(swerve);
@@ -152,5 +158,15 @@ public class RobotContainer {
 
 	public Command getAutonomousCommand() {
 		return autoFactory.getAuto();
+	}
+
+	public void log(){
+		arm.log();
+		wrist.log();
+		elevator.log();
+		hang.log();
+		swerve.log();
+		vision.log();
+		intake.log();
 	}
 }

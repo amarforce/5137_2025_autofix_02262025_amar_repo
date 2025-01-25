@@ -3,6 +3,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.HangConstants;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.wpilibj.Compressor;
 
 public class Hang extends SubsystemBase {
@@ -11,11 +12,16 @@ public class Hang extends SubsystemBase {
     private final Solenoid climbSolenoid;
     private final Compressor compressor;
 
-    public Hang(){
+    // Data log
+    private DataLog dataLog;
+
+    public Hang(DataLog dataLog){
         clampSolenoid = new Solenoid(PneumaticsModuleType.REVPH, HangConstants.clampSolenoid);
         climbSolenoid = new Solenoid(PneumaticsModuleType.REVPH, HangConstants.climbSolenoid);
         compressor = new Compressor(PneumaticsModuleType.REVPH);
         compressor.enableAnalog(HangConstants.minPressure, HangConstants.maxPressure);
+
+        this.dataLog = dataLog;
     }
     
     public void clampActivate(){
@@ -41,4 +47,8 @@ public class Hang extends SubsystemBase {
     public void isclimbExtended(){
         climbSolenoid.get();
     } 
+
+    public void log(){
+        // TODO add logs
+    }
 }

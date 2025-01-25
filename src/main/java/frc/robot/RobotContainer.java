@@ -25,69 +25,90 @@ import frc.robot.commands.*;
 
 @SuppressWarnings("unused")
 public class RobotContainer {
+	// Controllers for driver and operator
 	private CommandPS5Controller driver;
 	private CommandPS5Controller operator;
 
+	// Subsystems
 	private Vision vision;
 	private Swerve swerve;
 	private Elevator elevator;
 	private Arm arm;
 	private Wrist wrist;
 	private Intake intake;
-  	private Hang hang;
+	private Hang hang;
 	private ArmMechanism armMechanism;
 
+	// Commands for each subsystem
 	private SwerveCommands swerveCommands;
 	private ElevatorCommands elevatorCommands;
 	private ArmCommands armCommands;
 	private WristCommands wristCommands;
 	private IntakeCommands intakeCommands;
-  	private HangCommand hangCommand;
+	private HangCommand hangCommand;
 	private MultiCommands multiCommands;
 
+	// Additional components
 	private Reef reef;
 	private ReefScoring reefScoring;
 
+	// Factory for autonomous commands
 	private AutoFactory autoFactory;
 
+	// Data log for recording robot data
 	private DataLog dataLog;
 
+	/**
+	 * Constructor for RobotContainer.
+	 * Initializes all subsystems, commands, and binds controls.
+	 */
 	public RobotContainer() {
+		// Initialize controllers
 		driver = new CommandPS5Controller(0);
 		operator = new CommandPS5Controller(1);
 
+		// Initialize Reef and ReefScoring components
 		reef = new Reef();
 		reefScoring = new ReefScoring(reef);
 		SmartDashboard.putData("Reef", reef);
 		SmartDashboard.putData("ReefScoring", reefScoring);
 
+		// Initialize data log
 		dataLog = DataLogManager.getLog();
 
-		vision = new Vision(reef,dataLog);
-		swerve = new Swerve(new File(Filesystem.getDeployDirectory(),"swerve.json"), vision,dataLog);
+		// Initialize subsystems with data log
+		vision = new Vision(reef, dataLog);
+		swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision, dataLog);
 		elevator = new Elevator(dataLog);
 		arm = new Arm(dataLog);
 		wrist = new Wrist(dataLog);
 		intake = new Intake(dataLog);
-    	hang = new Hang(dataLog);
+		hang = new Hang(dataLog);
 		armMechanism = new ArmMechanism(arm, elevator, wrist);
 
+		// Initialize commands for each subsystem
 		swerveCommands = new SwerveCommands(swerve);
 		elevatorCommands = new ElevatorCommands(elevator);
 		armCommands = new ArmCommands(arm);
 		wristCommands = new WristCommands(wrist);
 		intakeCommands = new IntakeCommands(intake);
-    	hangCommand = new HangCommand(hang);
-		multiCommands = new MultiCommands(arm,elevator,wrist,swerve,intake,hang,armCommands,elevatorCommands,wristCommands,swerveCommands,intakeCommands,hangCommand);
+		hangCommand = new HangCommand(hang);
+		multiCommands = new MultiCommands(arm, elevator, wrist, swerve, intake, hang, armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand);
 
+		// Configure button bindings
 		configureBindings();
 
+		// Initialize autonomous command factory
 		autoFactory = new AutoFactory(multiCommands);
 	}
 
+	/**
+	 * Configures button bindings for driver and operator controllers.
+	 */
 	private void configureBindings() {
 		// Driver Bindings
 
+		// Set default command for swerve to drive with joystick inputs
 		swerve.setDefaultCommand(
 			swerveCommands.drive(
 				() -> -driver.getLeftY(),
@@ -96,19 +117,24 @@ public class RobotContainer {
 				() -> driver.R1().negate().getAsBoolean())
 		);
 
+		// Bind cross button to lock swerve
 		driver.cross().whileTrue(swerveCommands.lock());
 
+		// Bind buttons to drive to specific locations
 		driver.triangle().onTrue(swerveCommands.driveToStation());
 		driver.square().onTrue(swerveCommands.driveToCage());
 		driver.circle().onTrue(swerveCommands.driveToProcessor());
 
+		// Bind D-pad buttons to drive to specific reef positions
 		driver.povLeft().onTrue(swerveCommands.driveToReefLeft());
 		driver.povUp().onTrue(swerveCommands.driveToReefCenter());
 		driver.povRight().onTrue(swerveCommands.driveToReefRight());
 
+		// Bind options button to reset gyro
 		driver.options().onTrue(swerveCommands.resetGyro());
 
 		/*
+		// Example of SysId bindings (commented out)
 		driver.povUp().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineTranslation)));
 		driver.povLeft().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineSteer)));
 		driver.povRight().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineRotation)));
@@ -118,49 +144,53 @@ public class RobotContainer {
 		driver.create().and(driver.povDown()).whileTrue(swerveCommands.sysIdQuasistatic(Direction.kReverse));
 		*/
 
-		// Cancel all commands
+		// Bind touchpad to cancel all commands
 		driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 
-		// For testing
-		elevator.setDefaultCommand(elevatorCommands.changeGoal(()->-operator.getLeftY()/50));
-
-		arm.setDefaultCommand(armCommands.changeGoal(() ->-operator.getLeftX()/50));
+		// For testing: Set default commands for elevator and arm with joystick inputs
+		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -operator.getLeftY() / 50));
+		arm.setDefaultCommand(armCommands.changeGoal(() -> -operator.getLeftX() / 50));
 
 		// Operator Bindings
 
-		operator.triangle()
-			.onTrue(multiCommands.moveToGoal(4));
+		// Bind buttons to move to specific goals
+		operator.triangle().onTrue(multiCommands.moveToGoal(4));
+		operator.circle().onTrue(multiCommands.moveToGoal(3));
+		operator.square().onTrue(multiCommands.moveToGoal(2));
+		operator.cross().onTrue(multiCommands.moveToGoal(1));
 
-		operator.circle()
-			.onTrue(multiCommands.moveToGoal(3));
-
-		operator.square()
-			.onTrue(multiCommands.moveToGoal(2));
-
-		operator.cross()
-			.onTrue(multiCommands.moveToGoal(1));
-
+		// Bind R1 button to toggle wrist position
 		operator.R1()
 			.onTrue(wristCommands.toPos1())
 			.onFalse(wristCommands.toPos2());
 
+		// Bind L2 button to outtake and stop intake
 		operator.L2()
 			.onTrue(intakeCommands.outtake())
 			.onFalse(intakeCommands.stop());
 
+		// Bind R2 button to intake until switched and stop intake
 		operator.R2()
 			.onTrue(intakeCommands.intakeUntilSwitched())
 			.onFalse(intakeCommands.stop());
-    
-		operator.touchpad()
-		.onTrue(hangCommand);
+
+		// Bind touchpad to execute hang command
+		operator.touchpad().onTrue(hangCommand);
 	}
 
+	/**
+	 * Returns the autonomous command to be executed.
+	 *
+	 * @return The autonomous command
+	 */
 	public Command getAutonomousCommand() {
 		return autoFactory.getAuto();
 	}
 
-	public void log(){
+	/**
+	 * Logs data from all subsystems.
+	 */
+	public void log() {
 		arm.log();
 		wrist.log();
 		elevator.log();

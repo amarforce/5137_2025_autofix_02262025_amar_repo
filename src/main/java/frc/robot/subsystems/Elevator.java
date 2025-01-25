@@ -13,7 +13,6 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.datalog.DataLog;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -24,6 +23,12 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
 
+/**
+ * The Elevator subsystem controls the elevator mechanism of the robot.
+ * It uses two TalonFX motors for movement, a PID controller for position control,
+ * and a feedforward controller for compensating for gravity and friction.
+ * The subsystem also supports simulation for testing and tuning.
+ */
 public class Elevator extends SubsystemBase {
 
     // Define the motors for the elevator
@@ -42,7 +47,7 @@ public class Elevator extends SubsystemBase {
     // Goal position for the elevator
     private double goal = ElevatorConstants.defaultGoal;
 
-    // Data log
+    // Data log for recording elevator data
     private DataLog dataLog;
 
     // SysId routine for system identification
@@ -64,7 +69,11 @@ public class Elevator extends SubsystemBase {
                 // Tell SysId to make generated commands require this subsystem, suffix test state in WPILog with this subsystem's name ("elevator")
                 this));
 
-    // Constructor for the Elevator subsystem
+    /**
+     * Constructor for the Elevator subsystem.
+     * 
+     * @param dataLog The DataLog object used for logging elevator data.
+     */
     public Elevator(DataLog dataLog) {
         // Configure the motors to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
@@ -81,56 +90,91 @@ public class Elevator extends SubsystemBase {
         this.dataLog = dataLog;
     }
 
-    // Get the current goal position of the elevator
+    /**
+     * Gets the current goal position of the elevator.
+     * 
+     * @return The current goal position in meters.
+     */
     public double getGoal() {
         return goal;
     }
 
-    // Set the goal position for the elevator
+    /**
+     * Sets the goal position for the elevator.
+     * The goal is clamped between the minimum and maximum height limits.
+     * 
+     * @param newGoal The new goal position in meters.
+     */
     public void setGoal(double newGoal) {
-        if(newGoal<ElevatorConstants.minHeight){
-            newGoal=ElevatorConstants.minHeight;
+        if(newGoal < ElevatorConstants.minHeight){
+            newGoal = ElevatorConstants.minHeight;
         }
-        if(newGoal>ElevatorConstants.maxHeight){
-            newGoal=ElevatorConstants.maxHeight;
+        if(newGoal > ElevatorConstants.maxHeight){
+            newGoal = ElevatorConstants.maxHeight;
         }
         goal = newGoal;
     }
 
-    // Get the current position of the elevator in meters
+    /**
+     * Gets the current position of the elevator.
+     * 
+     * @return The current position in meters.
+     */
     public double getMeasurement() {
         return (leftMotor.getPosition().getValueAsDouble() - rightMotor.getPosition().getValueAsDouble()) / 2 * ElevatorConstants.metersPerRotation - ElevatorConstants.elevatorOffset;
     }
 
-    // Get the current velocity of the elevator in meters per second
+    /**
+     * Gets the current velocity of the elevator.
+     * 
+     * @return The current velocity in meters per second.
+     */
     public double getVelocity() {
         return (leftMotor.getVelocity().getValueAsDouble() - rightMotor.getVelocity().getValueAsDouble()) / 2 * ElevatorConstants.metersPerRotation;
     }
 
-    // Check if the elevator is at the setpoint
+    /**
+     * Checks if the elevator is at the setpoint.
+     * 
+     * @return True if the elevator is at the setpoint, false otherwise.
+     */
     public boolean atSetpoint() {
         return controller.atSetpoint();
     }
 
-    // Get the current input to the elevator motors
+    /**
+     * Gets the current input to the elevator motors.
+     * 
+     * @return The average input to the motors.
+     */
     public double getInput() {
         return (leftMotor.get() - rightMotor.get()) / 2;
     }
 
-    // Set the voltage to the elevator motors
+    /**
+     * Sets the voltage to the elevator motors.
+     * 
+     * @param v The voltage to apply to the motors.
+     */
     public void setVoltage(Voltage v) {
         leftMotor.setVoltage(v.magnitude());
         rightMotor.setVoltage(-v.magnitude());
     }
 
-    // Update telemetry data on SmartDashboard
+    /**
+     * Updates telemetry data on SmartDashboard.
+     * This includes the elevator height, velocity, and input.
+     */
     private void telemetry() {
         SmartDashboard.putNumber("Elevator Height", getMeasurement());
         SmartDashboard.putNumber("Elevator Velocity", getVelocity());
         SmartDashboard.putNumber("Elevator Input", getInput());
     }
 
-    // Periodic method called every robot loop
+    /**
+     * Periodic method called every robot loop.
+     * Updates the elevator control and telemetry.
+     */
     @Override
     public void periodic() {
         telemetry();
@@ -140,7 +184,10 @@ public class Elevator extends SubsystemBase {
         setVoltage(Volts.of(voltage));
     }
 
-    // Simulation periodic method called every simulation loop
+    /**
+     * Simulation periodic method called every simulation loop.
+     * Updates the motor simulation states and the RoboRIO simulation.
+     */
     @Override
     public void simulationPeriodic() {
         // Update the motor simulation states with the current battery voltage
@@ -164,7 +211,11 @@ public class Elevator extends SubsystemBase {
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps()));
     }
 
+    /**
+     * Logs elevator data.
+     * TODO: Implement logging functionality.
+     */
     public void log(){
-        // TODO add logs
+
     }
 }

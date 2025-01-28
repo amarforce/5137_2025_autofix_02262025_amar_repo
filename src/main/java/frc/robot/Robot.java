@@ -25,6 +25,7 @@ public class Robot extends TimedRobot {
 		CommandScheduler.getInstance().run();
 		if(logTimer.hasElapsed(GeneralConstants.logPeriod)){
 			logTimer.restart();
+			robotContainer.log();
 		}
 	}
 

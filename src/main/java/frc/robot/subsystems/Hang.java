@@ -5,6 +5,7 @@ import frc.robot.constants.HangConstants;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.Compressor;
 
 /**
@@ -21,15 +22,12 @@ public class Hang extends SubsystemBase {
     // Compressor to maintain air pressure within the specified range
     private final Compressor compressor;
 
-    // Data log for recording subsystem data
-    private DataLog dataLog;
+    private StringLogEntry log;
 
     /**
      * Constructs a new Hang subsystem.
-     *
-     * @param dataLog The DataLog instance used for logging subsystem data.
      */
-    public Hang(DataLog dataLog) {
+    public Hang(StringLogEntry log) {
         // Initialize the solenoids with the appropriate channels from HangConstants
         clampSolenoid = new Solenoid(PneumaticsModuleType.REVPH, HangConstants.clampSolenoid);
         climbSolenoid = new Solenoid(PneumaticsModuleType.REVPH, HangConstants.climbSolenoid);
@@ -38,8 +36,7 @@ public class Hang extends SubsystemBase {
         compressor = new Compressor(PneumaticsModuleType.REVPH);
         compressor.enableAnalog(HangConstants.minPressure, HangConstants.maxPressure);
 
-        // Set the data log instance
-        this.dataLog = dataLog;
+        this.log=log;
     }
     
     /**

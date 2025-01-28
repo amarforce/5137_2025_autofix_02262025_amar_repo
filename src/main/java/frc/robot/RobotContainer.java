@@ -4,7 +4,9 @@ import java.io.File;
 import java.util.function.Supplier;
 
 import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -55,9 +57,6 @@ public class RobotContainer {
 	// Factory for autonomous commands
 	private AutoFactory autoFactory;
 
-	// Data log for recording robot data
-	private DataLog dataLog;
-
 	/**
 	 * Constructor for RobotContainer.
 	 * Initializes all subsystems, commands, and binds controls.
@@ -67,23 +66,25 @@ public class RobotContainer {
 		driver = new CommandPS5Controller(0);
 		operator = new CommandPS5Controller(1);
 
+		// Start data log
+		DataLogManager.start();
+		DataLog log=DataLogManager.getLog();
+		DriverStation.startDataLog(log);
+
 		// Initialize Reef and ReefScoring components
 		reef = new Reef();
 		reefScoring = new ReefScoring(reef);
 		SmartDashboard.putData("Reef", reef);
 		SmartDashboard.putData("ReefScoring", reefScoring);
 
-		// Initialize data log
-		dataLog = DataLogManager.getLog();
-
 		// Initialize subsystems with data log
-		vision = new Vision(reef, dataLog);
-		swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision, dataLog);
-		elevator = new Elevator(dataLog);
-		arm = new Arm(dataLog);
-		wrist = new Wrist(dataLog);
-		intake = new Intake(dataLog);
-		hang = new Hang(dataLog);
+		vision = new Vision(reef,new StringLogEntry(log, "vision"));
+		swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,new StringLogEntry(log, "swerve"));
+		elevator = new Elevator(new StringLogEntry(log, "elevator"));
+		arm = new Arm(new StringLogEntry(log, "arm"));
+		wrist = new Wrist(new StringLogEntry(log, "wrist"));
+		intake = new Intake(new StringLogEntry(log, "intake"));
+		hang = new Hang(new StringLogEntry(log, "hang"));
 		armMechanism = new ArmMechanism(arm, elevator, wrist);
 
 		// Initialize commands for each subsystem

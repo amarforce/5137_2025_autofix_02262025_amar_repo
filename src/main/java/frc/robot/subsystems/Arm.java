@@ -10,6 +10,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -72,16 +73,13 @@ public class Arm extends SubsystemBase {
     
     // Simulation state for the motor
     private TalonFXSimState armMotorSim = armMotor.getSimState();
-
-    // Data log for recording arm data
-    private DataLog dataLog;
         
+    private StringLogEntry log;
+    
     /**
      * Constructor for the Arm subsystem.
-     * 
-     * @param dataLog The data log to record arm data.
      */
-    public Arm(DataLog dataLog) {
+    public Arm(StringLogEntry log) {
         // Configure the motor to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Coast;
@@ -93,7 +91,7 @@ public class Arm extends SubsystemBase {
         // Display the PID controller on SmartDashboard for tuning
         SmartDashboard.putData("Arm Controller", armController);
 
-        this.dataLog = dataLog;
+        this.log=log;
     }
 
     /**

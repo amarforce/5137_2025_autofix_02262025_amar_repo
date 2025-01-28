@@ -13,6 +13,8 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -47,9 +49,6 @@ public class Elevator extends SubsystemBase {
     // Goal position for the elevator
     private double goal = ElevatorConstants.defaultGoal;
 
-    // Data log for recording elevator data
-    private DataLog dataLog;
-
     // SysId routine for system identification
     public final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
@@ -69,12 +68,12 @@ public class Elevator extends SubsystemBase {
                 // Tell SysId to make generated commands require this subsystem, suffix test state in WPILog with this subsystem's name ("elevator")
                 this));
 
+    private StringLogEntry log;
+
     /**
      * Constructor for the Elevator subsystem.
-     * 
-     * @param dataLog The DataLog object used for logging elevator data.
      */
-    public Elevator(DataLog dataLog) {
+    public Elevator(StringLogEntry log) {
         // Configure the motors to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Coast;
@@ -87,7 +86,7 @@ public class Elevator extends SubsystemBase {
         // Add the PID controller to SmartDashboard for tuning
         SmartDashboard.putData("Elevator Controller", controller);
 
-        this.dataLog = dataLog;
+        this.log=log;
     }
 
     /**
@@ -213,9 +212,22 @@ public class Elevator extends SubsystemBase {
 
     /**
      * Logs elevator data.
-     * TODO: Implement logging functionality.
      */
     public void log(){
-
+        log.append("Height: "+getMeasurement());
+        log.append("Goal: "+getGoal());
+        log.append("Input: "+getInput());
+        log.append("Error: "+controller.getError());
+        log.append("Left Motor Temp: "+leftMotor.getDeviceTemp().getValueAsDouble());
+        log.append("Right Motor Temp: "+rightMotor.getDeviceTemp().getValueAsDouble());
+        log.append("Left Motor Voltage: "+leftMotor.getMotorVoltage().getValueAsDouble());
+        log.append("Right Motor Voltage: "+rightMotor.getMotorVoltage().getValueAsDouble());
+        // Fault flag = 0 means nothing bad happened, fault flag > 0 means something bad happened
+        log.append("Left Motor Fault: "+leftMotor.getFaultField().asSupplier().get());
+        log.append("Right Motor Fault: "+rightMotor.getFaultField().asSupplier().get());
+        log.append("Left Motor Supply Current: "+leftMotor.getSupplyCurrent());
+        log.append("Right Motor Supply Current: "+rightMotor.getSupplyCurrent());
+        log.append("Left Motor Supply Voltage: "+leftMotor.getSupplyVoltage());
+        log.append("Right Motor Supply Voltage: "+rightMotor.getSupplyVoltage());
     }
 }

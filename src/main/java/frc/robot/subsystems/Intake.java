@@ -4,6 +4,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.IntakeConstants;
@@ -20,23 +21,19 @@ public class Intake extends SubsystemBase {
     // Limit switch to detect the position of the intake
     private DigitalInput limitSwitch;
 
-    // Data log for recording subsystem data
-    private DataLog dataLog;
+    private StringLogEntry log;
 
     /**
      * Constructs an Intake subsystem.
-     *
-     * @param dataLog The DataLog instance used for logging subsystem data.
      */
-    public Intake(DataLog dataLog) {
+    public Intake(StringLogEntry log) {
         // Initialize the motor controller with the ID and type from constants
         intakeMotor = new SparkMax(IntakeConstants.motorId, MotorType.kBrushless);
 
         // Initialize the limit switch with the channel from constants
         limitSwitch = new DigitalInput(IntakeConstants.switchChannel);
 
-        // Store the DataLog instance for later use
-        this.dataLog = dataLog;
+        this.log=log;
     }
 
     /**

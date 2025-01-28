@@ -12,6 +12,7 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.VisionConstants;
 import frc.robot.elastic.Reef;
@@ -31,15 +32,14 @@ public class Vision extends SubsystemBase {
 
     private Reef reef; // Reference to the Reef object for coral placement tracking
 
-    private DataLog dataLog; // Data log for recording vision data
+    private StringLogEntry log;
 
     /**
      * Constructor for the Vision subsystem.
      *
      * @param reef The Reef object used for tracking coral placements.
-     * @param dataLog The DataLog object used for logging vision data.
      */
-    public Vision(Reef reef, DataLog dataLog) {
+    public Vision(Reef reef,StringLogEntry log) {
         // Load the AprilTag field layout from the default field
         fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
@@ -62,7 +62,7 @@ public class Vision extends SubsystemBase {
         }
 
         this.reef = reef;
-        this.dataLog = dataLog;
+        this.log=log;
     }
 
     /**

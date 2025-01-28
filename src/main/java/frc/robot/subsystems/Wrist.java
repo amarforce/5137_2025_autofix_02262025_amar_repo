@@ -9,6 +9,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -51,9 +52,6 @@ public class Wrist extends SubsystemBase {
         WristConstants.pos1
     );
 
-    // Data log for recording subsystem data
-    private DataLog dataLog;
-
     // System Identification routine for characterizing the Wrist
     public final SysIdRoutine sysIdRoutine =
         new SysIdRoutine(
@@ -72,13 +70,13 @@ public class Wrist extends SubsystemBase {
     
     // Simulation state for the motor
     private TalonFXSimState WristMotorSim = wristMotor.getSimState();
+
+    private StringLogEntry log;
         
     /**
      * Constructor for the Wrist subsystem.
-     * 
-     * @param dataLog The DataLog instance used for logging subsystem data.
      */
-    public Wrist(DataLog dataLog) {
+    public Wrist(StringLogEntry log) {
         // Configure the motor to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Coast;
@@ -90,7 +88,7 @@ public class Wrist extends SubsystemBase {
         // Display the PID controller on SmartDashboard for tuning
         SmartDashboard.putData("Wrist Controller", wristController);
 
-        this.dataLog = dataLog;
+        this.log=log;
     }
 
     /**

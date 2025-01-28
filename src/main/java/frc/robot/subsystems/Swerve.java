@@ -30,6 +30,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -61,16 +62,15 @@ public class Swerve extends SubsystemBase {
 
     private SendableChooser<Integer> cageChoice; // Chooser for selecting cage position (e.g., for autonomous)
 
-    private DataLog dataLog; // Data log for recording robot data
+    private StringLogEntry log;
 
     /**
      * Constructor for the Swerve subsystem.
      *
      * @param file    The configuration file for the swerve drivetrain.
      * @param vision  The vision subsystem for pose estimation.
-     * @param dataLog The data log for recording robot data.
      */
-    public Swerve(File file, Vision vision, DataLog dataLog) {
+    public Swerve(File file, Vision vision,StringLogEntry log) {
         SwerveFactory factory = new SwerveFactory(file);
         swerve = factory.create(); // Create the swerve drivetrain using the factory
         this.vision = vision;
@@ -134,7 +134,7 @@ public class Swerve extends SubsystemBase {
         field = new Field2d();
         SmartDashboard.putData("Field", field);
 
-        this.dataLog = dataLog;
+        this.log=log;
     }
 
     /**

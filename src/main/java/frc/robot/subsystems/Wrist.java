@@ -197,5 +197,16 @@ public class Wrist extends SubsystemBase {
      */
     public void log() {
         // TODO: Add logs
+        log.append("Angle: " + getMeasurement());
+        log.append("Goal: " + getGoal());
+        log.append("Error: " + wristController.getError());
+        log.append("Temp: " + wristMotor.getDeviceTemp().getValueAsDouble());
+        int motorFault = wristMotor.getFaultField().asSupplier().get();
+        if (motorFault != 0){
+            log.append("Fault: " + motorFault);
+        }
+        log.append("Current: " + wristMotor.getSupplyCurrent());
+        log.append("Voltage: " + wristMotor.getMotorVoltage().getValueAsDouble());
+        log.append("Supply Voltage: " + wristMotor.getSupplyVoltage());
     }
 }

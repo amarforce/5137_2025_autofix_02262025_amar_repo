@@ -69,7 +69,7 @@ public class RobotContainer {
 		// Start data log
 		DataLogManager.start();
 		DataLog log=DataLogManager.getLog();
-		//DriverStation.startDataLog(log);
+		DriverStation.startDataLog(log);
 
 		// Initialize Reef and ReefScoring components
 		reef = new Reef();
@@ -77,7 +77,7 @@ public class RobotContainer {
 		SmartDashboard.putData("Reef", reef);
 		SmartDashboard.putData("ReefScoring", reefScoring);
 
-		// Initialize subsystems with data log
+		// // Initialize subsystems with data log
 		vision = new Vision(reef,new StringLogEntry(log, "vision"));
 		swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,new StringLogEntry(log, "swerve"));
 		elevator = new Elevator(new StringLogEntry(log, "elevator"));

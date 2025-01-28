@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.other.RobotUtils;
 import frc.robot.other.SwerveFactory;
@@ -253,7 +254,9 @@ public class Swerve extends SubsystemBase {
 
         vision.processNewObjects(this.getPose());
         field.setRobotPose(this.getPose());
-        vision.updateSim(this.getPose());
+        if(Robot.isSimulation()){
+            vision.updateSim(this.getPose());
+        }
     }
 
     // SysId Routines for system characterization
@@ -345,7 +348,7 @@ public class Swerve extends SubsystemBase {
      * Starts the simulation thread.
      */
     private void startSimThread() {
-        m_lastSimTime = Utils.getCurrentTimeSeconds();
+        // m_lastSimTime = Utils.getCurrentTimeSeconds();
 
         // Run simulation at a faster rate for better PID behavior
         m_simNotifier = new Notifier(() -> {

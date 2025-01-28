@@ -57,6 +57,8 @@ public class RobotContainer {
 	// Factory for autonomous commands
 	private AutoFactory autoFactory;
 
+	private StringLogEntry log;
+
 	/**
 	 * Constructor for RobotContainer.
 	 * Initializes all subsystems, commands, and binds controls.
@@ -68,8 +70,8 @@ public class RobotContainer {
 
 		// Start data log
 		DataLogManager.start();
-		DataLog log=DataLogManager.getLog();
-		DriverStation.startDataLog(log);
+		DataLog dataLog=DataLogManager.getLog();
+		DriverStation.startDataLog(dataLog);
 
 		// Initialize Reef and ReefScoring components
 		reef = new Reef();
@@ -78,13 +80,13 @@ public class RobotContainer {
 		SmartDashboard.putData("ReefScoring", reefScoring);
 
 		// // Initialize subsystems with data log
-		vision = new Vision(reef,new StringLogEntry(log, "vision"));
-		swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,new StringLogEntry(log, "swerve"));
-		elevator = new Elevator(new StringLogEntry(log, "elevator"));
-		arm = new Arm(new StringLogEntry(log, "arm"));
-		wrist = new Wrist(new StringLogEntry(log, "wrist"));
-		intake = new Intake(new StringLogEntry(log, "intake"));
-		hang = new Hang(new StringLogEntry(log, "hang"));
+		vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
+		swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,new StringLogEntry(dataLog, "swerve"));
+		elevator = new Elevator(new StringLogEntry(dataLog, "elevator"));
+		arm = new Arm(new StringLogEntry(dataLog, "arm"));
+		wrist = new Wrist(new StringLogEntry(dataLog, "wrist"));
+		intake = new Intake(new StringLogEntry(dataLog, "intake"));
+		hang = new Hang(new StringLogEntry(dataLog, "hang"));
 		armMechanism = new ArmMechanism(arm, elevator, wrist);
 
 		// Initialize commands for each subsystem
@@ -101,6 +103,8 @@ public class RobotContainer {
 
 		// Initialize autonomous command factory
 		autoFactory = new AutoFactory(multiCommands);
+
+		log = new StringLogEntry(dataLog, "container");
 	}
 
 	/**
@@ -192,12 +196,16 @@ public class RobotContainer {
 	 * Logs data from all subsystems.
 	 */
 	public void log() {
-		arm.log();
-		wrist.log();
-		elevator.log();
-		hang.log();
-		swerve.log();
-		vision.log();
-		intake.log();
+		try{
+			arm.log();
+			wrist.log();
+			elevator.log();
+			hang.log();
+			swerve.log();
+			vision.log();
+			intake.log();
+		}catch(Exception e){
+			log.append("Error while logging: "+e.getMessage());
+		}
 	}
 }

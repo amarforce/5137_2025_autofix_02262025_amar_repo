@@ -157,14 +157,21 @@ public class Wrist extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        // Update telemetry
-        telemetry();
+        try {
+            // Update telemetry
+            telemetry();
         
-        // Calculate PID control outputs
-        double voltage = wristController.calculate(getMeasurement(), goal);
-        
-        // Apply the calculated voltage to the motor
-        setVoltage(Volts.of(voltage));
+            // Calculate PID control outputs
+            double voltage = wristController.calculate(getMeasurement(), goal);
+            
+            // Apply the calculated voltage to the motor
+            setVoltage(Volts.of(voltage));
+            
+        } catch (Exception e) {
+            // TODO: handle exception
+            log.append("Periodic Fault: " + e.getMessage());
+        }
+
     }
 
     /**
@@ -196,6 +203,7 @@ public class Wrist extends SubsystemBase {
      * TODO: Implement logging functionality.
      */
     public void log() {
+
         // TODO: Add logs
         log.append("Angle: " + getMeasurement());
         log.append("Goal: " + getGoal());

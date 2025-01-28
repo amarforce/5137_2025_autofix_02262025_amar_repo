@@ -372,6 +372,10 @@ public class Swerve extends SubsystemBase {
      * Logs data (currently unimplemented).
      */
     public void log() {
-        // TODO add logs
+        log.append("Chassis Speeds: "+swerve.getState().Speeds);
+        var modules=swerve.getModules();
+        for(var module:modules){
+            log.append("Module: "+module.getCurrentState());
+        }
     }
 }

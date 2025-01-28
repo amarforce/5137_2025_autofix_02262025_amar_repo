@@ -215,6 +215,7 @@ public class Elevator extends SubsystemBase {
      */
     public void log(){
         log.append("Height: "+getMeasurement());
+        log.append("Velocity: "+getVelocity());
         log.append("Goal: "+getGoal());
         log.append("Input: "+getInput());
         log.append("Error: "+controller.getError());
@@ -223,8 +224,14 @@ public class Elevator extends SubsystemBase {
         log.append("Left Motor Voltage: "+leftMotor.getMotorVoltage().getValueAsDouble());
         log.append("Right Motor Voltage: "+rightMotor.getMotorVoltage().getValueAsDouble());
         // Fault flag = 0 means nothing bad happened, fault flag > 0 means something bad happened
-        log.append("Left Motor Fault: "+leftMotor.getFaultField().asSupplier().get());
-        log.append("Right Motor Fault: "+rightMotor.getFaultField().asSupplier().get());
+        int leftMotorFault=leftMotor.getFaultField().asSupplier().get();
+        if(leftMotorFault!=0){
+            log.append("Left Motor Fault: "+leftMotorFault);
+        }
+        int rightMotorFault=leftMotor.getFaultField().asSupplier().get();
+        if(rightMotorFault!=0){
+            log.append("Left Motor Fault: "+rightMotorFault);
+        }
         log.append("Left Motor Supply Current: "+leftMotor.getSupplyCurrent());
         log.append("Right Motor Supply Current: "+rightMotor.getSupplyCurrent());
         log.append("Left Motor Supply Voltage: "+leftMotor.getSupplyVoltage());

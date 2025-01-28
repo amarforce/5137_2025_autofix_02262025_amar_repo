@@ -69,7 +69,7 @@ public class RobotContainer {
 		// Start data log
 		DataLogManager.start();
 		DataLog log=DataLogManager.getLog();
-		DriverStation.startDataLog(log);
+		//DriverStation.startDataLog(log);
 
 		// Initialize Reef and ReefScoring components
 		reef = new Reef();

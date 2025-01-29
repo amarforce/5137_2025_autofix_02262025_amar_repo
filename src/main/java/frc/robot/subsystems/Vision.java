@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.VisionConstants;
 import frc.robot.elastic.Reef;
@@ -43,13 +44,14 @@ public class Vision extends SubsystemBase {
         // Load the AprilTag field layout from the default field
         fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
+        DataLog dataLog = DataLogManager.getLog();
         // Initialize AprilTag cameras with their respective positions and the field layout
-        AprilTagCamera frontCamera = new AprilTagCamera("frontCamera", VisionConstants.robotToFrontCamera, fieldLayout);
-        AprilTagCamera leftCamera = new AprilTagCamera("leftCamera", VisionConstants.robotToLeftCamera, fieldLayout);
+        AprilTagCamera frontCamera = new AprilTagCamera("frontCamera", VisionConstants.robotToFrontCamera, fieldLayout, new StringLogEntry(dataLog, "frontCamera"));
+        AprilTagCamera leftCamera = new AprilTagCamera("leftCamera", VisionConstants.robotToLeftCamera, fieldLayout, new StringLogEntry(dataLog, "leftCamera"));
         aprilTagCameras = new AprilTagCamera[]{frontCamera, leftCamera};
 
         // Initialize object cameras with their respective positions
-        ObjectCamera frontObjectCamera = new ObjectCamera("frontObjectCamera", VisionConstants.robotToFrontObjectCamera);
+        ObjectCamera frontObjectCamera = new ObjectCamera("frontObjectCamera", VisionConstants.robotToFrontObjectCamera, new StringLogEntry(dataLog, "frontObjectCamera"));
         objectCameras = new ObjectCamera[]{frontObjectCamera};
 
         // Initialize the vision system simulation and add AprilTags to it
@@ -138,6 +140,7 @@ public class Vision extends SubsystemBase {
         if (closestBranch == -1) {
             return null;
         } else {
+            log.append("Detected coral on level "+(closestLevel+2)+" branch "+closestBranch);
             return Pair.of(closestLevel, closestBranch);
         }
     }
@@ -155,6 +158,6 @@ public class Vision extends SubsystemBase {
      * Logs vision data. Currently a placeholder for future implementation.
      */
     public void log() {
-        // TODO add logs
+        
     }
 }

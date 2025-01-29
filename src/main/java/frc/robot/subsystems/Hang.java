@@ -4,7 +4,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.HangConstants;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.Compressor;
 
@@ -90,6 +89,9 @@ public class Hang extends SubsystemBase {
      * This method is currently a placeholder and should be implemented to log specific data.
      */
     public void log() {
-        // TODO: Implement logging of relevant data
+        log.append("Climb Solenoid Enabled: "+climbSolenoid.get());
+        log.append("Climb Solenoid Shorted: "+climbSolenoid.isDisabled());
+        log.append("Clamp Solenoid Enabled: "+clampSolenoid.get());
+        log.append("Clamp Solenoid Shorted: "+clampSolenoid.isDisabled());
     }
 }

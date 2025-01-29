@@ -3,7 +3,6 @@ package frc.robot.subsystems;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
-import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -66,7 +65,11 @@ public class Intake extends SubsystemBase {
      * This method is intended to be called periodically to record data.
      */
     public void log() {
-        // TODO: Implement logging functionality
-        // Example: Log motor speed, limit switch state, etc.
+        log.append("Speed: "+intakeMotor.get());
+        log.append("Applied Output: "+intakeMotor.getAppliedOutput());
+        log.append("Bus Voltage: "+intakeMotor.getBusVoltage());
+        log.append("Motor Temperature: "+intakeMotor.getMotorTemperature());
+        log.append("Output Current: "+intakeMotor.getOutputCurrent());
+        log.append("Switched: "+isSwitched());
     }
 }

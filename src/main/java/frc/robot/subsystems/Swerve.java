@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import frc.robot.Robot;
-import frc.robot.RobotContainer;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.other.RobotUtils;
 import frc.robot.other.SwerveFactory;
@@ -30,7 +29,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -136,6 +134,14 @@ public class Swerve extends SubsystemBase {
         SmartDashboard.putData("Field", field);
 
         this.log=log;
+
+        swerve.registerTelemetry((sds)->{
+            for(int i=0;i<sds.ModuleStates.length;i++){
+                log.append("Module "+i+" State: "+sds.ModuleStates[i]);
+                log.append("Module "+i+" Target: "+sds.ModuleTargets[i]);
+                log.append("Module "+i+" Position: "+sds.ModulePositions[i]);
+            }
+        });
     }
 
     /**
@@ -247,16 +253,21 @@ public class Swerve extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        List<EstimatedRobotPose> newPoses = vision.getNewPoses();
-        for (EstimatedRobotPose newPose : newPoses) {
-            swerve.addVisionMeasurement(newPose.estimatedPose.toPose2d(), newPose.timestampSeconds);
-        }
+        try{
+            List<EstimatedRobotPose> newPoses = vision.getNewPoses();
+            for (EstimatedRobotPose newPose : newPoses) {
+                swerve.addVisionMeasurement(newPose.estimatedPose.toPose2d(), newPose.timestampSeconds);
+            }
 
-        vision.processNewObjects(this.getPose());
-        field.setRobotPose(this.getPose());
-        if(Robot.isSimulation()){
-            vision.updateSim(this.getPose());
+            vision.processNewObjects(this.getPose());
+            field.setRobotPose(this.getPose());
+            if(Robot.isSimulation()){
+                vision.updateSim(this.getPose());
+            }
+        }catch(Exception e){
+            log.append("Periodic error: "+RobotUtils.getError(e));
         }
+        
     }
 
     // SysId Routines for system characterization
@@ -375,10 +386,6 @@ public class Swerve extends SubsystemBase {
      * Logs data (currently unimplemented).
      */
     public void log() {
-        log.append("Chassis Speeds: "+swerve.getState().Speeds);
-        var modules=swerve.getModules();
-        for(var module:modules){
-            log.append("Module: "+module.getCurrentState());
-        }
+        log.append("Rotation: "+swerve.getRotation3d());
     }
 }

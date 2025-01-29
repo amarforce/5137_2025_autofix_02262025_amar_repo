@@ -8,7 +8,6 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
@@ -18,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.WristConstants;
+import frc.robot.other.RobotUtils;
 import frc.robot.constants.GeneralConstants;
 
 import static edu.wpi.first.units.Units.Radians;
@@ -69,7 +69,7 @@ public class Wrist extends SubsystemBase {
         );
     
     // Simulation state for the motor
-    private TalonFXSimState WristMotorSim = wristMotor.getSimState();
+    private TalonFXSimState wristMotorSim = wristMotor.getSimState();
 
     private StringLogEntry log;
         
@@ -168,8 +168,7 @@ public class Wrist extends SubsystemBase {
             setVoltage(Volts.of(voltage));
             
         } catch (Exception e) {
-            // TODO: handle exception
-            log.append("Periodic Fault: " + e.getMessage());
+            log.append("Periodic error: " + RobotUtils.getError(e));
         }
 
     }
@@ -181,18 +180,18 @@ public class Wrist extends SubsystemBase {
     @Override
     public void simulationPeriodic() {
         // Update the motor simulation state with the current battery voltage
-        WristMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+        wristMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
         
         // Get the current motor input voltage and update the Wrist simulation
-        double WristInput = WristMotorSim.getMotorVoltage();
+        double WristInput = wristMotorSim.getMotorVoltage();
         wristSim.setInputVoltage(WristInput);
         wristSim.update(GeneralConstants.simPeriod);
         
         // Update the motor simulation state with the new Wrist position and velocity
         double angle = wristSim.getAngleRads();
-        WristMotorSim.setRawRotorPosition(Units.radiansToRotations((angle + WristConstants.wristOffset) * WristConstants.gearRatio));
+        wristMotorSim.setRawRotorPosition(Units.radiansToRotations((angle + WristConstants.wristOffset) * WristConstants.gearRatio));
         double vel = wristSim.getVelocityRadPerSec();
-        WristMotorSim.setRotorVelocity(Units.radiansToRotations(vel * WristConstants.gearRatio));
+        wristMotorSim.setRotorVelocity(Units.radiansToRotations(vel * WristConstants.gearRatio));
         
         // Update the RoboRIO simulation state with the new battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(wristSim.getCurrentDrawAmps()));
@@ -200,18 +199,15 @@ public class Wrist extends SubsystemBase {
 
     /**
      * Logs subsystem data.
-     * TODO: Implement logging functionality.
      */
     public void log() {
-
-        // TODO: Add logs
         log.append("Angle: " + getMeasurement());
         log.append("Goal: " + getGoal());
         log.append("Error: " + wristController.getError());
         log.append("Temp: " + wristMotor.getDeviceTemp().getValueAsDouble());
         int motorFault = wristMotor.getFaultField().asSupplier().get();
         if (motorFault != 0){
-            log.append("Fault: " + motorFault);
+            log.append("Motor Error: " + motorFault);
         }
         log.append("Current: " + wristMotor.getSupplyCurrent());
         log.append("Voltage: " + wristMotor.getMotorVoltage().getValueAsDouble());

@@ -126,4 +126,17 @@ public class RobotUtils {
         }
         return closest;
     }
+
+    // Converts an exception to an error string
+    public static String getError(Exception e){
+        StringBuilder sb=new StringBuilder();
+        sb.append(e.getMessage());
+        sb.append("\nBegin stack trace\n");
+        for (var ste:e.getStackTrace()) {
+            sb.append(ste);
+            sb.append("\n");
+        }
+        sb.append("End stack trace");
+        return sb.toString();
+    }
 }

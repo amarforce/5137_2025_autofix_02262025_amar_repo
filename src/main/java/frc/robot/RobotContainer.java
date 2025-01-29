@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.elastic.*;
 import frc.robot.other.ArmMechanism;
 import frc.robot.other.AutoFactory;
+import frc.robot.other.RobotUtils;
 import frc.robot.subsystems.*;
 import frc.robot.commands.*;
 
@@ -64,47 +65,52 @@ public class RobotContainer {
 	 * Initializes all subsystems, commands, and binds controls.
 	 */
 	public RobotContainer() {
-		// Initialize controllers
-		driver = new CommandPS5Controller(0);
-		operator = new CommandPS5Controller(1);
-
 		// Start data log
 		DataLogManager.start();
 		DataLog dataLog=DataLogManager.getLog();
 		DriverStation.startDataLog(dataLog);
-
-		// Initialize Reef and ReefScoring components
-		reef = new Reef();
-		reefScoring = new ReefScoring(reef);
-		SmartDashboard.putData("Reef", reef);
-		SmartDashboard.putData("ReefScoring", reefScoring);
-
-		// // Initialize subsystems with data log
-		vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
-		swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,new StringLogEntry(dataLog, "swerve"));
-		elevator = new Elevator(new StringLogEntry(dataLog, "elevator"));
-		arm = new Arm(new StringLogEntry(dataLog, "arm"));
-		wrist = new Wrist(new StringLogEntry(dataLog, "wrist"));
-		intake = new Intake(new StringLogEntry(dataLog, "intake"));
-		hang = new Hang(new StringLogEntry(dataLog, "hang"));
-		armMechanism = new ArmMechanism(arm, elevator, wrist);
-
-		// Initialize commands for each subsystem
-		swerveCommands = new SwerveCommands(swerve);
-		elevatorCommands = new ElevatorCommands(elevator);
-		armCommands = new ArmCommands(arm);
-		wristCommands = new WristCommands(wrist);
-		intakeCommands = new IntakeCommands(intake);
-		hangCommand = new HangCommand(hang);
-		multiCommands = new MultiCommands(arm, elevator, wrist, swerve, intake, hang, armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand);
-
-		// Configure button bindings
-		configureBindings();
-
-		// Initialize autonomous command factory
-		autoFactory = new AutoFactory(multiCommands);
-
 		log = new StringLogEntry(dataLog, "container");
+
+		try{
+			// Initialize controllers
+			driver = new CommandPS5Controller(0);
+			operator = new CommandPS5Controller(1);
+
+			
+
+			// Initialize Reef and ReefScoring components
+			reef = new Reef();
+			reefScoring = new ReefScoring(reef);
+			SmartDashboard.putData("Reef", reef);
+			SmartDashboard.putData("ReefScoring", reefScoring);
+
+			// // Initialize subsystems with data log
+			vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
+			swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,new StringLogEntry(dataLog, "swerve"));
+			elevator = new Elevator(new StringLogEntry(dataLog, "elevator"));
+			arm = new Arm(new StringLogEntry(dataLog, "arm"));
+			wrist = new Wrist(new StringLogEntry(dataLog, "wrist"));
+			intake = new Intake(new StringLogEntry(dataLog, "intake"));
+			hang = new Hang(new StringLogEntry(dataLog, "hang"));
+			armMechanism = new ArmMechanism(arm, elevator, wrist);
+
+			// Initialize commands for each subsystem
+			swerveCommands = new SwerveCommands(swerve);
+			elevatorCommands = new ElevatorCommands(elevator);
+			armCommands = new ArmCommands(arm);
+			wristCommands = new WristCommands(wrist);
+			intakeCommands = new IntakeCommands(intake);
+			hangCommand = new HangCommand(hang);
+			multiCommands = new MultiCommands(arm, elevator, wrist, swerve, intake, hang, armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand);
+
+			// Configure button bindings
+			configureBindings();
+
+			// Initialize autonomous command factory
+			autoFactory = new AutoFactory(multiCommands);
+		}catch(Exception e){
+			log.append("Error while initializing: "+RobotUtils.getError(e));
+		}
 	}
 
 	/**
@@ -205,7 +211,7 @@ public class RobotContainer {
 			vision.log();
 			intake.log();
 		}catch(Exception e){
-			log.append("Error while logging: "+e.getMessage());
+			log.append("Error while logging: "+RobotUtils.getError(e));
 		}
 	}
 }

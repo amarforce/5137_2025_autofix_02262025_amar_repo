@@ -11,8 +11,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.other.DetectedObject;
+import frc.robot.other.RobotUtils;
 
 /**
  * The ObjectCamera subsystem is responsible for interfacing with a PhotonVision camera
@@ -23,6 +25,7 @@ public class ObjectCamera extends SubsystemBase {
     private PhotonCamera cam; // The PhotonVision camera used for object detection
     private Transform3d robotToCamera; // The transformation from the robot's center to the camera's position
     private List<PhotonTrackedTarget> newTargets; // A list of newly detected targets
+    private StringLogEntry log;
 
     /**
      * Constructs an ObjectCamera subsystem.
@@ -30,10 +33,11 @@ public class ObjectCamera extends SubsystemBase {
      * @param name The name of the PhotonVision camera.
      * @param robotToCamera The transformation from the robot's center to the camera's position.
      */
-    public ObjectCamera(String name, Transform3d robotToCamera) {
+    public ObjectCamera(String name, Transform3d robotToCamera,StringLogEntry log) {
         this.robotToCamera = robotToCamera;
         this.cam = new PhotonCamera(name);
         this.newTargets = new ArrayList<>();
+        this.log=log;
     }
 
     /**
@@ -58,6 +62,7 @@ public class ObjectCamera extends SubsystemBase {
             // Get the class ID of the detected object (if using object detection)
             int classId = target.objDetectId;
 
+            log.append("Detected object with transform "+targetTrans+" id "+classId);
             // Add the detected object to the list
             detectedObjects.add(new DetectedObject(targetTrans, classId));
         }
@@ -71,12 +76,16 @@ public class ObjectCamera extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        // Retrieve all unprocessed results from the camera
-        var results = cam.getAllUnreadResults();
+        try{
+            // Retrieve all unprocessed results from the camera
+            var results = cam.getAllUnreadResults();
 
-        // Add all detected targets to the newTargets list
-        for (PhotonPipelineResult res : results) {
-            newTargets.addAll(res.getTargets());
+            // Add all detected targets to the newTargets list
+            for (PhotonPipelineResult res : results) {
+                newTargets.addAll(res.getTargets());
+            }
+        }catch(Exception e){
+            log.append("Periodic error: "+RobotUtils.getError(e));
         }
     }
 }

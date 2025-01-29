@@ -12,9 +12,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -226,11 +224,11 @@ public class Elevator extends SubsystemBase {
         // Fault flag = 0 means nothing bad happened, fault flag > 0 means something bad happened
         int leftMotorFault=leftMotor.getFaultField().asSupplier().get();
         if(leftMotorFault!=0){
-            log.append("Left Motor Fault: "+leftMotorFault);
+            log.append("Left Motor Error: "+leftMotorFault);
         }
         int rightMotorFault=leftMotor.getFaultField().asSupplier().get();
         if(rightMotorFault!=0){
-            log.append("Left Motor Fault: "+rightMotorFault);
+            log.append("Right Motor Error: "+rightMotorFault);
         }
         log.append("Left Motor Supply Current: "+leftMotor.getSupplyCurrent());
         log.append("Right Motor Supply Current: "+rightMotor.getSupplyCurrent());

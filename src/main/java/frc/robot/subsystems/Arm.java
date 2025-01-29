@@ -9,7 +9,6 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
@@ -20,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ArmConstants;
 import frc.robot.constants.GeneralConstants;
+import frc.robot.other.RobotUtils;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -159,15 +159,19 @@ public class Arm extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        // Update telemetry
-        telemetry();
-        
-        // Calculate feedforward and PID control outputs
-        double extra = feedforward.calculate(getMeasurement(), getVelocity());
-        double voltage = armController.calculate(getMeasurement(), goal) + extra;
-        
-        // Apply the calculated voltage to the motor
-        setVoltage(Volts.of(voltage));
+        try{
+            // Update telemetry
+            telemetry();
+            
+            // Calculate feedforward and PID control outputs
+            double extra = feedforward.calculate(getMeasurement(), getVelocity());
+            double voltage = armController.calculate(getMeasurement(), goal) + extra;
+            
+            // Apply the calculated voltage to the motor
+            setVoltage(Volts.of(voltage));
+        }catch(Exception e){
+            log.append("Periodic error: " + RobotUtils.getError(e));
+        }
     }
 
     /**
@@ -195,9 +199,18 @@ public class Arm extends SubsystemBase {
 
     /**
      * Log arm data.
-     * TODO: Implement logging functionality.
      */
     public void log() {
-
+        log.append("Angle: " + getMeasurement());
+        log.append("Goal: " + getGoal());
+        log.append("Error: " + armController.getError());
+        log.append("Temp: " + armMotor.getDeviceTemp().getValueAsDouble());
+        int motorFault = armMotor.getFaultField().asSupplier().get();
+        if (motorFault != 0){
+            log.append("Motor Error: " + motorFault);
+        }
+        log.append("Current: " + armMotor.getSupplyCurrent());
+        log.append("Voltage: " + armMotor.getMotorVoltage().getValueAsDouble());
+        log.append("Supply Voltage: " + armMotor.getSupplyVoltage());
     }
 }

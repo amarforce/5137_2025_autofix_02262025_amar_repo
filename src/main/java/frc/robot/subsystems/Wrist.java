@@ -35,7 +35,7 @@ public class Wrist extends SubsystemBase {
     private TalonFX wristMotor = new TalonFX(WristConstants.motorId, "rhino");
     
     // PID controller for Wrist position control
-    private PIDController wristController = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
+    private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
     
     // Goal position for the Wrist in radians
     private double goal = WristConstants.pos1;
@@ -53,7 +53,7 @@ public class Wrist extends SubsystemBase {
     );
 
     // System Identification routine for characterizing the Wrist
-    public final SysIdRoutine sysIdRoutine =
+    private final SysIdRoutine sysIdRoutine =
         new SysIdRoutine(
             new SysIdRoutine.Config(),
             new SysIdRoutine.Mechanism(
@@ -83,10 +83,10 @@ public class Wrist extends SubsystemBase {
         wristMotor.getConfigurator().apply(currentConfigs);
 
         // Set the tolerance for the PID controller
-        wristController.setTolerance(WristConstants.wristTolerance);
+        controller.setTolerance(WristConstants.wristTolerance);
         
         // Display the PID controller on SmartDashboard for tuning
-        SmartDashboard.putData("Wrist Controller", wristController);
+        SmartDashboard.putData("Wrist Controller", controller);
 
         this.log=log;
     }
@@ -142,13 +142,27 @@ public class Wrist extends SubsystemBase {
         return Units.rotationsToRadians(wristMotor.getVelocity().getValueAsDouble() / WristConstants.gearRatio);
     }
 
+    public SysIdRoutine getRoutine(){
+        return sysIdRoutine;
+    }
+
     /**
      * Displays telemetry data on SmartDashboard.
      */
     public void telemetry() {
-        SmartDashboard.putNumber("Wrist Angle", wristSim.getAngleRads());
-        SmartDashboard.putNumber("Wrist Velocity", wristSim.getVelocityRadPerSec());
-        SmartDashboard.putNumber("Wrist Input", wristMotor.get());
+        SmartDashboard.putNumber("wrist/angle",getMeasurement());
+        SmartDashboard.putNumber("wrist/goal",getGoal());
+        SmartDashboard.putNumber("wrist/velocity",getVelocity());
+        SmartDashboard.putNumber("wrist/error",controller.getError());
+        SmartDashboard.putNumber("wrist/motorTemp",wristMotor.getDeviceTemp().getValueAsDouble());
+        int motorFault = wristMotor.getFaultField().asSupplier().get();
+        if (motorFault != 0){
+            SmartDashboard.putNumber("wrist/motorFault",motorFault);
+        }
+        SmartDashboard.putNumber("wrist/current",wristMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/voltage",wristMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/current",wristMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/supplyVoltage",wristMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**
@@ -162,7 +176,7 @@ public class Wrist extends SubsystemBase {
             telemetry();
         
             // Calculate PID control outputs
-            double voltage = wristController.calculate(getMeasurement(), goal);
+            double voltage = controller.calculate(getMeasurement(), goal);
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
@@ -195,22 +209,5 @@ public class Wrist extends SubsystemBase {
         
         // Update the RoboRIO simulation state with the new battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(wristSim.getCurrentDrawAmps()));
-    }
-
-    /**
-     * Logs subsystem data.
-     */
-    public void log() {
-        log.append("Angle: " + getMeasurement());
-        log.append("Goal: " + getGoal());
-        log.append("Error: " + wristController.getError());
-        log.append("Temp: " + wristMotor.getDeviceTemp().getValueAsDouble());
-        int motorFault = wristMotor.getFaultField().asSupplier().get();
-        if (motorFault != 0){
-            log.append("Motor Error: " + motorFault);
-        }
-        log.append("Current: " + wristMotor.getSupplyCurrent());
-        log.append("Voltage: " + wristMotor.getMotorVoltage().getValueAsDouble());
-        log.append("Supply Voltage: " + wristMotor.getSupplyVoltage());
     }
 }

@@ -35,7 +35,7 @@ public class Arm extends SubsystemBase {
     private TalonFX armMotor = new TalonFX(ArmConstants.motorId, "rhino");
     
     // PID controller for arm position control
-    private PIDController armController = new PIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kD);
+    private PIDController controller = new PIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kD);
     
     // Feedforward controller for arm dynamics
     private ArmFeedforward feedforward = new ArmFeedforward(ArmConstants.kS, ArmConstants.kG, ArmConstants.kV);
@@ -56,7 +56,7 @@ public class Arm extends SubsystemBase {
     );
 
     // System Identification routine for characterizing the arm
-    public final SysIdRoutine sysIdRoutine =
+    private final SysIdRoutine sysIdRoutine =
         new SysIdRoutine(
             new SysIdRoutine.Config(),
             new SysIdRoutine.Mechanism(
@@ -86,10 +86,10 @@ public class Arm extends SubsystemBase {
         armMotor.getConfigurator().apply(currentConfigs);
 
         // Set the tolerance for the PID controller
-        armController.setTolerance(ArmConstants.armTolerance);
+        controller.setTolerance(ArmConstants.armTolerance);
         
         // Display the PID controller on SmartDashboard for tuning
-        SmartDashboard.putData("Arm Controller", armController);
+        SmartDashboard.putData("Arm Controller", controller);
 
         this.log=log;
     }
@@ -145,13 +145,27 @@ public class Arm extends SubsystemBase {
         return Units.rotationsToRadians(armMotor.getVelocity().getValueAsDouble() / ArmConstants.gearRatio);
     }
 
+    public SysIdRoutine getRoutine(){
+        return sysIdRoutine;
+    }
+
     /**
      * Display telemetry data on SmartDashboard.
      */
     public void telemetry() {
-        SmartDashboard.putNumber("Arm Angle", armSim.getAngleRads());
-        SmartDashboard.putNumber("Arm Velocity", armSim.getVelocityRadPerSec());
-        SmartDashboard.putNumber("Arm Input", armMotor.get());
+        SmartDashboard.putNumber("arm/angle",getMeasurement());
+        SmartDashboard.putNumber("arm/goal",getGoal());
+        SmartDashboard.putNumber("arm/velocity",getVelocity());
+        SmartDashboard.putNumber("arm/error",controller.getError());
+        SmartDashboard.putNumber("arm/motorTemp",armMotor.getDeviceTemp().getValueAsDouble());
+        int motorFault = armMotor.getFaultField().asSupplier().get();
+        if (motorFault != 0){
+            SmartDashboard.putNumber("arm/motorFault",motorFault);
+        }
+        SmartDashboard.putNumber("arm/current",armMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("arm/voltage",armMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("arm/current",armMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("arm/supplyVoltage",armMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**
@@ -165,7 +179,7 @@ public class Arm extends SubsystemBase {
             
             // Calculate feedforward and PID control outputs
             double extra = feedforward.calculate(getMeasurement(), getVelocity());
-            double voltage = armController.calculate(getMeasurement(), goal) + extra;
+            double voltage = controller.calculate(getMeasurement(), goal) + extra;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
@@ -195,22 +209,5 @@ public class Arm extends SubsystemBase {
         
         // Update the RoboRIO simulation state with the new battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(armSim.getCurrentDrawAmps()));
-    }
-
-    /**
-     * Log arm data.
-     */
-    public void log() {
-        log.append("Angle: " + getMeasurement());
-        log.append("Goal: " + getGoal());
-        log.append("Error: " + armController.getError());
-        log.append("Temp: " + armMotor.getDeviceTemp().getValueAsDouble());
-        int motorFault = armMotor.getFaultField().asSupplier().get();
-        if (motorFault != 0){
-            log.append("Motor Error: " + motorFault);
-        }
-        log.append("Current: " + armMotor.getSupplyCurrent());
-        log.append("Voltage: " + armMotor.getMotorVoltage().getValueAsDouble());
-        log.append("Supply Voltage: " + armMotor.getSupplyVoltage());
     }
 }

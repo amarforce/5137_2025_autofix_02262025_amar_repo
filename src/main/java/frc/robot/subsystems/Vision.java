@@ -153,11 +153,4 @@ public class Vision extends SubsystemBase {
     public void updateSim(Pose2d currentPose) {
         visionSim.update(currentPose);
     }
-
-    /**
-     * Logs vision data. Currently a placeholder for future implementation.
-     */
-    public void log() {
-        
-    }
 }

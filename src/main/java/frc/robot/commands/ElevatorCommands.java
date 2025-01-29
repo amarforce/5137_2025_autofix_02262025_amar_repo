@@ -98,7 +98,7 @@ public class ElevatorCommands {
      * @return A command that runs the quasistatic system identification routine when executed.
      */
     public Command sysIdQuasistatic(SysIdRoutine.Direction dir) {
-        return elevator.sysIdRoutine.quasistatic(dir);
+        return elevator.getRoutine().quasistatic(dir);
     }
 
     /**
@@ -108,6 +108,6 @@ public class ElevatorCommands {
      * @return A command that runs the dynamic system identification routine when executed.
      */
     public Command sysIdDynamic(SysIdRoutine.Direction dir) {
-        return elevator.sysIdRoutine.dynamic(dir);
+        return elevator.getRoutine().dynamic(dir);
     }
 }

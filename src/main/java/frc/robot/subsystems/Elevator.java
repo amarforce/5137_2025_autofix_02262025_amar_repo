@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
+import frc.robot.other.RobotUtils;
 
 /**
  * The Elevator subsystem controls the elevator mechanism of the robot.
@@ -48,7 +49,7 @@ public class Elevator extends SubsystemBase {
     private double goal = ElevatorConstants.defaultGoal;
 
     // SysId routine for system identification
-    public final SysIdRoutine sysIdRoutine = 
+    private final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
             // Empty config defaults to 1 volt/second ramp rate and 7 volt step voltage.
             new SysIdRoutine.Config(),
@@ -158,14 +159,35 @@ public class Elevator extends SubsystemBase {
         rightMotor.setVoltage(-v.magnitude());
     }
 
+    public SysIdRoutine getRoutine(){
+        return sysIdRoutine;
+    }
+
     /**
      * Updates telemetry data on SmartDashboard.
      * This includes the elevator height, velocity, and input.
      */
     private void telemetry() {
-        SmartDashboard.putNumber("Elevator Height", getMeasurement());
-        SmartDashboard.putNumber("Elevator Velocity", getVelocity());
-        SmartDashboard.putNumber("Elevator Input", getInput());
+        SmartDashboard.putNumber("elevator/height",getMeasurement());
+        SmartDashboard.putNumber("elevator/goal",getGoal());
+        SmartDashboard.putNumber("elevator/velocity",getVelocity());
+        SmartDashboard.putNumber("elevator/error",controller.getError());
+        SmartDashboard.putNumber("elevator/leftMotorTemp",leftMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorTemp",rightMotor.getDeviceTemp().getValueAsDouble());
+        int leftMotorFault = leftMotor.getFaultField().asSupplier().get();
+        if (leftMotorFault != 0){
+            SmartDashboard.putNumber("elevator/leftMotorFault",leftMotorFault);
+        }
+        int rightMotorFault = rightMotor.getFaultField().asSupplier().get();
+        if (rightMotorFault != 0){
+            SmartDashboard.putNumber("elevator/rightMotorFault",rightMotorFault);
+        }
+        SmartDashboard.putNumber("elevator/leftMotorCurrent",leftMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorCurrent",rightMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotorVoltage",leftMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorVoltage",rightMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotorSupplyVoltage",leftMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorSupplyVoltage",rightMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**
@@ -174,11 +196,16 @@ public class Elevator extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        telemetry();
-        // Calculate the feedforward and PID output
-        double extra = feedforward.calculate(getVelocity());
-        double voltage = controller.calculate(getMeasurement(), goal) + extra;
-        setVoltage(Volts.of(voltage));
+        try{
+            telemetry();
+            // Calculate the feedforward and PID output
+            double extra = feedforward.calculate(getVelocity());
+            double voltage = controller.calculate(getMeasurement(), goal) + extra;
+            setVoltage(Volts.of(voltage));
+        }catch(Exception e){
+            log.append("Periodic error: "+RobotUtils.getError(e));
+        }
+        
     }
 
     /**
@@ -206,33 +233,5 @@ public class Elevator extends SubsystemBase {
 
         // Update the RoboRIO simulation with the current battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps()));
-    }
-
-    /**
-     * Logs elevator data.
-     */
-    public void log(){
-        log.append("Height: "+getMeasurement());
-        log.append("Velocity: "+getVelocity());
-        log.append("Goal: "+getGoal());
-        log.append("Input: "+getInput());
-        log.append("Error: "+controller.getError());
-        log.append("Left Motor Temp: "+leftMotor.getDeviceTemp().getValueAsDouble());
-        log.append("Right Motor Temp: "+rightMotor.getDeviceTemp().getValueAsDouble());
-        log.append("Left Motor Voltage: "+leftMotor.getMotorVoltage().getValueAsDouble());
-        log.append("Right Motor Voltage: "+rightMotor.getMotorVoltage().getValueAsDouble());
-        // Fault flag = 0 means nothing bad happened, fault flag > 0 means something bad happened
-        int leftMotorFault=leftMotor.getFaultField().asSupplier().get();
-        if(leftMotorFault!=0){
-            log.append("Left Motor Error: "+leftMotorFault);
-        }
-        int rightMotorFault=leftMotor.getFaultField().asSupplier().get();
-        if(rightMotorFault!=0){
-            log.append("Right Motor Error: "+rightMotorFault);
-        }
-        log.append("Left Motor Supply Current: "+leftMotor.getSupplyCurrent());
-        log.append("Right Motor Supply Current: "+rightMotor.getSupplyCurrent());
-        log.append("Left Motor Supply Voltage: "+leftMotor.getSupplyVoltage());
-        log.append("Right Motor Supply Voltage: "+rightMotor.getSupplyVoltage());
     }
 }

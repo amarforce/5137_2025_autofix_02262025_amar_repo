@@ -99,7 +99,7 @@ public class ArmCommands {
      * @return A command that runs the quasi-static SysId routine.
      */
     public Command sysIdQuasistatic(SysIdRoutine.Direction dir) {
-        return arm.sysIdRoutine.quasistatic(dir);
+        return arm.getRoutine().quasistatic(dir);
     }
 
     /**
@@ -109,6 +109,6 @@ public class ArmCommands {
      * @return A command that runs the dynamic SysId routine.
      */
     public Command sysIdDynamic(SysIdRoutine.Direction dir) {
-        return arm.sysIdRoutine.dynamic(dir);
+        return arm.getRoutine().dynamic(dir);
     }
 }

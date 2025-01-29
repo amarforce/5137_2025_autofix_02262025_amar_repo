@@ -133,20 +133,20 @@ public class SwerveCommands {
     /**
      * Creates a command to run a quasistatic system identification routine.
      *
-     * @param direction The direction of the quasistatic test.
+     * @param dir The direction of the quasistatic test.
      * @return A command that runs the quasistatic system identification routine.
      */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return swerve.getRoutine().quasistatic(direction);
+    public Command sysIdQuasistatic(SysIdRoutine.Direction dir) {
+        return swerve.getRoutine().quasistatic(dir);
     }
 
     /**
      * Creates a command to run a dynamic system identification routine.
      *
-     * @param direction The direction of the dynamic test.
+     * @param dir The direction of the dynamic test.
      * @return A command that runs the dynamic system identification routine.
      */
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return swerve.getRoutine().dynamic(direction);
+    public Command sysIdDynamic(SysIdRoutine.Direction dir) {
+        return swerve.getRoutine().dynamic(dir);
     }
 }

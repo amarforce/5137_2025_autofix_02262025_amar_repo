@@ -4,13 +4,11 @@ import frc.robot.Robot;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.other.RobotUtils;
 import frc.robot.other.SwerveFactory;
-import frc.robot.other.Telemetry;
 
 import static edu.wpi.first.units.Units.*;
 
 import java.io.File;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.photonvision.EstimatedRobotPose;
 
@@ -33,8 +31,12 @@ import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
@@ -50,7 +52,6 @@ public class Swerve extends SubsystemBase {
     private double maxSpeed; // Maximum translational speed of the robot
     private double maxAngularSpeed; // Maximum rotational speed of the robot
 
-    private Telemetry logger; // Telemetry logger for swerve drivetrain
     private Field2d field; // Field visualization for SmartDashboard
 
     // Swerve control requests
@@ -62,6 +63,36 @@ public class Swerve extends SubsystemBase {
     private SendableChooser<Integer> cageChoice; // Chooser for selecting cage position (e.g., for autonomous)
 
     private StringLogEntry log;
+
+    /* Mechanisms to represent the swerve module states */
+    private final Mechanism2d[] moduleMechanisms = new Mechanism2d[] {
+        new Mechanism2d(1, 1),
+        new Mechanism2d(1, 1),
+        new Mechanism2d(1, 1),
+        new Mechanism2d(1, 1),
+    };
+    /* A direction and length changing ligament for speed representation */
+    private final MechanismLigament2d[] moduleSpeeds = new MechanismLigament2d[] {
+        moduleMechanisms[0].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
+        moduleMechanisms[1].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
+        moduleMechanisms[2].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
+        moduleMechanisms[3].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
+    };
+    /* A direction changing and length constant ligament for module direction */
+    private final MechanismLigament2d[] moduleDirections = new MechanismLigament2d[] {
+        moduleMechanisms[0].getRoot("RootDirection", 0.5, 0.5)
+            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
+        moduleMechanisms[1].getRoot("RootDirection", 0.5, 0.5)
+            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
+        moduleMechanisms[2].getRoot("RootDirection", 0.5, 0.5)
+            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
+        moduleMechanisms[3].getRoot("RootDirection", 0.5, 0.5)
+            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
+    };
+
+    private final double[] poseArray = new double[3];
+    private final double[] moduleStatesArray = new double[8];
+    private final double[] moduleTargetsArray = new double[8];
 
     /**
      * Constructor for the Swerve subsystem.
@@ -127,21 +158,12 @@ public class Swerve extends SubsystemBase {
         }
 
         // Initialize telemetry and field visualization
-        logger = new Telemetry(maxSpeed);
-        swerve.registerTelemetry(logger::telemeterize);
+        swerve.registerTelemetry(this::telemetry);
 
         field = new Field2d();
         SmartDashboard.putData("Field", field);
 
         this.log=log;
-
-        swerve.registerTelemetry((sds)->{
-            for(int i=0;i<sds.ModuleStates.length;i++){
-                log.append("Module "+i+" State: "+sds.ModuleStates[i]);
-                log.append("Module "+i+" Target: "+sds.ModuleTargets[i]);
-                log.append("Module "+i+" Position: "+sds.ModulePositions[i]);
-            }
-        });
     }
 
     /**
@@ -267,7 +289,33 @@ public class Swerve extends SubsystemBase {
         }catch(Exception e){
             log.append("Periodic error: "+RobotUtils.getError(e));
         }
-        
+    }
+
+    private void telemetry(SwerveDriveState state){
+        /* Also write to log file */
+        poseArray[0] = state.Pose.getX();
+        poseArray[1] = state.Pose.getY();
+        poseArray[2] = state.Pose.getRotation().getDegrees();
+        for (int i = 0; i < 4; ++i) {
+            moduleStatesArray[i*2 + 0] = state.ModuleStates[i].angle.getRadians();
+            moduleStatesArray[i*2 + 1] = state.ModuleStates[i].speedMetersPerSecond;
+            moduleTargetsArray[i*2 + 0] = state.ModuleTargets[i].angle.getRadians();
+            moduleTargetsArray[i*2 + 1] = state.ModuleTargets[i].speedMetersPerSecond;
+        }
+
+        SmartDashboard.putNumberArray("driveState/pose", poseArray);
+        SmartDashboard.putNumberArray("driveState/moduleStates", moduleStatesArray);
+        SmartDashboard.putNumberArray("driveState/moduleTargets", moduleTargetsArray);
+        SmartDashboard.putNumber("driveState/odometryPeriod", state.OdometryPeriod);
+
+        /* Telemeterize the module states to a Mechanism2d */
+        for (int i = 0; i < 4; ++i) {
+            moduleSpeeds[i].setAngle(state.ModuleStates[i].angle);
+            moduleDirections[i].setAngle(state.ModuleStates[i].angle);
+            moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * maxSpeed));
+
+            SmartDashboard.putData("Module " + i, moduleMechanisms[i]);
+        }
     }
 
     // SysId Routines for system characterization
@@ -276,12 +324,11 @@ public class Swerve extends SubsystemBase {
      * SysId routine for characterizing translation.
      * This is used to find PID gains for the drive motors.
      */
-    public final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
+    public final SysIdRoutine sysIdRoutineTranslation = new SysIdRoutine(
         new SysIdRoutine.Config(
             null,        // Use default ramp rate (1 V/s)
             Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-            null,        // Use default timeout (10 s)
-            state -> SignalLogger.writeString("SysIdTranslation_State", state.toString()) // Log state
+            null        // Use default timeout (10 s)
         ),
         new SysIdRoutine.Mechanism(
             output -> setControl(new SwerveRequest.SysIdSwerveTranslation().withVolts(output)),
@@ -294,12 +341,11 @@ public class Swerve extends SubsystemBase {
      * SysId routine for characterizing steer.
      * This is used to find PID gains for the steer motors.
      */
-    public final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
+    public final SysIdRoutine sysIdRoutineSteer = new SysIdRoutine(
         new SysIdRoutine.Config(
             null,        // Use default ramp rate (1 V/s)
             Volts.of(7), // Use dynamic voltage of 7 V
-            null,        // Use default timeout (10 s)
-            state -> SignalLogger.writeString("SysIdSteer_State", state.toString()) // Log state
+            null        // Use default timeout (10 s)
         ),
         new SysIdRoutine.Mechanism(
             volts -> setControl(new SwerveRequest.SysIdSwerveSteerGains().withVolts(volts)),
@@ -312,12 +358,11 @@ public class Swerve extends SubsystemBase {
      * SysId routine for characterizing rotation.
      * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
      */
-    public final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
+    public final SysIdRoutine sysIdRoutineRotation = new SysIdRoutine(
         new SysIdRoutine.Config(
             Volts.of(Math.PI / 6).per(Second), // Ramp rate in radians per second²
             Volts.of(Math.PI), // Dynamic voltage in radians per second
-            null, // Use default timeout (10 s)
-            state -> SignalLogger.writeString("SysIdRotation_State", state.toString()) // Log state
+            null // Use default timeout (10 s)
         ),
         new SysIdRoutine.Mechanism(
             output -> {
@@ -329,7 +374,7 @@ public class Swerve extends SubsystemBase {
         )
     );
 
-    private SysIdRoutine routine = m_sysIdRoutineTranslation; // Current SysId routine to test
+    private SysIdRoutine routine = sysIdRoutineTranslation; // Current SysId routine to test
 
     /**
      * Sets the current SysId routine.
@@ -350,42 +395,24 @@ public class Swerve extends SubsystemBase {
     }
 
     // Simulation
-
-    private static final double kSimLoopPeriod = 0.005; // Simulation loop period (200 Hz)
-    private Notifier m_simNotifier = null; // Notifier for simulation thread
-    private double m_lastSimTime; // Last simulation time
+    private Notifier simNotifier = null; // Notifier for simulation thread
+    private double lastSimTime; // Last simulation time
 
     /**
      * Starts the simulation thread.
      */
     private void startSimThread() {
-        // m_lastSimTime = Utils.getCurrentTimeSeconds();
+        lastSimTime = Utils.getCurrentTimeSeconds();
 
         // Run simulation at a faster rate for better PID behavior
-        m_simNotifier = new Notifier(() -> {
+        simNotifier = new Notifier(() -> {
             final double currentTime = Utils.getCurrentTimeSeconds();
-            double deltaTime = currentTime - m_lastSimTime;
-            m_lastSimTime = currentTime;
+            double deltaTime = currentTime - lastSimTime;
+            lastSimTime = currentTime;
 
             // Update simulation state with measured time delta and battery voltage
             swerve.updateSimState(deltaTime, RobotController.getBatteryVoltage());
         });
-        m_simNotifier.startPeriodic(kSimLoopPeriod);
-    }
-
-    /**
-     * Registers a telemetry function for the swerve drivetrain.
-     *
-     * @param telemetryFunction The telemetry function to register.
-     */
-    public void registerTelemetry(Consumer<SwerveDriveState> telemetryFunction) {
-        swerve.registerTelemetry(telemetryFunction);
-    }
-
-    /**
-     * Logs data (currently unimplemented).
-     */
-    public void log() {
-        log.append("Rotation: "+swerve.getRotation3d());
+        simNotifier.startPeriodic(SwerveConstants.simLoopPeriod);
     }
 }

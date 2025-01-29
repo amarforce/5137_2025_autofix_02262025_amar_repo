@@ -16,6 +16,7 @@ public class SwerveConstants {
     public static final double translationalDeadband = 0.1;
     public static final double rotationalDeadband = 0.1;
     public static final double odometryFrequency = 20; // ms
+    public static final double simLoopPeriod = 0.005; // seconds
 
     public static final double translationKP = 5.0;
     public static final double translationKI = 0.0;

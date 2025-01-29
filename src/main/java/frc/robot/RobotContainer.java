@@ -82,7 +82,7 @@ public class RobotContainer {
 			reef = new Reef();
 			reefScoring = new ReefScoring(reef);
 			SmartDashboard.putData("Reef", reef);
-			SmartDashboard.putData("ReefScoring", reefScoring);
+			SmartDashboard.putData("Reefs/Scoring", reefScoring);
 
 			// // Initialize subsystems with data log
 			vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
@@ -196,22 +196,5 @@ public class RobotContainer {
 	 */
 	public Command getAutonomousCommand() {
 		return autoFactory.getAuto();
-	}
-
-	/**
-	 * Logs data from all subsystems.
-	 */
-	public void log() {
-		try{
-			arm.log();
-			wrist.log();
-			elevator.log();
-			hang.log();
-			swerve.log();
-			vision.log();
-			intake.log();
-		}catch(Exception e){
-			log.append("Error while logging: "+RobotUtils.getError(e));
-		}
 	}
 }

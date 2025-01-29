@@ -33,8 +33,8 @@ import frc.robot.other.RobotUtils;
 public class Elevator extends SubsystemBase {
 
     // Define the motors for the elevator
-    private TalonFX leftMotor = new TalonFX(ElevatorConstants.leftMotorId, "rhino");
-    private TalonFX rightMotor = new TalonFX(ElevatorConstants.rightMotorId, "rhino");
+    private TalonFX leftMotor = new TalonFX(ElevatorConstants.leftMotorId, "rio");
+    private TalonFX rightMotor = new TalonFX(ElevatorConstants.rightMotorId, "rio");
 
     // PID controller and feedforward controller for elevator control
     private PIDController controller = new PIDController(ElevatorConstants.kP, ElevatorConstants.kI, ElevatorConstants.kD);

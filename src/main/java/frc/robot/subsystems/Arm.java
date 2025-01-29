@@ -32,7 +32,7 @@ import static edu.wpi.first.units.Units.Volts;
 public class Arm extends SubsystemBase {
     
     // Motor controller for the arm
-    private TalonFX armMotor = new TalonFX(ArmConstants.motorId, "rhino");
+    private TalonFX armMotor = new TalonFX(ArmConstants.motorId, "rio");
     
     // PID controller for arm position control
     private PIDController controller = new PIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kD);

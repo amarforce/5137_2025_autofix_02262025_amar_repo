@@ -32,7 +32,7 @@ import static edu.wpi.first.units.Units.Volts;
 public class Wrist extends SubsystemBase {
     
     // Motor controller for the Wrist
-    private TalonFX wristMotor = new TalonFX(WristConstants.motorId, "rhino");
+    private TalonFX wristMotor = new TalonFX(WristConstants.motorId, "rio");
     
     // PID controller for Wrist position control
     private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);

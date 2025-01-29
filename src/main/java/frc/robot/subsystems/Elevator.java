@@ -12,6 +12,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -21,12 +22,19 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
+import frc.robot.other.RobotUtils;
 
+/**
+ * The Elevator subsystem controls the elevator mechanism of the robot.
+ * It uses two TalonFX motors for movement, a PID controller for position control,
+ * and a feedforward controller for compensating for gravity and friction.
+ * The subsystem also supports simulation for testing and tuning.
+ */
 public class Elevator extends SubsystemBase {
 
     // Define the motors for the elevator
-    private TalonFX leftMotor = new TalonFX(ElevatorConstants.leftMotorId, "rhino");
-    private TalonFX rightMotor = new TalonFX(ElevatorConstants.rightMotorId, "rhino");
+    private TalonFX leftMotor = new TalonFX(ElevatorConstants.leftMotorId, "rio");
+    private TalonFX rightMotor = new TalonFX(ElevatorConstants.rightMotorId, "rio");
 
     // PID controller and feedforward controller for elevator control
     private PIDController controller = new PIDController(ElevatorConstants.kP, ElevatorConstants.kI, ElevatorConstants.kD);
@@ -41,7 +49,7 @@ public class Elevator extends SubsystemBase {
     private double goal = ElevatorConstants.defaultGoal;
 
     // SysId routine for system identification
-    public final SysIdRoutine sysIdRoutine = 
+    private final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
             // Empty config defaults to 1 volt/second ramp rate and 7 volt step voltage.
             new SysIdRoutine.Config(),
@@ -59,8 +67,12 @@ public class Elevator extends SubsystemBase {
                 // Tell SysId to make generated commands require this subsystem, suffix test state in WPILog with this subsystem's name ("elevator")
                 this));
 
-    // Constructor for the Elevator subsystem
-    public Elevator() {
+    private StringLogEntry log;
+
+    /**
+     * Constructor for the Elevator subsystem.
+     */
+    public Elevator(StringLogEntry log) {
         // Configure the motors to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Coast;
@@ -72,68 +84,134 @@ public class Elevator extends SubsystemBase {
 
         // Add the PID controller to SmartDashboard for tuning
         SmartDashboard.putData("Elevator Controller", controller);
+
+        this.log=log;
     }
 
-    // Get the current goal position of the elevator
+    /**
+     * Gets the current goal position of the elevator.
+     * 
+     * @return The current goal position in meters.
+     */
     public double getGoal() {
         return goal;
     }
 
-    // Set the goal position for the elevator
+    /**
+     * Sets the goal position for the elevator.
+     * The goal is clamped between the minimum and maximum height limits.
+     * 
+     * @param newGoal The new goal position in meters.
+     */
     public void setGoal(double newGoal) {
-        if(newGoal<ElevatorConstants.minHeight){
-            newGoal=ElevatorConstants.minHeight;
+        if(newGoal < ElevatorConstants.minHeight){
+            newGoal = ElevatorConstants.minHeight;
         }
-        if(newGoal>ElevatorConstants.maxHeight){
-            newGoal=ElevatorConstants.maxHeight;
+        if(newGoal > ElevatorConstants.maxHeight){
+            newGoal = ElevatorConstants.maxHeight;
         }
         goal = newGoal;
     }
 
-    // Get the current position of the elevator in meters
+    /**
+     * Gets the current position of the elevator.
+     * 
+     * @return The current position in meters.
+     */
     public double getMeasurement() {
         return (leftMotor.getPosition().getValueAsDouble() - rightMotor.getPosition().getValueAsDouble()) / 2 * ElevatorConstants.metersPerRotation - ElevatorConstants.elevatorOffset;
     }
 
-    // Get the current velocity of the elevator in meters per second
+    /**
+     * Gets the current velocity of the elevator.
+     * 
+     * @return The current velocity in meters per second.
+     */
     public double getVelocity() {
         return (leftMotor.getVelocity().getValueAsDouble() - rightMotor.getVelocity().getValueAsDouble()) / 2 * ElevatorConstants.metersPerRotation;
     }
 
-    // Check if the elevator is at the setpoint
+    /**
+     * Checks if the elevator is at the setpoint.
+     * 
+     * @return True if the elevator is at the setpoint, false otherwise.
+     */
     public boolean atSetpoint() {
         return controller.atSetpoint();
     }
 
-    // Get the current input to the elevator motors
+    /**
+     * Gets the current input to the elevator motors.
+     * 
+     * @return The average input to the motors.
+     */
     public double getInput() {
         return (leftMotor.get() - rightMotor.get()) / 2;
     }
 
-    // Set the voltage to the elevator motors
+    /**
+     * Sets the voltage to the elevator motors.
+     * 
+     * @param v The voltage to apply to the motors.
+     */
     public void setVoltage(Voltage v) {
         leftMotor.setVoltage(v.magnitude());
         rightMotor.setVoltage(-v.magnitude());
     }
 
-    // Update telemetry data on SmartDashboard
-    private void telemetry() {
-        SmartDashboard.putNumber("Elevator Height", getMeasurement());
-        SmartDashboard.putNumber("Elevator Velocity", getVelocity());
-        SmartDashboard.putNumber("Elevator Input", getInput());
+    public SysIdRoutine getRoutine(){
+        return sysIdRoutine;
     }
 
-    // Periodic method called every robot loop
+    /**
+     * Updates telemetry data on SmartDashboard.
+     * This includes the elevator height, velocity, and input.
+     */
+    private void telemetry() {
+        SmartDashboard.putNumber("elevator/height",getMeasurement());
+        SmartDashboard.putNumber("elevator/goal",getGoal());
+        SmartDashboard.putNumber("elevator/velocity",getVelocity());
+        SmartDashboard.putNumber("elevator/error",controller.getError());
+        SmartDashboard.putNumber("elevator/leftMotorTemp",leftMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorTemp",rightMotor.getDeviceTemp().getValueAsDouble());
+        int leftMotorFault = leftMotor.getFaultField().asSupplier().get();
+        if (leftMotorFault != 0){
+            SmartDashboard.putNumber("elevator/leftMotorFault",leftMotorFault);
+        }
+        int rightMotorFault = rightMotor.getFaultField().asSupplier().get();
+        if (rightMotorFault != 0){
+            SmartDashboard.putNumber("elevator/rightMotorFault",rightMotorFault);
+        }
+        SmartDashboard.putNumber("elevator/leftMotorCurrent",leftMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorCurrent",rightMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotorVoltage",leftMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorVoltage",rightMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotorSupplyVoltage",leftMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorSupplyVoltage",rightMotor.getSupplyVoltage().getValueAsDouble());
+    }
+
+    /**
+     * Periodic method called every robot loop.
+     * Updates the elevator control and telemetry.
+     */
     @Override
     public void periodic() {
-        telemetry();
-        // Calculate the feedforward and PID output
-        double extra = feedforward.calculate(getVelocity());
-        double voltage = controller.calculate(getMeasurement(), goal) + extra;
-        setVoltage(Volts.of(voltage));
+        try{
+            telemetry();
+            // Calculate the feedforward and PID output
+            double extra = feedforward.calculate(getVelocity());
+            double voltage = controller.calculate(getMeasurement(), goal) + extra;
+            setVoltage(Volts.of(voltage));
+        }catch(Exception e){
+            log.append("Periodic error: "+RobotUtils.getError(e));
+        }
+        
     }
 
-    // Simulation periodic method called every simulation loop
+    /**
+     * Simulation periodic method called every simulation loop.
+     * Updates the motor simulation states and the RoboRIO simulation.
+     */
     @Override
     public void simulationPeriodic() {
         // Update the motor simulation states with the current battery voltage

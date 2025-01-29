@@ -1,7 +1,6 @@
 package frc.robot.other;
 
 import com.pathplanner.lib.commands.PathPlannerAuto;
-
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -9,24 +8,44 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.MultiCommands;
 import frc.robot.constants.GeneralConstants;
 
-
+/**
+ * The AutoFactory class is responsible for constructing and managing autonomous routines
+ * for the robot. It uses a series of AutoStep objects to build a sequence of commands
+ * that can be executed during the autonomous period of a match.
+ */
 public class AutoFactory {
+    // Array to hold the steps (AutoStep objects) that make up the autonomous routine
     private AutoStep[] choices;
+
+    // A chooser to allow the driver to select whether the auto routine has been built
     private SendableChooser<Boolean> build;
+
+    // The final autonomous command that will be executed
     private PathPlannerAuto auto;
 
+    /**
+     * Constructor for the AutoFactory class.
+     * Initializes the autonomous steps and sets up a chooser on the SmartDashboard.
+     *
+     * @param multiCommands An instance of MultiCommands that provides the necessary commands
+     *                      for the autonomous steps.
+     */
     public AutoFactory(MultiCommands multiCommands) {
-        choices=new AutoStep[GeneralConstants.numAuto];
+        // Initialize the array of AutoStep objects
+        choices = new AutoStep[GeneralConstants.numAuto];
 
+        // Initialize the SendableChooser for auto build status
         build = new SendableChooser<Boolean>();
         build.setDefaultOption("AUTO NOT BUILT", false);
         build.addOption("AUTO BUILT", true);
         SmartDashboard.putData("Auto Builder", build);
 
-        for(int i=0;i<GeneralConstants.numAuto;i++){
-            choices[i]=new AutoStep(i+1, multiCommands);
+        // Populate the choices array with AutoStep objects
+        for (int i = 0; i < GeneralConstants.numAuto; i++) {
+            choices[i] = new AutoStep(i + 1, multiCommands);
         }
 
+        // Set up a listener to trigger auto build when the chooser value changes
         build.onChange((Boolean build) -> {
             if (build) {
                 buildAuto();
@@ -34,15 +53,31 @@ public class AutoFactory {
         });
     }
 
+    /**
+     * Constructs the autonomous routine by combining the commands from each AutoStep
+     * into a SequentialCommandGroup, which is then wrapped in a PathPlannerAuto command.
+     */
     public void buildAuto() {
-        Command[] autoCommands=new Command[GeneralConstants.numAuto];
-        for(int i=0;i<GeneralConstants.numAuto;i++){
-            autoCommands[i]=choices[i].getCommand();
+        // Create an array to hold the commands from each AutoStep
+        Command[] autoCommands = new Command[GeneralConstants.numAuto];
+
+        // Populate the array with commands from each AutoStep
+        for (int i = 0; i < GeneralConstants.numAuto; i++) {
+            autoCommands[i] = choices[i].getCommand();
         }
+
+        // Create a SequentialCommandGroup from the array of commands and wrap it in a PathPlannerAuto
         auto = new PathPlannerAuto(new SequentialCommandGroup(autoCommands));
     }
 
+    /**
+     * Retrieves the constructed autonomous command. If the command has not been built yet,
+     * it will trigger the build process before returning the command.
+     *
+     * @return The PathPlannerAuto command representing the autonomous routine.
+     */
     public PathPlannerAuto getAuto() {
+        // Ensure the auto command is built before returning it
         if (auto == null) {
             buildAuto();
         }

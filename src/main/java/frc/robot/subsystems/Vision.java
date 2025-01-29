@@ -6,6 +6,8 @@ import java.util.List;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.simulation.VisionSystemSim;
 
+import com.ctre.phoenix6.Utils;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Pair;
@@ -28,6 +30,8 @@ public class Vision extends SubsystemBase {
 
     private AprilTagCamera[] aprilTagCameras; // Array of cameras used for AprilTag detection
     private ObjectCamera[] objectCameras; // Array of cameras used for object detection
+
+    private ArrayList<DetectedObject> objects;
 
     private VisionSystemSim visionSim; // Simulation object for vision system
 
@@ -111,6 +115,9 @@ public class Vision extends SubsystemBase {
             if (coralLoc != null) {
                 // Update the Reef to indicate that a coral has been placed
                 reef.setCoralPlaced(coralLoc.getFirst(), coralLoc.getSecond(), true);
+            }else{
+                // Coral is on ground
+                objects.add(object);
             }
         }
     }
@@ -152,5 +159,16 @@ public class Vision extends SubsystemBase {
      */
     public void updateSim(Pose2d currentPose) {
         visionSim.update(currentPose);
+    }
+
+    public List<DetectedObject> getGroundCoral(double expirationTime){
+        ArrayList<DetectedObject> relevantObjects=new ArrayList<>();
+        double currentTime = Utils.getCurrentTimeSeconds();
+        for (DetectedObject object : objects) {
+            if(currentTime-object.getDetectionTime()<expirationTime){
+                relevantObjects.add(object);
+            }
+        }
+        return relevantObjects;
     }
 }

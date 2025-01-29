@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import frc.robot.Robot;
 import frc.robot.constants.SwerveConstants;
+import frc.robot.other.DetectedObject;
 import frc.robot.other.RobotUtils;
 import frc.robot.other.SwerveFactory;
 
@@ -267,6 +268,10 @@ public class Swerve extends SubsystemBase {
      */
     public void lock() {
         this.setControl(lock);
+    }
+
+    public List<DetectedObject> getGroundCoral(){
+        return vision.getGroundCoral(SwerveConstants.coralExpirationTime);
     }
 
     /**

@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -11,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.SwerveConstants;
+import frc.robot.other.DetectedObject;
 import frc.robot.subsystems.Swerve;
 
 /**
@@ -128,6 +130,17 @@ public class SwerveCommands {
      */
     public Command resetGyro() {
         return new InstantCommand(() -> swerve.resetGyro(), swerve);
+    }
+
+    public Command driveToCoral(){
+        return driveToPose(()->{
+            List<DetectedObject> objects=swerve.getGroundCoral();
+            Pose2d[] poses=new Pose2d[objects.size()];
+            for(int i=0;i<poses.length;i++){
+                poses[i]=objects.get(i).getPose().toPose2d();
+            }
+            return swerve.getClosest(poses);
+        });
     }
 
     /**

@@ -7,6 +7,8 @@ import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import com.ctre.phoenix6.Utils;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -62,7 +64,7 @@ public class ObjectCamera extends SubsystemBase {
 
             log.append("Detected object with transform "+targetPose+" id "+classId);
             // Add the detected object to the list
-            detectedObjects.add(new DetectedObject(targetPose, classId));
+            detectedObjects.add(new DetectedObject(targetPose, classId, Utils.getCurrentTimeSeconds()));
         }
 
         return detectedObjects;

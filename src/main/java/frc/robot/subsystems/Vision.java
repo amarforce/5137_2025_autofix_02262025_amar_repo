@@ -106,7 +106,7 @@ public class Vision extends SubsystemBase {
             if (!object.getClassName().equals("Coral")) {
                 continue;
             }
-            Translation3d coralPos = object.getPos();
+            Translation3d coralPos = object.getPose().getTranslation();
             Pair<Integer, Integer> coralLoc = checkObjectOnReef(coralPos);
             if (coralLoc != null) {
                 // Update the Reef to indicate that a coral has been placed

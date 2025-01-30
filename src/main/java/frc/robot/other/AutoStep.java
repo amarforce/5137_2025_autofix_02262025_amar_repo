@@ -110,7 +110,8 @@ public class AutoStep {
             new ParallelCommandGroup(
                 multiCommands.moveToGoal(levelChooser.getSelected()),
                 multiCommands.getSwerveCommands().driveToPose(() -> RobotUtils.invertPoseToAlliance(reefChooser.getSelected()))
-            )
+            ),
+            multiCommands.getIntakeCommands().outtake()
         );
     }
 

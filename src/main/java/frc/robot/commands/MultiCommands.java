@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Hang;
@@ -141,19 +142,21 @@ public class MultiCommands {
         if (pose == null) {
             return new InstantCommand(); // Do nothing if the pose is null
         } else {
+            Command moveTo=null;
             if (pose.getY() > 1.75 && pose.getY() < 6.3) {
                 // If the robot is within a specific Y range, move to the ground intake position
-                return new ParallelCommandGroup(
+                moveTo = new ParallelCommandGroup(
                     swerveCommands.driveToPose(() -> pose),
                     moveToGroundIntake()
                 );
             } else {
                 // Otherwise, move to the source position
-                return new ParallelCommandGroup(
+                moveTo = new ParallelCommandGroup(
                     swerveCommands.driveToPose(() -> pose),
                     moveToSource()
                 );
             }
+            return new SequentialCommandGroup(moveTo,intakeCommands.intakeUntilSwitched());
         }
     }
 
@@ -164,5 +167,14 @@ public class MultiCommands {
      */
     public SwerveCommands getSwerveCommands() {
         return swerveCommands;
+    }
+
+    /**
+     * Getter for the SwerveCommands.
+     * 
+     * @return The SwerveCommands command group.
+     */
+    public IntakeCommands getIntakeCommands() {
+        return intakeCommands;
     }
 }

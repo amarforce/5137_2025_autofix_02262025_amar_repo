@@ -42,13 +42,13 @@ public class Wrist extends SubsystemBase {
     
     // Simulation model for the Wrist
     private SingleJointedArmSim wristSim = new SingleJointedArmSim(
-        WristConstants.motorSim, 
+        WristConstants.motorSim,
         WristConstants.gearRatio,
-        WristConstants.momentOfInertia, 
-        WristConstants.wristLength, 
-        WristConstants.minAngle, 
-        WristConstants.maxAngle, 
-        true, 
+        WristConstants.momentOfInertia,
+        WristConstants.wristLength,
+        WristConstants.minAngle,
+        WristConstants.maxAngle,
+        true,
         WristConstants.pos1
     );
 

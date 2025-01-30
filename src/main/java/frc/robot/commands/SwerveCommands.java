@@ -106,15 +106,6 @@ public class SwerveCommands {
     }
 
     /**
-     * Creates a command to drive the swerve subsystem to the closest cage.
-     *
-     * @return A command that drives the swerve subsystem to the closest cage.
-     */
-    public Command driveToCage() {
-        return driveToPose(() -> SwerveConstants.cages[swerve.getCage()]);
-    }
-
-    /**
      * Creates a command to lock the swerve subsystem in place.
      *
      * @return A command that locks the swerve subsystem.

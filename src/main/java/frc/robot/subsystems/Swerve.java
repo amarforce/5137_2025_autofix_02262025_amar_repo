@@ -34,7 +34,6 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
@@ -60,8 +59,6 @@ public class Swerve extends SubsystemBase {
     private SwerveRequest.RobotCentric robotOrientedDrive; // Robot-oriented driving request
     private SwerveRequest.ApplyRobotSpeeds setChassisSpeeds; // Request to set chassis speeds directly
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
-
-    private SendableChooser<Integer> cageChoice; // Chooser for selecting cage position (e.g., for autonomous)
 
     private StringLogEntry log;
 
@@ -145,13 +142,7 @@ public class Swerve extends SubsystemBase {
                 this
         );
 
-        // Configure cage position chooser for autonomous
-        cageChoice = new SendableChooser<Integer>();
-        cageChoice.addOption("Left", 0);
-        cageChoice.addOption("Center", 1);
-        cageChoice.addOption("Right", 2);
-        cageChoice.setDefaultOption("Center", 1);
-        SmartDashboard.putData("Cage Choice", cageChoice);
+        
 
         // Start simulation thread if in simulation
         if (Robot.isSimulation()) {
@@ -244,15 +235,6 @@ public class Swerve extends SubsystemBase {
      */
     public Pose2d getClosest(Pose2d[] poses) {
         return RobotUtils.getClosestPoseToPose(this.getPose(), poses);
-    }
-
-    /**
-     * Gets the selected cage position from the chooser.
-     *
-     * @return The selected cage position.
-     */
-    public int getCage() {
-        return cageChoice.getSelected();
     }
 
     /**

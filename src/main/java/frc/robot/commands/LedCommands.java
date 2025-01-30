@@ -16,9 +16,9 @@ public class LedCommands
 {
 
     private Led led;
-    private LedCommands()
+    public LedCommands(Led led)
     {
-        led = new Led();
+        this.led = led;
     }
     public Command red()
     {

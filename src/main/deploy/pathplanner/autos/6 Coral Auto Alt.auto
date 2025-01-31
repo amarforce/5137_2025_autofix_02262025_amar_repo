@@ -1,0 +1,79 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "PreloadScore"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "StationPickup"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "StationScoreAlt"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "StationPickupAlt"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "StationScore"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GroundPickup1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GroundScore1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GroundPickup2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GroundScore2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GroundPickup3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GroundScore3"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

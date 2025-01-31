@@ -19,8 +19,9 @@ public class ElevatorConstants {
 
     // Feedforward constants
     public static final double kS = 0;
-    public static final double kG = 0;
-    public static final double kV = 0;
+    public static final double kG = 0.18;
+    public static final double kV = 0.88;
+    public static final double kA = 0.02;
 
     // Elevator tolerance
     public static final double elevatorTol = 0.1;

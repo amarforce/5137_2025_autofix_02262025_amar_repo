@@ -41,6 +41,7 @@ public class RobotContainer {
 	private Intake intake;
 	private Hang hang;
 	private ArmMechanism armMechanism;
+	private LED led;
 
 	// Commands for each subsystem
 	private SwerveCommands swerveCommands;
@@ -49,6 +50,7 @@ public class RobotContainer {
 	private WristCommands wristCommands;
 	private IntakeCommands intakeCommands;
 	private HangCommand hangCommand;
+	private LedCommands ledCommands;
 	private MultiCommands multiCommands;
 
 	// Additional components
@@ -93,6 +95,7 @@ public class RobotContainer {
 			intake = new Intake(new StringLogEntry(dataLog, "intake"));
 			hang = new Hang(new StringLogEntry(dataLog, "hang"));
 			armMechanism = new ArmMechanism(arm, elevator, wrist);
+			led = new LED();
 
 			// Initialize commands for each subsystem
 			swerveCommands = new SwerveCommands(swerve);
@@ -101,8 +104,9 @@ public class RobotContainer {
 			wristCommands = new WristCommands(wrist);
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
+			ledCommands = new LedCommands(led);
 			multiCommands = new MultiCommands(arm, elevator, wrist, swerve, intake, hang, armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand);
-
+			ledCommands.red();
 			// Configure button bindings
 			configureBindings();
 

@@ -139,4 +139,14 @@ public class RobotUtils {
         sb.append("End stack trace");
         return sb.toString();
     }
+
+    public static double clamp(double in,double min,double max){
+        if(in<min){
+            return min;
+        }
+        if(in>max){
+            return max;
+        }
+        return in;
+    }
 }

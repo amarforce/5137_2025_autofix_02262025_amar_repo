@@ -4,43 +4,25 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.Hang;
-import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.Swerve;
-import frc.robot.subsystems.Wrist;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 /**
  * The MultiCommands class is responsible for creating complex commands that involve multiple subsystems.
  * These commands are typically composed of several simpler commands that run in parallel or sequence.
  */
 public class MultiCommands {
-    // Subsystems
-    private Arm arm;
-    private Elevator elevator;
-    private Wrist wrist;
-    private Swerve swerve;
-    private Intake intake;
-    private Hang hang;
-
     // Command groups for each subsystem
     private ArmCommands armCommands;
     private ElevatorCommands elevatorCommands;
     private WristCommands wristCommands;
     private SwerveCommands swerveCommands;
     private IntakeCommands intakeCommands;
+    @SuppressWarnings("unused")
     private HangCommand hangCommand;
 
     /**
      * Constructor for MultiCommands.
      * 
-     * @param arm The Arm subsystem.
-     * @param elevator The Elevator subsystem.
-     * @param wrist The Wrist subsystem.
-     * @param swerve The Swerve subsystem.
-     * @param intake The Intake subsystem.
-     * @param hang The Hang subsystem.
      * @param armCommands The ArmCommands command group.
      * @param elevatorCommands The ElevatorCommands command group.
      * @param wristCommands The WristCommands command group.
@@ -48,15 +30,8 @@ public class MultiCommands {
      * @param intakeCommands The IntakeCommands command group.
      * @param hangCommand The HangCommand command group.
      */
-    public MultiCommands(Arm arm, Elevator elevator, Wrist wrist, Swerve swerve, Intake intake, Hang hang,
-                         ArmCommands armCommands, ElevatorCommands elevatorCommands, WristCommands wristCommands,
+    public MultiCommands(ArmCommands armCommands, ElevatorCommands elevatorCommands, WristCommands wristCommands,
                          SwerveCommands swerveCommands, IntakeCommands intakeCommands, HangCommand hangCommand) {
-        this.arm = arm;
-        this.elevator = elevator;
-        this.wrist = wrist;
-        this.swerve = swerve;
-        this.intake = intake;
-        this.hang = hang;
         this.armCommands = armCommands;
         this.elevatorCommands = elevatorCommands;
         this.wristCommands = wristCommands;
@@ -141,19 +116,21 @@ public class MultiCommands {
         if (pose == null) {
             return new InstantCommand(); // Do nothing if the pose is null
         } else {
+            Command moveTo=null;
             if (pose.getY() > 1.75 && pose.getY() < 6.3) {
                 // If the robot is within a specific Y range, move to the ground intake position
-                return new ParallelCommandGroup(
+                moveTo = new ParallelCommandGroup(
                     swerveCommands.driveToPose(() -> pose),
                     moveToGroundIntake()
                 );
             } else {
                 // Otherwise, move to the source position
-                return new ParallelCommandGroup(
+                moveTo = new ParallelCommandGroup(
                     swerveCommands.driveToPose(() -> pose),
                     moveToSource()
                 );
             }
+            return new SequentialCommandGroup(moveTo,intakeCommands.intakeUntilSwitched());
         }
     }
 
@@ -164,5 +141,14 @@ public class MultiCommands {
      */
     public SwerveCommands getSwerveCommands() {
         return swerveCommands;
+    }
+
+    /**
+     * Getter for the SwerveCommands.
+     * 
+     * @return The SwerveCommands command group.
+     */
+    public IntakeCommands getIntakeCommands() {
+        return intakeCommands;
     }
 }

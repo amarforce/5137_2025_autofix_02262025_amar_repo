@@ -104,13 +104,13 @@ public class AutoStep {
      * @return A {@link Command} representing the sequence of actions to be executed.
      */
     public Command getCommand() {
-        System.out.println(pickupChooser.getSelected());
         return new SequentialCommandGroup(
             multiCommands.getCoral(RobotUtils.invertPoseToAlliance(pickupChooser.getSelected())),
             new ParallelCommandGroup(
                 multiCommands.moveToGoal(levelChooser.getSelected()),
                 multiCommands.getSwerveCommands().driveToPose(() -> RobotUtils.invertPoseToAlliance(reefChooser.getSelected()))
-            )
+            ),
+            multiCommands.getIntakeCommands().outtake()
         );
     }
 

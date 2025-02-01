@@ -7,7 +7,6 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.RobotController;
@@ -100,7 +99,7 @@ public class Arm extends SubsystemBase {
      * @return The current arm position in radians.
      */
     public double getMeasurement() {
-        return Units.rotationsToRadians(armMotor.getPosition().getValueAsDouble() / ArmConstants.gearRatio) - ArmConstants.armOffset;
+        return ArmConstants.transform.transformPos(armMotor.getPosition().getValueAsDouble());
     }
     
     /**
@@ -109,13 +108,7 @@ public class Arm extends SubsystemBase {
      * @param newGoal The desired goal position in radians.
      */
     public void setGoal(double newGoal) {
-        if (newGoal < ArmConstants.minAngle) {
-            newGoal = ArmConstants.minAngle;
-        }
-        if (newGoal > ArmConstants.maxAngle) {
-            newGoal = ArmConstants.maxAngle;
-        }
-        goal = newGoal;
+        goal = RobotUtils.clamp(newGoal,ArmConstants.minAngle,ArmConstants.maxAngle);
     }
 
     /**
@@ -142,7 +135,7 @@ public class Arm extends SubsystemBase {
      * @return The current arm velocity in radians per second.
      */
     public double getVelocity() {
-        return Units.rotationsToRadians(armMotor.getVelocity().getValueAsDouble() / ArmConstants.gearRatio);
+        return ArmConstants.transform.transformVel(armMotor.getPosition().getValueAsDouble());
     }
 
     public SysIdRoutine getRoutine(){
@@ -202,10 +195,8 @@ public class Arm extends SubsystemBase {
         armSim.update(GeneralConstants.simPeriod);
         
         // Update the motor simulation state with the new arm position and velocity
-        double angle = armSim.getAngleRads();
-        armMotorSim.setRawRotorPosition(Units.radiansToRotations((angle + ArmConstants.armOffset) * ArmConstants.gearRatio));
-        double vel = armSim.getVelocityRadPerSec();
-        armMotorSim.setRotorVelocity(Units.radiansToRotations(vel * ArmConstants.gearRatio));
+        armMotorSim.setRawRotorPosition(ArmConstants.transform.transformPosInv(armSim.getAngleRads()));
+        armMotorSim.setRotorVelocity(ArmConstants.transform.transformVelInv(armSim.getVelocityRadPerSec()));
         
         // Update the RoboRIO simulation state with the new battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(armSim.getCurrentDrawAmps()));

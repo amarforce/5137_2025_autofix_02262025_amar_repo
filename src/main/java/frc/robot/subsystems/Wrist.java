@@ -6,7 +6,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.RobotController;
@@ -42,13 +41,13 @@ public class Wrist extends SubsystemBase {
     
     // Simulation model for the Wrist
     private SingleJointedArmSim wristSim = new SingleJointedArmSim(
-        WristConstants.motorSim, 
+        WristConstants.motorSim,
         WristConstants.gearRatio,
-        WristConstants.momentOfInertia, 
-        WristConstants.wristLength, 
-        WristConstants.minAngle, 
-        WristConstants.maxAngle, 
-        true, 
+        WristConstants.momentOfInertia,
+        WristConstants.wristLength,
+        WristConstants.minAngle,
+        WristConstants.maxAngle,
+        true,
         WristConstants.pos1
     );
 
@@ -97,7 +96,7 @@ public class Wrist extends SubsystemBase {
      * @return The current position of the wrist in radians.
      */
     public double getMeasurement() {
-        return Units.rotationsToRadians(wristMotor.getPosition().getValueAsDouble() / WristConstants.gearRatio) - WristConstants.wristOffset;
+        return WristConstants.transform.transformPos(wristMotor.getPosition().getValueAsDouble());
     }
     
     /**
@@ -106,13 +105,7 @@ public class Wrist extends SubsystemBase {
      * @param newGoal The desired goal position in radians.
      */
     public void setGoal(double newGoal) {
-        if (newGoal < WristConstants.minAngle) {
-            newGoal = WristConstants.minAngle;
-        }
-        if (newGoal > WristConstants.maxAngle) {
-            newGoal = WristConstants.maxAngle;
-        }
-        goal = newGoal;
+        goal = RobotUtils.clamp(newGoal,WristConstants.minAngle,WristConstants.maxAngle);
     }
 
     /**
@@ -139,7 +132,7 @@ public class Wrist extends SubsystemBase {
      * @return The current velocity of the wrist in radians per second.
      */
     public double getVelocity() {
-        return Units.rotationsToRadians(wristMotor.getVelocity().getValueAsDouble() / WristConstants.gearRatio);
+        return WristConstants.transform.transformVel(wristMotor.getVelocity().getValueAsDouble());
     }
 
     public SysIdRoutine getRoutine(){
@@ -202,10 +195,8 @@ public class Wrist extends SubsystemBase {
         wristSim.update(GeneralConstants.simPeriod);
         
         // Update the motor simulation state with the new Wrist position and velocity
-        double angle = wristSim.getAngleRads();
-        wristMotorSim.setRawRotorPosition(Units.radiansToRotations((angle + WristConstants.wristOffset) * WristConstants.gearRatio));
-        double vel = wristSim.getVelocityRadPerSec();
-        wristMotorSim.setRotorVelocity(Units.radiansToRotations(vel * WristConstants.gearRatio));
+        wristMotorSim.setRawRotorPosition(WristConstants.transform.transformPosInv(wristSim.getAngleRads()));
+        wristMotorSim.setRotorVelocity(WristConstants.transform.transformVelInv(wristSim.getVelocityRadPerSec()));
         
         // Update the RoboRIO simulation state with the new battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(wristSim.getCurrentDrawAmps()));

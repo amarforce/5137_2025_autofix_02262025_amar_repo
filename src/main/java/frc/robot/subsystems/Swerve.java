@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import frc.robot.Robot;
 import frc.robot.constants.SwerveConstants;
+import frc.robot.other.DetectedObject;
 import frc.robot.other.RobotUtils;
 import frc.robot.other.SwerveFactory;
 
@@ -12,7 +13,6 @@ import java.util.List;
 
 import org.photonvision.EstimatedRobotPose;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -33,7 +33,6 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
@@ -59,8 +58,6 @@ public class Swerve extends SubsystemBase {
     private SwerveRequest.RobotCentric robotOrientedDrive; // Robot-oriented driving request
     private SwerveRequest.ApplyRobotSpeeds setChassisSpeeds; // Request to set chassis speeds directly
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
-
-    private SendableChooser<Integer> cageChoice; // Chooser for selecting cage position (e.g., for autonomous)
 
     private StringLogEntry log;
 
@@ -89,10 +86,6 @@ public class Swerve extends SubsystemBase {
         moduleMechanisms[3].getRoot("RootDirection", 0.5, 0.5)
             .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
     };
-
-    private final double[] poseArray = new double[3];
-    private final double[] moduleStatesArray = new double[8];
-    private final double[] moduleTargetsArray = new double[8];
 
     /**
      * Constructor for the Swerve subsystem.
@@ -144,13 +137,7 @@ public class Swerve extends SubsystemBase {
                 this
         );
 
-        // Configure cage position chooser for autonomous
-        cageChoice = new SendableChooser<Integer>();
-        cageChoice.addOption("Left", 0);
-        cageChoice.addOption("Center", 1);
-        cageChoice.addOption("Right", 2);
-        cageChoice.setDefaultOption("Center", 1);
-        SmartDashboard.putData("Cage Choice", cageChoice);
+        
 
         // Start simulation thread if in simulation
         if (Robot.isSimulation()) {
@@ -162,6 +149,10 @@ public class Swerve extends SubsystemBase {
 
         field = new Field2d();
         SmartDashboard.putData("Field", field);
+
+        for(int i=0;i<moduleMechanisms.length;i++){
+            SmartDashboard.putData("Module " + i, moduleMechanisms[i]);
+        }
 
         this.log=log;
     }
@@ -220,17 +211,20 @@ public class Swerve extends SubsystemBase {
      * @param fieldRelative Whether the drive is field-relative or robot-relative.
      */
     public void setPercentDrive(double dx, double dy, double dtheta, boolean fieldRelative) {
+        double absSpeedX = dx*maxSpeed;
+        double absSpeedY = dy*maxSpeed;
+        double absRot = dtheta*maxAngularSpeed;
         if (fieldRelative) {
             setControl(fieldOrientedDrive
-                .withVelocityX(dx * maxSpeed)
-                .withVelocityY(dy * maxSpeed)
-                .withRotationalRate(dtheta * maxAngularSpeed)
+                .withVelocityX(absSpeedX)
+                .withVelocityY(absSpeedY)
+                .withRotationalRate(absRot)
             );
         } else {
             setControl(robotOrientedDrive
-                .withVelocityX(dx * maxSpeed)
-                .withVelocityY(dy * maxSpeed)
-                .withRotationalRate(dtheta * maxAngularSpeed)
+                .withVelocityX(absSpeedX)
+                .withVelocityY(absSpeedY)
+                .withRotationalRate(absRot)
             );
         }
     }
@@ -246,15 +240,6 @@ public class Swerve extends SubsystemBase {
     }
 
     /**
-     * Gets the selected cage position from the chooser.
-     *
-     * @return The selected cage position.
-     */
-    public int getCage() {
-        return cageChoice.getSelected();
-    }
-
-    /**
      * Resets the gyro and reseeds the field-centric drive.
      */
     public void resetGyro() {
@@ -267,6 +252,10 @@ public class Swerve extends SubsystemBase {
      */
     public void lock() {
         this.setControl(lock);
+    }
+
+    public List<DetectedObject> getGroundCoral(){
+        return vision.getGroundCoral(SwerveConstants.coralExpirationTime);
     }
 
     /**
@@ -292,29 +281,19 @@ public class Swerve extends SubsystemBase {
     }
 
     private void telemetry(SwerveDriveState state){
-        /* Also write to log file */
-        poseArray[0] = state.Pose.getX();
-        poseArray[1] = state.Pose.getY();
-        poseArray[2] = state.Pose.getRotation().getDegrees();
-        for (int i = 0; i < 4; ++i) {
-            moduleStatesArray[i*2 + 0] = state.ModuleStates[i].angle.getRadians();
-            moduleStatesArray[i*2 + 1] = state.ModuleStates[i].speedMetersPerSecond;
-            moduleTargetsArray[i*2 + 0] = state.ModuleTargets[i].angle.getRadians();
-            moduleTargetsArray[i*2 + 1] = state.ModuleTargets[i].speedMetersPerSecond;
-        }
-
-        SmartDashboard.putNumberArray("driveState/pose", poseArray);
-        SmartDashboard.putNumberArray("driveState/moduleStates", moduleStatesArray);
-        SmartDashboard.putNumberArray("driveState/moduleTargets", moduleTargetsArray);
         SmartDashboard.putNumber("driveState/odometryPeriod", state.OdometryPeriod);
 
-        /* Telemeterize the module states to a Mechanism2d */
+        SmartDashboard.putNumberArray("driveState/pose", new double[]{state.Pose.getX(),state.Pose.getY(),state.Pose.getRotation().getDegrees()});
         for (int i = 0; i < 4; ++i) {
+            SmartDashboard.putNumberArray("driveState/moduleStates/"+i, new double[]{state.ModuleStates[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
+            SmartDashboard.putNumberArray("driveState/moduleTargets/"+i, new double[]{state.ModuleTargets[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
+        }
+
+        /* Telemeterize the module states to a Mechanism2d */
+        for (int i = 0; i < moduleMechanisms.length; ++i) {
             moduleSpeeds[i].setAngle(state.ModuleStates[i].angle);
             moduleDirections[i].setAngle(state.ModuleStates[i].angle);
             moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * maxSpeed));
-
-            SmartDashboard.putData("Module " + i, moduleMechanisms[i]);
         }
     }
 
@@ -367,7 +346,6 @@ public class Swerve extends SubsystemBase {
         new SysIdRoutine.Mechanism(
             output -> {
                 setControl(new SwerveRequest.SysIdSwerveRotation().withRotationalRate(output.in(Volts)));
-                SignalLogger.writeDouble("Rotational_Rate", output.in(Volts)); // Log rotational rate
             },
             null,
             this
@@ -395,7 +373,7 @@ public class Swerve extends SubsystemBase {
     }
 
     // Simulation
-    private Notifier simNotifier = null; // Notifier for simulation thread
+    private Notifier simNotifier; // Notifier for simulation thread
     private double lastSimTime; // Last simulation time
 
     /**

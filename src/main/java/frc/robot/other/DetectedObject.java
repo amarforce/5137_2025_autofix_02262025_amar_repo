@@ -1,6 +1,6 @@
 package frc.robot.other;
 
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.Pose3d;
 import frc.robot.constants.VisionConstants;
 
 /**
@@ -8,20 +8,23 @@ import frc.robot.constants.VisionConstants;
  */
 public class DetectedObject {
     // The 3D position of the detected object.
-    private Translation3d pos;
+    private Pose3d pose;
 
     // The class ID of the detected object, which corresponds to a specific type or category.
     private int classId;
 
+    private double detectionTime;
+
     /**
      * Constructs a new DetectedObject with the specified position and class ID.
      *
-     * @param pos The 3D position of the detected object.
+     * @param pose The 3D position of the detected object.
      * @param classId The class ID of the detected object.
      */
-    public DetectedObject(Translation3d pos, int classId) {
-        this.pos = pos;
+    public DetectedObject(Pose3d pose, int classId, double detectionTime) {
+        this.pose = pose;
         this.classId = classId;
+        this.detectionTime = detectionTime;
     }
 
     /**
@@ -29,8 +32,8 @@ public class DetectedObject {
      *
      * @return The 3D position of the detected object.
      */
-    public Translation3d getPos() {
-        return pos;
+    public Pose3d getPose() {
+        return pose;
     }
 
     /**
@@ -40,6 +43,15 @@ public class DetectedObject {
      */
     public int getClassId() {
         return classId;
+    }
+
+    /**
+     * Returns the detection time of the object.
+     *
+     * @return The detection time of the object.
+     */
+    public double getDetectionTime() {
+        return detectionTime;
     }
 
     /**

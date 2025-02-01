@@ -13,7 +13,6 @@ import java.util.List;
 
 import org.photonvision.EstimatedRobotPose;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -88,10 +87,6 @@ public class Swerve extends SubsystemBase {
             .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
     };
 
-    private final double[] poseArray = new double[3];
-    private final double[] moduleStatesArray = new double[8];
-    private final double[] moduleTargetsArray = new double[8];
-
     /**
      * Constructor for the Swerve subsystem.
      *
@@ -155,6 +150,10 @@ public class Swerve extends SubsystemBase {
         field = new Field2d();
         SmartDashboard.putData("Field", field);
 
+        for(int i=0;i<moduleMechanisms.length;i++){
+            SmartDashboard.putData("Module " + i, moduleMechanisms[i]);
+        }
+
         this.log=log;
     }
 
@@ -212,17 +211,20 @@ public class Swerve extends SubsystemBase {
      * @param fieldRelative Whether the drive is field-relative or robot-relative.
      */
     public void setPercentDrive(double dx, double dy, double dtheta, boolean fieldRelative) {
+        double absSpeedX = dx*maxSpeed;
+        double absSpeedY = dy*maxSpeed;
+        double absRot = dtheta*maxAngularSpeed;
         if (fieldRelative) {
             setControl(fieldOrientedDrive
-                .withVelocityX(dx * maxSpeed)
-                .withVelocityY(dy * maxSpeed)
-                .withRotationalRate(dtheta * maxAngularSpeed)
+                .withVelocityX(absSpeedX)
+                .withVelocityY(absSpeedY)
+                .withRotationalRate(absRot)
             );
         } else {
             setControl(robotOrientedDrive
-                .withVelocityX(dx * maxSpeed)
-                .withVelocityY(dy * maxSpeed)
-                .withRotationalRate(dtheta * maxAngularSpeed)
+                .withVelocityX(absSpeedX)
+                .withVelocityY(absSpeedY)
+                .withRotationalRate(absRot)
             );
         }
     }
@@ -279,29 +281,19 @@ public class Swerve extends SubsystemBase {
     }
 
     private void telemetry(SwerveDriveState state){
-        /* Also write to log file */
-        poseArray[0] = state.Pose.getX();
-        poseArray[1] = state.Pose.getY();
-        poseArray[2] = state.Pose.getRotation().getDegrees();
-        for (int i = 0; i < 4; ++i) {
-            moduleStatesArray[i*2 + 0] = state.ModuleStates[i].angle.getRadians();
-            moduleStatesArray[i*2 + 1] = state.ModuleStates[i].speedMetersPerSecond;
-            moduleTargetsArray[i*2 + 0] = state.ModuleTargets[i].angle.getRadians();
-            moduleTargetsArray[i*2 + 1] = state.ModuleTargets[i].speedMetersPerSecond;
-        }
-
-        SmartDashboard.putNumberArray("driveState/pose", poseArray);
-        SmartDashboard.putNumberArray("driveState/moduleStates", moduleStatesArray);
-        SmartDashboard.putNumberArray("driveState/moduleTargets", moduleTargetsArray);
         SmartDashboard.putNumber("driveState/odometryPeriod", state.OdometryPeriod);
 
-        /* Telemeterize the module states to a Mechanism2d */
+        SmartDashboard.putNumberArray("driveState/pose", new double[]{state.Pose.getX(),state.Pose.getY(),state.Pose.getRotation().getDegrees()});
         for (int i = 0; i < 4; ++i) {
+            SmartDashboard.putNumberArray("driveState/moduleStates/"+i, new double[]{state.ModuleStates[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
+            SmartDashboard.putNumberArray("driveState/moduleTargets/"+i, new double[]{state.ModuleTargets[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
+        }
+
+        /* Telemeterize the module states to a Mechanism2d */
+        for (int i = 0; i < moduleMechanisms.length; ++i) {
             moduleSpeeds[i].setAngle(state.ModuleStates[i].angle);
             moduleDirections[i].setAngle(state.ModuleStates[i].angle);
             moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * maxSpeed));
-
-            SmartDashboard.putData("Module " + i, moduleMechanisms[i]);
         }
     }
 
@@ -354,7 +346,6 @@ public class Swerve extends SubsystemBase {
         new SysIdRoutine.Mechanism(
             output -> {
                 setControl(new SwerveRequest.SysIdSwerveRotation().withRotationalRate(output.in(Volts)));
-                SignalLogger.writeDouble("Rotational_Rate", output.in(Volts)); // Log rotational rate
             },
             null,
             this
@@ -382,7 +373,7 @@ public class Swerve extends SubsystemBase {
     }
 
     // Simulation
-    private Notifier simNotifier = null; // Notifier for simulation thread
+    private Notifier simNotifier; // Notifier for simulation thread
     private double lastSimTime; // Last simulation time
 
     /**

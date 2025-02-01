@@ -2,11 +2,12 @@ package frc.robot.constants;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Robot;
 import frc.robot.other.MotorTransform;
 
 public class WristConstants {
     // Motor ID
-    public static final int motorId = 3;
+    public static final int motorId = Robot.isSimulation()?23:3;
 
     // Encoder transform
     public static final double wristOffset = 0.0;

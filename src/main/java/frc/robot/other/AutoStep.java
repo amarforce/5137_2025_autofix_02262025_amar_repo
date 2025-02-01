@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.MultiCommands;
@@ -42,6 +43,7 @@ public class AutoStep {
         levelChooser.addOption("L2", 2);
         levelChooser.addOption("L1", 1);
         levelChooser.addOption("Algae", 0);
+        levelChooser.addOption("No Auto",-1);
         SmartDashboard.putData("Level Choice " + id, levelChooser);
 
         // Initialize the reef and pickup choosers with coral poses
@@ -51,7 +53,9 @@ public class AutoStep {
         levelChooser.onChange((Integer choice) -> {
             if (choice.equals(0)) {
                 switchToAlgaePoses();
-            } else {
+            } else if(choice.equals(-1)){
+                switchToNoAuto();
+            }else{
                 switchToCoralPoses();
             }
         });
@@ -98,20 +102,39 @@ public class AutoStep {
         SmartDashboard.putData("Pickup Choice " + id, pickupChooser);
     }
 
+    private void switchToNoAuto(){
+        pickupChooser = new SendableChooser<Pose2d>();
+        SmartDashboard.putData("Pickup Choice " + id, pickupChooser);
+
+        reefChooser = new SendableChooser<Pose2d>();
+        SmartDashboard.putData("Reef Choice " + id, reefChooser);
+    }
+
     /**
      * Generates a command sequence based on the selected options from the choosers.
      *
      * @return A {@link Command} representing the sequence of actions to be executed.
      */
     public Command getCommand() {
-        return new SequentialCommandGroup(
-            multiCommands.getCoral(RobotUtils.invertPoseToAlliance(pickupChooser.getSelected())),
-            new ParallelCommandGroup(
-                multiCommands.moveToGoal(levelChooser.getSelected()),
-                multiCommands.getSwerveCommands().driveToPose(() -> RobotUtils.invertPoseToAlliance(reefChooser.getSelected()))
-            ),
-            multiCommands.getIntakeCommands().outtake()
-        );
+        int level=levelChooser.getSelected();
+        if(level==-1){
+            return new InstantCommand();
+        }else if(level==0){
+            return new ParallelCommandGroup(
+                multiCommands.moveToAlgae(),
+                multiCommands.getSwerveCommands().driveToPose(()->RobotUtils.invertPoseToAlliance(reefChooser.getSelected()))
+            );
+        }else{
+            return new SequentialCommandGroup(
+                multiCommands.getCoral(RobotUtils.invertPoseToAlliance(pickupChooser.getSelected())),
+                new ParallelCommandGroup(
+                    multiCommands.moveToGoal(levelChooser.getSelected()),
+                    multiCommands.getSwerveCommands().driveToPose(() -> RobotUtils.invertPoseToAlliance(reefChooser.getSelected()))
+                ),
+                multiCommands.getIntakeCommands().outtake()
+            );
+        }
+        
     }
 
     /**

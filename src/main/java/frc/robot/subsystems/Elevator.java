@@ -84,7 +84,7 @@ public class Elevator extends SubsystemBase {
         rightMotor.getConfigurator().apply(currentConfigs);
 
         // Set the tolerance for the PID controller
-        controller.setTolerance(ElevatorConstants.elevatorTol);
+        controller.setTolerance(ElevatorConstants.elevatorTolerance);
 
         // Add the PID controller to SmartDashboard for tuning
         SmartDashboard.putData("Elevator Controller", controller);
@@ -204,7 +204,6 @@ public class Elevator extends SubsystemBase {
         }catch(Exception e){
             log.append("Periodic error: "+RobotUtils.getError(e));
         }
-        System.out.println("Goal: " + getGoal() + " Measurement: " + getMeasurement());
     }
 
     /**

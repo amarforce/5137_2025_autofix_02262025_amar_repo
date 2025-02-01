@@ -2,7 +2,6 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.robot.constants.LEDConstants;
 import frc.robot.subsystems.*;
 
 public class LEDCommands 
@@ -15,24 +14,18 @@ public class LEDCommands
     }
     public Command red()
     {
-        return new InstantCommand(() -> led.set(LEDConstants.red), led);
+        return new InstantCommand(() -> led.red(), led);
     }
     public Command blue()
     {
-        return new InstantCommand(() -> led.set(LEDConstants.blue), led);
+        return new InstantCommand(() -> led.blue(), led);
     }
-    public Command rainbow()    
+    public Command fire()    
     {
-        return new InstantCommand(() -> led.set(LEDConstants.rainbow),led);
+        return new InstantCommand(() -> led.fire(),led);
     }
-    public Command gradient()
+    public Command green()
     {
-        return new InstantCommand(()->led.set(LEDConstants.gradient),led);
+        return new InstantCommand(()->led.green(),led);
     }
-    public Command steps()
-    {
-        return new InstantCommand(()->led.setReverse(LEDConstants.steps),led);
-    }
-
-
-                                                                                                                                                                                                                                                                                                                                        }
+}

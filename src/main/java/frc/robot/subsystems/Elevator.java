@@ -104,13 +104,7 @@ public class Elevator extends SubsystemBase {
      * @param newGoal The new goal position in meters.
      */
     public void setGoal(double newGoal) {
-        if(newGoal < ElevatorConstants.minHeight){
-            newGoal = ElevatorConstants.minHeight;
-        }
-        if(newGoal > ElevatorConstants.maxHeight){
-            newGoal = ElevatorConstants.maxHeight;
-        }
-        goal = newGoal;
+        goal = RobotUtils.clamp(newGoal,ElevatorConstants.minHeight,ElevatorConstants.maxHeight);
     }
 
     /**

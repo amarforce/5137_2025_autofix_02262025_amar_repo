@@ -109,13 +109,7 @@ public class Arm extends SubsystemBase {
      * @param newGoal The desired goal position in radians.
      */
     public void setGoal(double newGoal) {
-        if (newGoal < ArmConstants.minAngle) {
-            newGoal = ArmConstants.minAngle;
-        }
-        if (newGoal > ArmConstants.maxAngle) {
-            newGoal = ArmConstants.maxAngle;
-        }
-        goal = newGoal;
+        goal = RobotUtils.clamp(newGoal,ArmConstants.minAngle,ArmConstants.maxAngle);
     }
 
     /**

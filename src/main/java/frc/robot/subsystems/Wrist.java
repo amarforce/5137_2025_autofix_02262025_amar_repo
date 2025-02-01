@@ -106,13 +106,7 @@ public class Wrist extends SubsystemBase {
      * @param newGoal The desired goal position in radians.
      */
     public void setGoal(double newGoal) {
-        if (newGoal < WristConstants.minAngle) {
-            newGoal = WristConstants.minAngle;
-        }
-        if (newGoal > WristConstants.maxAngle) {
-            newGoal = WristConstants.maxAngle;
-        }
-        goal = newGoal;
+        goal = RobotUtils.clamp(newGoal,WristConstants.minAngle,WristConstants.maxAngle);
     }
 
     /**

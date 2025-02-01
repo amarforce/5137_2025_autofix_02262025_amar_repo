@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.MultiCommands;
 import frc.robot.constants.GeneralConstants;
-import frc.robot.constants.SwerveConstants;
 
 /**
  * The `AutoStep` class is responsible for creating and managing three {@link SendableChooser}s
@@ -67,21 +66,21 @@ public class AutoStep {
     private void switchToCoralPoses() {
         // Initialize the reef chooser with default and additional options
         reefChooser = new SendableChooser<Pose2d>();
-        reefChooser.setDefaultOption("A", SwerveConstants.allReef[0]);
+        reefChooser.setDefaultOption("A", GeneralConstants.allReef[0]);
         for (int i = 1; i < GeneralConstants.sides * 2; i++) {
-            reefChooser.addOption(Character.toString('A' + i), SwerveConstants.allReef[i]);
+            reefChooser.addOption(Character.toString('A' + i), GeneralConstants.allReef[i]);
         }
         SmartDashboard.putData("Reef Choice " + id, reefChooser);
 
         // Initialize the pickup chooser with default and additional options
         pickupChooser = new SendableChooser<Pose2d>();
-        pickupChooser.setDefaultOption("RightStation Right", SwerveConstants.stationA);
-        pickupChooser.addOption("RightStation Left", SwerveConstants.stationB);
-        pickupChooser.addOption("LeftStation Right", SwerveConstants.stationC);
-        pickupChooser.addOption("LeftStation Left", SwerveConstants.stationD);
-        pickupChooser.addOption("Left Ground", SwerveConstants.leftPickup);
-        pickupChooser.addOption("Center Ground", SwerveConstants.centerPickup);
-        pickupChooser.addOption("Right Ground", SwerveConstants.rightPickup);
+        pickupChooser.setDefaultOption("RightStation Right", GeneralConstants.stationRR);
+        pickupChooser.addOption("RightStation Left", GeneralConstants.stationRL);
+        pickupChooser.addOption("LeftStation Right", GeneralConstants.stationLR);
+        pickupChooser.addOption("LeftStation Left", GeneralConstants.stationLL);
+        pickupChooser.addOption("Left Ground", GeneralConstants.leftPickup);
+        pickupChooser.addOption("Center Ground", GeneralConstants.centerPickup);
+        pickupChooser.addOption("Right Ground", GeneralConstants.rightPickup);
         SmartDashboard.putData("Pickup Choice " + id, pickupChooser);
     }
 
@@ -91,9 +90,9 @@ public class AutoStep {
     private void switchToAlgaePoses() {
         // Initialize the reef chooser with default and additional options for algae poses
         reefChooser = new SendableChooser<Pose2d>();
-        reefChooser.setDefaultOption("AB", SwerveConstants.centerReef[0]);
+        reefChooser.setDefaultOption("AB", GeneralConstants.centerReef[0]);
         for (int i = 1; i < GeneralConstants.sides; i++) {
-            reefChooser.addOption(Character.toString('A' + (2 * i)) + Character.toString('A' + (2 * i + 1)), SwerveConstants.centerReef[i]);
+            reefChooser.addOption(Character.toString('A' + (2 * i)) + Character.toString('A' + (2 * i + 1)), GeneralConstants.centerReef[i]);
         }
         SmartDashboard.putData("Reef Choice " + id, reefChooser);
 

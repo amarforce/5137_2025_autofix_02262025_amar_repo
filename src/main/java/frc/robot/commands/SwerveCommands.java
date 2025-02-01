@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.other.DetectedObject;
 import frc.robot.subsystems.Swerve;
@@ -66,7 +67,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the closest station.
      */
     public Command driveToStation() {
-        return driveToPose(() -> swerve.getClosest(SwerveConstants.stations));
+        return driveToPose(() -> swerve.getClosest(GeneralConstants.stations));
     }
 
     /**
@@ -75,7 +76,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the closest left reef.
      */
     public Command driveToReefLeft() {
-        return driveToPose(() -> swerve.getClosest(SwerveConstants.leftReef));
+        return driveToPose(() -> swerve.getClosest(GeneralConstants.leftReef));
     }
 
     /**
@@ -84,7 +85,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the closest center reef.
      */
     public Command driveToReefCenter() {
-        return driveToPose(() -> swerve.getClosest(SwerveConstants.centerReef));
+        return driveToPose(() -> swerve.getClosest(GeneralConstants.centerReef));
     }
 
     /**
@@ -93,7 +94,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the closest right reef.
      */
     public Command driveToReefRight() {
-        return driveToPose(() -> swerve.getClosest(SwerveConstants.rightReef));
+        return driveToPose(() -> swerve.getClosest(GeneralConstants.rightReef));
     }
 
     /**
@@ -102,7 +103,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the processor.
      */
     public Command driveToProcessor() {
-        return driveToPose(() -> SwerveConstants.processor);
+        return driveToPose(() -> GeneralConstants.processor);
     }
 
     /**

@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.LedConstants;
 
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Second;
@@ -13,7 +14,8 @@ import edu.wpi.first.wpilibj.simulation.AddressableLEDSim;
 public class LED extends SubsystemBase
 {
     private int i = 0;
-    private int j = 0;
+    private double x = 0;
+    private int y = 0;
     private AddressableLED led;
     private AddressableLEDBuffer ledBuffer;
     private AddressableLEDBufferView ledLeft;
@@ -49,34 +51,74 @@ public class LED extends SubsystemBase
 
     public void red()
     {
-        
-        if(i>14){
-            i=0;
-        }
-        else{
-            i++;
-            j=i;
-        }
-
-
-        for(int a=0;a<4;a++)
+        i++;
+        for(int a=0;a<6;a++)
         {
-            for(int p=0;p<15;p++){
-                ledBuffer.setRGB((p+i)%15 + (a*15),200,200 + (p*15),0 );
+            for(int p=0;p<10;p++)
+            {
+                ledBuffer.setRGB((p+i)%10 + (a*10),200,200 + (p*15),0 );
             }
         }
-
-        
-
-
     }
+    public void green()
+    {
+        for(int a=0;a<60;a++)
+        {
+            
+            ledBuffer.setRGB(a, 0, 255, 0);
+            
+        }
+    }
+    public void mlue()
+    {
+        i++;
+        for(int a=0;a<6;a++)
+        {
+            for(int p=0;p<10;p++)
+            {
+                ledBuffer.setRGB((p+i)%10 + (a*10),0, 0, 250-(p*15));
+            }
+        }
+    }
+    public void fire()
+    {
+        x++;
+        if (x>50)
+        {
+            x = 0;
+        }
+        if (-1<x && x<9 || (41<x && x<50))
+        {
+            x = x / 10;
+            y = (int)((-(x-2.5)*(x-2.5)+6.25)*(LedConstants.LEDLength/(20/3)));
+            x = x * 10;
+        }
+        if(9<x && x<41)
+        {
+            x = x / 10;
+            y = (int)((1*(Math.sin(5*x))+ 3.5)*(LedConstants.LEDLength/(20/3)));
+            x = x * 10;
+        }
+        for(int p=0;p<LedConstants.LEDLength-y;p++)
+        {
+            ledBuffer.setRGB(p,255, 240 - (int)(p*(240/(LedConstants.LEDLength-y))),100);
+            ledBuffer.setRGB(59-p,255, 240 - (int)(p*(240/(LedConstants.LEDLength-y))),100);
+        }
+        for (int cat = LedConstants.LEDLength-y;cat<LedConstants.LEDLength;cat++){
+            ledBuffer.setRGB(cat,0, 0,0);
+            ledBuffer.setRGB(59-cat,0, 0,0);
+        }
+
+
+    };
+
     @Override
     public void periodic()
     {
         timing += 1;
         if(timing % 4 == 0)
         {
-            red();
+            fire();
         }
         byte[] dataConvert = new byte[240];
         for(int i= 0; i<60; i++)

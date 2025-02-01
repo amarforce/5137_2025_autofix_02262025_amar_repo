@@ -2,7 +2,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.LedConstants;
-
+import frc.robot.other.ImprovedNoise;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.simulation.AddressableLEDSim;
@@ -88,6 +88,21 @@ public class LED extends SubsystemBase
         }
     }
 
+    public void betterFire()
+    {
+            int y= (int)ImprovedNoise.noise(3.14,42,7);
+            for(int p=0;p<LedConstants.LEDLength-y;p++)
+        {
+            ledBuffer.setRGB(p,255, 240 - (int)(p*(240/(LedConstants.LEDLength-y))),100);
+            ledBuffer.setRGB(LedConstants.LEDStrip-1-p,255, 240 - (int)(p*(240/(LedConstants.LEDLength-y))),100);
+        }
+        for (int cat = LedConstants.LEDLength-y;cat<LedConstants.LEDLength;cat++){
+            ledBuffer.setRGB(cat,0, 0,0);
+            ledBuffer.setRGB(LedConstants.LEDStrip-1-cat,0, 0,0);
+        }
+    }
+    
+
     @Override
     public void periodic()
     {
@@ -110,7 +125,7 @@ public class LED extends SubsystemBase
         timing += 1;
         if(timing % 4 == 0)
         {
-            fire();
+            betterFire();
         }
     }
 }

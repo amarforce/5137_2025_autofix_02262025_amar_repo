@@ -6,7 +6,9 @@ import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
@@ -42,8 +44,8 @@ public class Elevator extends SubsystemBase {
 
     // Simulation objects for the elevator
     private ElevatorSim elevatorSim = new ElevatorSim(ElevatorConstants.motorSim, ElevatorConstants.gearRatio, ElevatorConstants.carriageMass, ElevatorConstants.drumRadius, ElevatorConstants.minHeight, ElevatorConstants.maxHeight, true, ElevatorConstants.defaultGoal);
-    private TalonFXSimState leftMotorSim = leftMotor.getSimState();
-    private TalonFXSimState rightMotorSim = rightMotor.getSimState();
+    private TalonFXSimState leftMotorSim = new TalonFXSimState(leftMotor, ChassisReference.Clockwise_Positive);
+    private TalonFXSimState rightMotorSim = new TalonFXSimState(rightMotor, ChassisReference.CounterClockwise_Positive);
 
     // Goal position for the elevator
     private double goal = ElevatorConstants.defaultGoal;
@@ -76,7 +78,9 @@ public class Elevator extends SubsystemBase {
         // Configure the motors to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Coast;
+        currentConfigs.Inverted = InvertedValue.Clockwise_Positive;
         leftMotor.getConfigurator().apply(currentConfigs);
+        currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
         rightMotor.getConfigurator().apply(currentConfigs);
 
         // Set the tolerance for the PID controller
@@ -113,7 +117,7 @@ public class Elevator extends SubsystemBase {
      * @return The current position in meters.
      */
     public double getMeasurement() {
-        return (leftMotor.getPosition().getValueAsDouble() - rightMotor.getPosition().getValueAsDouble()) / 2 * ElevatorConstants.metersPerRotation - ElevatorConstants.elevatorOffset;
+        return ElevatorConstants.transform.transformPos((leftMotor.getPosition().getValueAsDouble() + rightMotor.getPosition().getValueAsDouble()) / 2);
     }
 
     /**
@@ -122,7 +126,7 @@ public class Elevator extends SubsystemBase {
      * @return The current velocity in meters per second.
      */
     public double getVelocity() {
-        return (leftMotor.getVelocity().getValueAsDouble() - rightMotor.getVelocity().getValueAsDouble()) / 2 * ElevatorConstants.metersPerRotation;
+        return ElevatorConstants.transform.transformVel((leftMotor.getVelocity().getValueAsDouble() + rightMotor.getVelocity().getValueAsDouble()) / 2);
     }
 
     /**
@@ -140,7 +144,7 @@ public class Elevator extends SubsystemBase {
      * @return The average input to the motors.
      */
     public double getInput() {
-        return (leftMotor.get() - rightMotor.get()) / 2;
+        return (leftMotor.get() + rightMotor.get()) / 2;
     }
 
     /**
@@ -150,7 +154,7 @@ public class Elevator extends SubsystemBase {
      */
     public void setVoltage(Voltage v) {
         leftMotor.setVoltage(v.magnitude());
-        rightMotor.setVoltage(-v.magnitude());
+        rightMotor.setVoltage(v.magnitude());
     }
 
     public SysIdRoutine getRoutine(){
@@ -213,17 +217,17 @@ public class Elevator extends SubsystemBase {
         rightMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 
         // Calculate the input voltage to the elevator simulation
-        double elevatorInput = (leftMotorSim.getMotorVoltage() - rightMotorSim.getMotorVoltage()) / 2;
+        double elevatorInput = (leftMotorSim.getMotorVoltage() + rightMotorSim.getMotorVoltage()) / 2;
         elevatorSim.setInputVoltage(elevatorInput);
         elevatorSim.update(GeneralConstants.simPeriod);
 
         // Update the motor positions and velocities based on the simulation
-        double pos = elevatorSim.getPositionMeters();
-        leftMotorSim.setRawRotorPosition((pos + ElevatorConstants.elevatorOffset) / ElevatorConstants.metersPerRotation);
-        rightMotorSim.setRawRotorPosition(-(pos + ElevatorConstants.elevatorOffset) / ElevatorConstants.metersPerRotation);
-        double vel = elevatorSim.getVelocityMetersPerSecond();
-        leftMotorSim.setRotorVelocity(vel / ElevatorConstants.metersPerRotation);
-        rightMotorSim.setRotorVelocity(-vel / ElevatorConstants.metersPerRotation);
+        double pos = ElevatorConstants.transform.transformPosInv(elevatorSim.getPositionMeters());
+        leftMotorSim.setRawRotorPosition(pos);
+        rightMotorSim.setRawRotorPosition(pos);
+        double vel = ElevatorConstants.transform.transformPosInv(elevatorSim.getVelocityMetersPerSecond());
+        leftMotorSim.setRotorVelocity(vel);
+        rightMotorSim.setRotorVelocity(vel);
 
         // Update the RoboRIO simulation with the current battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps()));

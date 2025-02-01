@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.WristConstants;
 import frc.robot.other.RobotUtils;
+import frc.robot.constants.ArmConstants;
 import frc.robot.constants.GeneralConstants;
 
 import static edu.wpi.first.units.Units.Radians;
@@ -97,7 +98,7 @@ public class Wrist extends SubsystemBase {
      * @return The current position of the wrist in radians.
      */
     public double getMeasurement() {
-        return Units.rotationsToRadians(wristMotor.getPosition().getValueAsDouble() / WristConstants.gearRatio) - WristConstants.wristOffset;
+        return WristConstants.transform.transformPos(wristMotor.getPosition().getValueAsDouble());
     }
     
     /**
@@ -133,7 +134,7 @@ public class Wrist extends SubsystemBase {
      * @return The current velocity of the wrist in radians per second.
      */
     public double getVelocity() {
-        return Units.rotationsToRadians(wristMotor.getVelocity().getValueAsDouble() / WristConstants.gearRatio);
+        return WristConstants.transform.transformVel(wristMotor.getVelocity().getValueAsDouble());
     }
 
     public SysIdRoutine getRoutine(){
@@ -196,10 +197,8 @@ public class Wrist extends SubsystemBase {
         wristSim.update(GeneralConstants.simPeriod);
         
         // Update the motor simulation state with the new Wrist position and velocity
-        double angle = wristSim.getAngleRads();
-        wristMotorSim.setRawRotorPosition(Units.radiansToRotations((angle + WristConstants.wristOffset) * WristConstants.gearRatio));
-        double vel = wristSim.getVelocityRadPerSec();
-        wristMotorSim.setRotorVelocity(Units.radiansToRotations(vel * WristConstants.gearRatio));
+        wristMotorSim.setRawRotorPosition(WristConstants.transform.transformPosInv(wristSim.getAngleRads()));
+        wristMotorSim.setRotorVelocity(WristConstants.transform.transformVelInv(wristSim.getVelocityRadPerSec()));
         
         // Update the RoboRIO simulation state with the new battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(wristSim.getCurrentDrawAmps()));

@@ -1,6 +1,7 @@
 package frc.robot.constants;
 
 import edu.wpi.first.math.system.plant.DCMotor;
+import frc.robot.other.MotorTransform;
 
 
 public class ElevatorConstants {
@@ -11,6 +12,7 @@ public class ElevatorConstants {
     // Encoder transform
     public static final double elevatorOffset = 0;
     public static final double metersPerRotation = 0.01397;
+    public static final MotorTransform transform = new MotorTransform(metersPerRotation, elevatorOffset);
 
     // PID constants
     public static final double kP = 30;

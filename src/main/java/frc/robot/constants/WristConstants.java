@@ -6,7 +6,7 @@ import frc.robot.other.MotorTransform;
 
 public class WristConstants {
     // Motor ID
-    public static final int motorId = 24;
+    public static final int motorId = 3;
 
     // Encoder transform
     public static final double wristOffset = 0.0;

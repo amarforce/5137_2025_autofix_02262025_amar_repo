@@ -44,8 +44,8 @@ public class Elevator extends SubsystemBase {
 
     // Simulation objects for the elevator
     private ElevatorSim elevatorSim = new ElevatorSim(ElevatorConstants.motorSim, ElevatorConstants.gearRatio, ElevatorConstants.carriageMass, ElevatorConstants.drumRadius, ElevatorConstants.minHeight, ElevatorConstants.maxHeight, true, ElevatorConstants.defaultGoal);
-    private TalonFXSimState leftMotorSim = new TalonFXSimState(leftMotor, ChassisReference.Clockwise_Positive);
-    private TalonFXSimState rightMotorSim = new TalonFXSimState(rightMotor, ChassisReference.CounterClockwise_Positive);
+    private TalonFXSimState leftMotorSim = new TalonFXSimState(leftMotor, ChassisReference.CounterClockwise_Positive);
+    private TalonFXSimState rightMotorSim = new TalonFXSimState(rightMotor, ChassisReference.Clockwise_Positive);
 
     // Goal position for the elevator
     private double goal = ElevatorConstants.defaultGoal;
@@ -78,9 +78,9 @@ public class Elevator extends SubsystemBase {
         // Configure the motors to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Coast;
-        currentConfigs.Inverted = InvertedValue.Clockwise_Positive;
-        leftMotor.getConfigurator().apply(currentConfigs);
         currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
+        leftMotor.getConfigurator().apply(currentConfigs);
+        currentConfigs.Inverted = InvertedValue.Clockwise_Positive;
         rightMotor.getConfigurator().apply(currentConfigs);
 
         // Set the tolerance for the PID controller
@@ -167,6 +167,7 @@ public class Elevator extends SubsystemBase {
      */
     private void telemetry() {
         SmartDashboard.putNumber("elevator/height",getMeasurement());
+        SmartDashboard.putNumber("elevator/rawHeight",leftMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("elevator/goal",getGoal());
         SmartDashboard.putNumber("elevator/velocity",getVelocity());
         SmartDashboard.putNumber("elevator/error",controller.getError());
@@ -203,7 +204,7 @@ public class Elevator extends SubsystemBase {
         }catch(Exception e){
             log.append("Periodic error: "+RobotUtils.getError(e));
         }
-        
+        System.out.println("Goal: " + getGoal() + " Measurement: " + getMeasurement());
     }
 
     /**

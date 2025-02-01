@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -42,7 +43,7 @@ public class ElevatorCommands {
      * @return A command that adjusts the elevator's goal when executed.
      */
     public Command changeGoal(DoubleSupplier change) {
-        return new InstantCommand(() -> elevator.setGoal(elevator.getGoal() + change.getAsDouble()), elevator);
+        return new InstantCommand(() -> elevator.setGoal(elevator.getGoal() + MathUtil.applyDeadband(change.getAsDouble(), 0.1/50)), elevator);
     }
 
     /**

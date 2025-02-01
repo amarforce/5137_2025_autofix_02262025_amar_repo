@@ -6,7 +6,7 @@ import frc.robot.other.MotorTransform;
 
 public class ArmConstants {
     // Motor ID
-    public static final int motorId = 20;
+    public static final int motorId = 2;
 
     // Encoder transform
     public static final double armOffset = 0.0;

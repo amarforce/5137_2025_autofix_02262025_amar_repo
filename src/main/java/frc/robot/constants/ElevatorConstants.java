@@ -6,16 +6,11 @@ import frc.robot.other.MotorTransform;
 
 public class ElevatorConstants {
     // Motor IDs
-    public static final int leftMotorId = 21; // TODO: Change to 1
-    public static final int rightMotorId = 22; // TODO: Change to 2
-
-    // Encoder transform
-    public static final double elevatorOffset = 0;
-    public static final double metersPerRotation = 0.01397;
-    public static final MotorTransform transform = new MotorTransform(metersPerRotation, elevatorOffset);
+    public static final int leftMotorId = 0;
+    public static final int rightMotorId = 1;
 
     // PID constants
-    public static final double kP = 30;
+    public static final double kP = 60;
     public static final double kI = 0;
     public static final double kD = 1;
 
@@ -36,12 +31,17 @@ public class ElevatorConstants {
     public static final double defaultGoal = 0;
 
     // Simulation constants
-    public static final double gearRatio = 20.0; // gear ratio
+    public static final double gearRatio = 60.0; // gear ratio
     public static final double carriageMass = 13.0; // in kg
-    public static final double drumRadius = metersPerRotation*gearRatio/(2*Math.PI); // in meters
+    public static final double drumRadius = 0.0254; // in meters
     public static final double minHeight = 0; // in meters
-    public static final double maxHeight = 1.27; // in meters
+    public static final double maxHeight = 1.3; // in meters
     public static final DCMotor motorSim = DCMotor.getFalcon500(2);
+
+    // Encoder transform
+    public static final double elevatorOffset = 0;
+    public static final double metersPerRotation = drumRadius*4*Math.PI/gearRatio;
+    public static final MotorTransform transform = new MotorTransform(metersPerRotation, elevatorOffset);
 
     // Mech constants
     public static final double mechWidth = 20;

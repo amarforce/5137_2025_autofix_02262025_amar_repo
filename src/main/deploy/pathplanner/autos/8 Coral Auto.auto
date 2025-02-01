@@ -19,6 +19,18 @@
         {
           "type": "path",
           "data": {
+            "pathName": "SR-K"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "K-SR"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
             "pathName": "SR-L"
           }
         },
@@ -68,6 +80,18 @@
           "type": "path",
           "data": {
             "pathName": "SL-D"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D-SL"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SL-E"
           }
         }
       ]

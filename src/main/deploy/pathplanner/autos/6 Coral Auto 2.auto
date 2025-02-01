@@ -7,67 +7,67 @@
         {
           "type": "path",
           "data": {
-            "pathName": "PreloadScore"
+            "pathName": "ST-J"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "StationPickup"
+            "pathName": "J-SR"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "StationScoreAlt"
+            "pathName": "SR-K"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "StationPickupAlt"
+            "pathName": "K-SR"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "StationScore"
+            "pathName": "SR-L"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "GroundPickup1"
+            "pathName": "L-G1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "GroundScore1"
+            "pathName": "G1-A"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "GroundPickup2"
+            "pathName": "A-G2"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "GroundScore2"
+            "pathName": "G2-B"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "GroundPickup3"
+            "pathName": "B-G3"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "GroundScore3"
+            "pathName": "G3-C"
           }
         }
       ]

@@ -8,11 +8,11 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.0502140410958902,
-        "y": 6.21875
+        "x": 3.097503767118477,
+        "y": 6.130967286794747
       },
       "isLocked": false,
-      "linkedName": "StationScoreAlt"
+      "linkedName": "K"
     },
     {
       "anchor": {
@@ -20,12 +20,12 @@
         "y": 7.27054794520548
       },
       "prevControl": {
-        "x": 2.599443493150685,
-        "y": 6.564340753424658
+        "x": 2.3358690356702345,
+        "y": 6.850151734932205
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Station1"
+      "linkedName": "SR"
     }
   ],
   "rotationTargets": [],
@@ -34,10 +34,10 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 5.0,
-    "maxAcceleration": 5.0,
+    "maxAcceleration": 11.7,
     "maxAngularVelocity": 270.0,
-    "maxAngularAcceleration": 360.0,
-    "nominalVoltage": 12.0,
+    "maxAngularAcceleration": 2580.0,
+    "nominalVoltage": 13.0,
     "unlimited": false
   },
   "goalEndState": {

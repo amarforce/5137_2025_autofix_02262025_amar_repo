@@ -7,67 +7,67 @@
         {
           "type": "path",
           "data": {
-            "pathName": "ST-J"
+            "pathName": "SB-E"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "J-SR"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "SR-L"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "L-G1"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "G1-A"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "A-G2"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "G2-B"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "B-G3"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "G3-C"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "C-SL"
+            "pathName": "E-SL"
           }
         },
         {
           "type": "path",
           "data": {
             "pathName": "SL-D"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D-SL"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SL-C"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "C-G3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "G3-B"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "B-G2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "G2-A"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "A-G1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "G1-L"
           }
         }
       ]

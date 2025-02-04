@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -28,6 +29,7 @@ public class MultiCommands {
     private Arm arm;
     private Wrist wrist;
     private Elevator elevator;
+    private StringLogEntry log;
 
     /**
      * Constructor for MultiCommands.
@@ -40,7 +42,7 @@ public class MultiCommands {
      * @param hangCommand The HangCommand command group.
      */
     public MultiCommands(ArmCommands armCommands, ElevatorCommands elevatorCommands, WristCommands wristCommands,
-                         SwerveCommands swerveCommands, IntakeCommands intakeCommands, HangCommand hangCommand, Reef reef, Arm arm, Wrist wrist, Elevator elevator) {
+                         SwerveCommands swerveCommands, IntakeCommands intakeCommands, HangCommand hangCommand, Reef reef, Arm arm, Wrist wrist, Elevator elevator, StringLogEntry log) {
         this.armCommands = armCommands;
         this.elevatorCommands = elevatorCommands;
         this.wristCommands = wristCommands;
@@ -51,6 +53,7 @@ public class MultiCommands {
         this.arm=arm;
         this.wrist=wrist;
         this.elevator=elevator;
+        this.log=log;
     }
 
     /**
@@ -62,7 +65,8 @@ public class MultiCommands {
         return new ParallelCommandGroup(
             armCommands.moveToGroundIntake(),
             elevatorCommands.moveToGroundIntake(),
-            wristCommands.toPos1()
+            wristCommands.toPos1(),
+            new InstantCommand(()->log.append("Moving to ground intake"))
         );
     }
 
@@ -75,7 +79,8 @@ public class MultiCommands {
         return new ParallelCommandGroup(
             armCommands.moveToDefault(),
             elevatorCommands.moveToDefault(),
-            wristCommands.toPos1()
+            wristCommands.toPos1(),
+            new InstantCommand(()->log.append("Moving to default"))
         );
     }
 
@@ -88,7 +93,8 @@ public class MultiCommands {
         return new ParallelCommandGroup(
             armCommands.moveToSource(),
             elevatorCommands.moveToSource(),
-            wristCommands.toPos2()
+            wristCommands.toPos2(),
+            new InstantCommand(()->log.append("Moving to source"))
         );
     }
 
@@ -101,7 +107,8 @@ public class MultiCommands {
         return new ParallelCommandGroup(
             armCommands.moveToAlgae(),
             elevatorCommands.moveToAlgae(),
-            wristCommands.toPos2()
+            wristCommands.toPos2(),
+            new InstantCommand(()->log.append("Moving to algae"))
         );
     }
 
@@ -115,7 +122,8 @@ public class MultiCommands {
         return new ParallelCommandGroup(
             armCommands.moveToGoal(goal),
             elevatorCommands.moveToGoal(goal),
-            wristCommands.toPos2()
+            wristCommands.toPos2(),
+            new InstantCommand(()->log.append("Moving to goal "+goal))
         );
     }
 

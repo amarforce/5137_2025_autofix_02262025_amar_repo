@@ -73,6 +73,7 @@ public class RobotContainer {
 		DataLog dataLog=DataLogManager.getLog();
 		DriverStation.startDataLog(dataLog);
 		log = new StringLogEntry(dataLog, "container");
+		StringLogEntry swerveLog = new StringLogEntry(dataLog, "swerve");
 
 		try{
 			// Initialize controllers
@@ -87,7 +88,7 @@ public class RobotContainer {
 
 			// // Initialize subsystems with data log
 			vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
-			swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,new StringLogEntry(dataLog, "swerve"));
+			swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,swerveLog);
 			elevator = new Elevator(new StringLogEntry(dataLog, "elevator"));
 			arm = new Arm(new StringLogEntry(dataLog, "arm"));
 			wrist = new Wrist(new StringLogEntry(dataLog, "wrist"));
@@ -96,13 +97,13 @@ public class RobotContainer {
 			armMechanism = new ArmMechanism(arm, elevator, wrist);
 
 			// Initialize commands for each subsystem
-			swerveCommands = new SwerveCommands(swerve);
+			swerveCommands = new SwerveCommands(swerve,swerveLog);
 			elevatorCommands = new ElevatorCommands(elevator);
 			armCommands = new ArmCommands(arm);
 			wristCommands = new WristCommands(wrist);
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
-			multiCommands = new MultiCommands(armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand, reef, arm, wrist, elevator);
+			multiCommands = new MultiCommands(armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand, reef, arm, wrist, elevator, new StringLogEntry(dataLog, "multi"));
 
 			// Initialize cage choice
 			cageChoice = new CageChoice();

@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -23,14 +24,16 @@ import frc.robot.subsystems.Swerve;
  */
 public class SwerveCommands {
     private Swerve swerve;
+    private StringLogEntry log;
 
     /**
      * Constructor for SwerveCommands.
      *
      * @param swerve The Swerve subsystem that this class will control.
      */
-    public SwerveCommands(Swerve swerve) {
+    public SwerveCommands(Swerve swerve,StringLogEntry log) {
         this.swerve = swerve;
+        this.log=log;
     }
 
     /**
@@ -56,9 +59,13 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the specified pose.
      */
     public Command driveToPose(Supplier<Pose2d> pose){
-        Command auto = AutoBuilder.pathfindToPose(pose.get(), SwerveConstants.constraints);
-        auto.addRequirements(swerve);
-        return auto;
+        return new InstantCommand(()->{
+            Pose2d p=pose.get();
+            Command auto = AutoBuilder.pathfindToPose(p, SwerveConstants.constraints);
+            log.append("Moving to pose "+p);
+            auto.addRequirements(swerve);
+            auto.schedule();
+        });
     }
 
     /**

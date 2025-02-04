@@ -52,6 +52,15 @@ public class Reef implements NTSendable{
         }
     }
 
+    public int getLevel(int branch){
+        for(int i=2;i>=0;i--){
+            if(!coralPlaced[i][branch]){
+                return i+2;
+            }
+        }
+        return 1;
+    }
+
     @SuppressWarnings("unchecked")
     public String jsonify(){
         JSONObject obj = new JSONObject();

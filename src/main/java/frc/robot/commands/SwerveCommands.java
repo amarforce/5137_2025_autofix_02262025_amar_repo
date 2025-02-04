@@ -135,6 +135,10 @@ public class SwerveCommands {
         });
     }
 
+    public Command driveToBranch(int branch){
+        return driveToPose(()->GeneralConstants.allReef[branch]);
+    }
+
     /**
      * Creates a command to run a quasistatic system identification routine.
      *

@@ -135,6 +135,10 @@ public class Wrist extends SubsystemBase {
         return WristConstants.transform.transformVel(wristMotor.getVelocity().getValueAsDouble());
     }
 
+    public boolean atSetpoint(){
+        return controller.atSetpoint();
+    }
+
     public SysIdRoutine getRoutine(){
         return sysIdRoutine;
     }

@@ -138,6 +138,10 @@ public class Arm extends SubsystemBase {
         return ArmConstants.transform.transformVel(armMotor.getPosition().getValueAsDouble());
     }
 
+    public boolean atSetpoint(){
+        return controller.atSetpoint();
+    }
+
     public SysIdRoutine getRoutine(){
         return sysIdRoutine;
     }

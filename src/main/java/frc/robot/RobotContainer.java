@@ -102,7 +102,7 @@ public class RobotContainer {
 			wristCommands = new WristCommands(wrist);
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
-			multiCommands = new MultiCommands(armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand);
+			multiCommands = new MultiCommands(armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand, reef, arm, wrist, elevator);
 
 			// Initialize cage choice
 			cageChoice = new CageChoice();

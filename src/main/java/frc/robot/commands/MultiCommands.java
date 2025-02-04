@@ -2,9 +2,14 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.elastic.Reef;
+import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Wrist;
 
 /**
  * The MultiCommands class is responsible for creating complex commands that involve multiple subsystems.
@@ -19,6 +24,10 @@ public class MultiCommands {
     private IntakeCommands intakeCommands;
     @SuppressWarnings("unused")
     private HangCommand hangCommand;
+    private Reef reef;
+    private Arm arm;
+    private Wrist wrist;
+    private Elevator elevator;
 
     /**
      * Constructor for MultiCommands.
@@ -31,13 +40,17 @@ public class MultiCommands {
      * @param hangCommand The HangCommand command group.
      */
     public MultiCommands(ArmCommands armCommands, ElevatorCommands elevatorCommands, WristCommands wristCommands,
-                         SwerveCommands swerveCommands, IntakeCommands intakeCommands, HangCommand hangCommand) {
+                         SwerveCommands swerveCommands, IntakeCommands intakeCommands, HangCommand hangCommand, Reef reef, Arm arm, Wrist wrist, Elevator elevator) {
         this.armCommands = armCommands;
         this.elevatorCommands = elevatorCommands;
         this.wristCommands = wristCommands;
         this.intakeCommands = intakeCommands;
         this.swerveCommands = swerveCommands;
         this.hangCommand = hangCommand;
+        this.reef=reef;
+        this.arm=arm;
+        this.wrist=wrist;
+        this.elevator=elevator;
     }
 
     /**
@@ -106,6 +119,16 @@ public class MultiCommands {
         );
     }
 
+    public Command moveToGoalWithRequirements(int goal){
+        return new FunctionalCommand(()->{},()->{
+            moveToGoal(goal);
+        },(e)->{},()->atSetpoint(),arm,wrist,elevator);
+    }
+
+    private boolean atSetpoint(){
+        return arm.atSetpoint() && elevator.atSetpoint() && wrist.atSetpoint();
+    }
+
     /**
      * Command to retrieve coral based on the robot's current pose.
      * 
@@ -132,6 +155,15 @@ public class MultiCommands {
             }
             return new SequentialCommandGroup(moveTo,intakeCommands.intakeUntilSwitched());
         }
+    }
+
+    public Command placeCoral(int branch){
+        return new SequentialCommandGroup(
+            new ParallelCommandGroup(
+                swerveCommands.driveToBranch(branch),
+                moveToGoalWithRequirements(reef.getLevel(branch))
+            ),
+            intakeCommands.outtake());
     }
 
     /**

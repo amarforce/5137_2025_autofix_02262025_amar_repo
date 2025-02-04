@@ -50,7 +50,6 @@ public class RobotContainer {
 	private WristCommands wristCommands;
 	private IntakeCommands intakeCommands;
 	private HangCommand hangCommand;
-	private LedCommands ledCommands;
 	private MultiCommands multiCommands;
 
 	// Additional components
@@ -104,9 +103,7 @@ public class RobotContainer {
 			wristCommands = new WristCommands(wrist);
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
-			ledCommands = new LedCommands(led);
 			multiCommands = new MultiCommands(arm, elevator, wrist, swerve, intake, hang, armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand);
-			ledCommands.red();
 			// Configure button bindings
 			configureBindings();
 

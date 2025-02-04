@@ -100,7 +100,7 @@ public class SwerveFactory {
                 TalonFX::new, TalonFX::new, CANcoder::new, // Motor and encoder constructors
 
                 new SwerveDrivetrainConstants()
-                    .withCANBusName("rio") // Set CAN bus name
+                    .withCANBusName("rhino") // Set CAN bus name
                     .withPigeon2Id((int) (long) constants.get("gyro_id")) // Set gyro ID
                     .withPigeon2Configs(null), // Set gyro configs (null for default)
 

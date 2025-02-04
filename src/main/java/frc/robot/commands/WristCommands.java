@@ -47,7 +47,7 @@ public class WristCommands {
      * @return A command that runs the quasi-static system identification routine.
      */
     public Command sysIdQuasistatic(SysIdRoutine.Direction dir) {
-        return wrist.sysIdRoutine.quasistatic(dir);
+        return wrist.getRoutine().quasistatic(dir);
     }
 
     /**
@@ -57,6 +57,6 @@ public class WristCommands {
      * @return A command that runs the dynamic system identification routine.
      */
     public Command sysIdDynamic(SysIdRoutine.Direction dir) {
-        return wrist.sysIdRoutine.dynamic(dir);
+        return wrist.getRoutine().dynamic(dir);
     }
 }

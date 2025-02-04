@@ -5,8 +5,10 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.IntakeConstants;
+import frc.robot.other.RobotUtils;
 
 /**
  * The Intake subsystem controls the intake mechanism of the robot.
@@ -64,12 +66,21 @@ public class Intake extends SubsystemBase {
      * Logs relevant data from the Intake subsystem.
      * This method is intended to be called periodically to record data.
      */
-    public void log() {
-        log.append("Speed: "+intakeMotor.get());
-        log.append("Applied Output: "+intakeMotor.getAppliedOutput());
-        log.append("Bus Voltage: "+intakeMotor.getBusVoltage());
-        log.append("Motor Temperature: "+intakeMotor.getMotorTemperature());
-        log.append("Output Current: "+intakeMotor.getOutputCurrent());
-        log.append("Switched: "+isSwitched());
+    public void telemetry(){
+        SmartDashboard.putNumber("intake/speed",intakeMotor.get());
+        SmartDashboard.putNumber("intake/appliedOutput",intakeMotor.getAppliedOutput());
+        SmartDashboard.putNumber("intake/busVoltage",intakeMotor.getBusVoltage());
+        SmartDashboard.putNumber("intake/motorTemp",intakeMotor.getMotorTemperature());
+        SmartDashboard.putNumber("intake/outputCurrent",intakeMotor.getOutputCurrent());
+        SmartDashboard.putBoolean("intake/isSwitched",isSwitched());
+    }
+
+    @Override
+    public void periodic(){
+        try{
+            telemetry();
+        }catch(Exception e){
+            log.append("Periodic error: "+RobotUtils.getError(e));
+        }
     }
 }

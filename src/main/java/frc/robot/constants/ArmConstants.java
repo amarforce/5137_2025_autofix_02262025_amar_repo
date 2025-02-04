@@ -2,14 +2,16 @@ package frc.robot.constants;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import frc.robot.other.MotorTransform;
 
 public class ArmConstants {
     // Motor ID
-    public static final int motorId = 20;
+    public static final int motorId = 2;
 
     // Encoder transform
     public static final double armOffset = 0.0;
     public static final double gearRatio = 100.0;
+    public static final MotorTransform transform = new MotorTransform((2*Math.PI)/gearRatio, armOffset);
     
     // PID constants
     public static final double kP = 30;

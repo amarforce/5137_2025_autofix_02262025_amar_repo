@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -11,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.SwerveConstants;
+import frc.robot.other.DetectedObject;
 import frc.robot.subsystems.Swerve;
 
 /**
@@ -104,15 +106,6 @@ public class SwerveCommands {
     }
 
     /**
-     * Creates a command to drive the swerve subsystem to the closest cage.
-     *
-     * @return A command that drives the swerve subsystem to the closest cage.
-     */
-    public Command driveToCage() {
-        return driveToPose(() -> SwerveConstants.cages[swerve.getCage()]);
-    }
-
-    /**
      * Creates a command to lock the swerve subsystem in place.
      *
      * @return A command that locks the swerve subsystem.
@@ -130,23 +123,34 @@ public class SwerveCommands {
         return new InstantCommand(() -> swerve.resetGyro(), swerve);
     }
 
+    public Command driveToCoral(){
+        return driveToPose(()->{
+            List<DetectedObject> objects=swerve.getGroundCoral();
+            Pose2d[] poses=new Pose2d[objects.size()];
+            for(int i=0;i<poses.length;i++){
+                poses[i]=objects.get(i).getPose().toPose2d();
+            }
+            return swerve.getClosest(poses);
+        });
+    }
+
     /**
      * Creates a command to run a quasistatic system identification routine.
      *
-     * @param direction The direction of the quasistatic test.
+     * @param dir The direction of the quasistatic test.
      * @return A command that runs the quasistatic system identification routine.
      */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return swerve.getRoutine().quasistatic(direction);
+    public Command sysIdQuasistatic(SysIdRoutine.Direction dir) {
+        return swerve.getRoutine().quasistatic(dir);
     }
 
     /**
      * Creates a command to run a dynamic system identification routine.
      *
-     * @param direction The direction of the dynamic test.
+     * @param dir The direction of the dynamic test.
      * @return A command that runs the dynamic system identification routine.
      */
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return swerve.getRoutine().dynamic(direction);
+    public Command sysIdDynamic(SysIdRoutine.Direction dir) {
+        return swerve.getRoutine().dynamic(dir);
     }
 }

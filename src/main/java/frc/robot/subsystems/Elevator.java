@@ -6,7 +6,9 @@ import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
@@ -22,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
+import frc.robot.other.RobotUtils;
 
 /**
  * The Elevator subsystem controls the elevator mechanism of the robot.
@@ -32,23 +35,23 @@ import frc.robot.constants.GeneralConstants;
 public class Elevator extends SubsystemBase {
 
     // Define the motors for the elevator
-    private TalonFX leftMotor = new TalonFX(ElevatorConstants.leftMotorId, "rhino");
-    private TalonFX rightMotor = new TalonFX(ElevatorConstants.rightMotorId, "rhino");
+    private TalonFX leftMotor = new TalonFX(ElevatorConstants.leftMotorId, "rio");
+    private TalonFX rightMotor = new TalonFX(ElevatorConstants.rightMotorId, "rio");
 
     // PID controller and feedforward controller for elevator control
     private PIDController controller = new PIDController(ElevatorConstants.kP, ElevatorConstants.kI, ElevatorConstants.kD);
-    private ElevatorFeedforward feedforward = new ElevatorFeedforward(ElevatorConstants.kS, ElevatorConstants.kG, ElevatorConstants.kV);
+    private ElevatorFeedforward feedforward = new ElevatorFeedforward(ElevatorConstants.kS, ElevatorConstants.kG, ElevatorConstants.kV, ElevatorConstants.kA);
 
     // Simulation objects for the elevator
     private ElevatorSim elevatorSim = new ElevatorSim(ElevatorConstants.motorSim, ElevatorConstants.gearRatio, ElevatorConstants.carriageMass, ElevatorConstants.drumRadius, ElevatorConstants.minHeight, ElevatorConstants.maxHeight, true, ElevatorConstants.defaultGoal);
-    private TalonFXSimState leftMotorSim = leftMotor.getSimState();
-    private TalonFXSimState rightMotorSim = rightMotor.getSimState();
+    private TalonFXSimState leftMotorSim = new TalonFXSimState(leftMotor, ChassisReference.CounterClockwise_Positive);
+    private TalonFXSimState rightMotorSim = new TalonFXSimState(rightMotor, ChassisReference.Clockwise_Positive);
 
     // Goal position for the elevator
     private double goal = ElevatorConstants.defaultGoal;
 
     // SysId routine for system identification
-    public final SysIdRoutine sysIdRoutine = 
+    private final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
             // Empty config defaults to 1 volt/second ramp rate and 7 volt step voltage.
             new SysIdRoutine.Config(),
@@ -75,7 +78,9 @@ public class Elevator extends SubsystemBase {
         // Configure the motors to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Coast;
+        currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
         leftMotor.getConfigurator().apply(currentConfigs);
+        currentConfigs.Inverted = InvertedValue.Clockwise_Positive;
         rightMotor.getConfigurator().apply(currentConfigs);
 
         // Set the tolerance for the PID controller
@@ -103,13 +108,7 @@ public class Elevator extends SubsystemBase {
      * @param newGoal The new goal position in meters.
      */
     public void setGoal(double newGoal) {
-        if(newGoal < ElevatorConstants.minHeight){
-            newGoal = ElevatorConstants.minHeight;
-        }
-        if(newGoal > ElevatorConstants.maxHeight){
-            newGoal = ElevatorConstants.maxHeight;
-        }
-        goal = newGoal;
+        goal = RobotUtils.clamp(newGoal,ElevatorConstants.minHeight,ElevatorConstants.maxHeight);
     }
 
     /**
@@ -118,7 +117,7 @@ public class Elevator extends SubsystemBase {
      * @return The current position in meters.
      */
     public double getMeasurement() {
-        return (leftMotor.getPosition().getValueAsDouble() - rightMotor.getPosition().getValueAsDouble()) / 2 * ElevatorConstants.metersPerRotation - ElevatorConstants.elevatorOffset;
+        return ElevatorConstants.transform.transformPos((leftMotor.getPosition().getValueAsDouble() + rightMotor.getPosition().getValueAsDouble()) / 2);
     }
 
     /**
@@ -127,7 +126,7 @@ public class Elevator extends SubsystemBase {
      * @return The current velocity in meters per second.
      */
     public double getVelocity() {
-        return (leftMotor.getVelocity().getValueAsDouble() - rightMotor.getVelocity().getValueAsDouble()) / 2 * ElevatorConstants.metersPerRotation;
+        return ElevatorConstants.transform.transformVel((leftMotor.getVelocity().getValueAsDouble() + rightMotor.getVelocity().getValueAsDouble()) / 2);
     }
 
     /**
@@ -145,7 +144,7 @@ public class Elevator extends SubsystemBase {
      * @return The average input to the motors.
      */
     public double getInput() {
-        return (leftMotor.get() - rightMotor.get()) / 2;
+        return (leftMotor.get() + rightMotor.get()) / 2;
     }
 
     /**
@@ -155,7 +154,11 @@ public class Elevator extends SubsystemBase {
      */
     public void setVoltage(Voltage v) {
         leftMotor.setVoltage(v.magnitude());
-        rightMotor.setVoltage(-v.magnitude());
+        rightMotor.setVoltage(v.magnitude());
+    }
+
+    public SysIdRoutine getRoutine(){
+        return sysIdRoutine;
     }
 
     /**
@@ -163,9 +166,27 @@ public class Elevator extends SubsystemBase {
      * This includes the elevator height, velocity, and input.
      */
     private void telemetry() {
-        SmartDashboard.putNumber("Elevator Height", getMeasurement());
-        SmartDashboard.putNumber("Elevator Velocity", getVelocity());
-        SmartDashboard.putNumber("Elevator Input", getInput());
+        SmartDashboard.putNumber("elevator/height",getMeasurement());
+        SmartDashboard.putNumber("elevator/rawHeight",leftMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/goal",getGoal());
+        SmartDashboard.putNumber("elevator/velocity",getVelocity());
+        SmartDashboard.putNumber("elevator/error",controller.getError());
+        SmartDashboard.putNumber("elevator/leftMotorTemp",leftMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorTemp",rightMotor.getDeviceTemp().getValueAsDouble());
+        int leftMotorFault = leftMotor.getFaultField().asSupplier().get();
+        if (leftMotorFault != 0){
+            SmartDashboard.putNumber("elevator/leftMotorFault",leftMotorFault);
+        }
+        int rightMotorFault = rightMotor.getFaultField().asSupplier().get();
+        if (rightMotorFault != 0){
+            SmartDashboard.putNumber("elevator/rightMotorFault",rightMotorFault);
+        }
+        SmartDashboard.putNumber("elevator/leftMotorCurrent",leftMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorCurrent",rightMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotorVoltage",leftMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorVoltage",rightMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotorSupplyVoltage",leftMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotorSupplyVoltage",rightMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**
@@ -174,11 +195,16 @@ public class Elevator extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        telemetry();
-        // Calculate the feedforward and PID output
-        double extra = feedforward.calculate(getVelocity());
-        double voltage = controller.calculate(getMeasurement(), goal) + extra;
-        setVoltage(Volts.of(voltage));
+        try{
+            telemetry();
+            // Calculate the feedforward and PID output
+            double extra = feedforward.calculate(getVelocity());
+            double voltage = controller.calculate(getMeasurement(), goal) + extra;
+            setVoltage(Volts.of(voltage));
+        }catch(Exception e){
+            log.append("Periodic error: "+RobotUtils.getError(e));
+        }
+        System.out.println("Goal: " + getGoal() + " Measurement: " + getMeasurement());
     }
 
     /**
@@ -192,47 +218,19 @@ public class Elevator extends SubsystemBase {
         rightMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 
         // Calculate the input voltage to the elevator simulation
-        double elevatorInput = (leftMotorSim.getMotorVoltage() - rightMotorSim.getMotorVoltage()) / 2;
+        double elevatorInput = (leftMotorSim.getMotorVoltage() + rightMotorSim.getMotorVoltage()) / 2;
         elevatorSim.setInputVoltage(elevatorInput);
         elevatorSim.update(GeneralConstants.simPeriod);
 
         // Update the motor positions and velocities based on the simulation
-        double pos = elevatorSim.getPositionMeters();
-        leftMotorSim.setRawRotorPosition((pos + ElevatorConstants.elevatorOffset) / ElevatorConstants.metersPerRotation);
-        rightMotorSim.setRawRotorPosition(-(pos + ElevatorConstants.elevatorOffset) / ElevatorConstants.metersPerRotation);
-        double vel = elevatorSim.getVelocityMetersPerSecond();
-        leftMotorSim.setRotorVelocity(vel / ElevatorConstants.metersPerRotation);
-        rightMotorSim.setRotorVelocity(-vel / ElevatorConstants.metersPerRotation);
+        double pos = ElevatorConstants.transform.transformPosInv(elevatorSim.getPositionMeters());
+        leftMotorSim.setRawRotorPosition(pos);
+        rightMotorSim.setRawRotorPosition(pos);
+        double vel = ElevatorConstants.transform.transformPosInv(elevatorSim.getVelocityMetersPerSecond());
+        leftMotorSim.setRotorVelocity(vel);
+        rightMotorSim.setRotorVelocity(vel);
 
         // Update the RoboRIO simulation with the current battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps()));
-    }
-
-    /**
-     * Logs elevator data.
-     */
-    public void log(){
-        log.append("Height: "+getMeasurement());
-        log.append("Velocity: "+getVelocity());
-        log.append("Goal: "+getGoal());
-        log.append("Input: "+getInput());
-        log.append("Error: "+controller.getError());
-        log.append("Left Motor Temp: "+leftMotor.getDeviceTemp().getValueAsDouble());
-        log.append("Right Motor Temp: "+rightMotor.getDeviceTemp().getValueAsDouble());
-        log.append("Left Motor Voltage: "+leftMotor.getMotorVoltage().getValueAsDouble());
-        log.append("Right Motor Voltage: "+rightMotor.getMotorVoltage().getValueAsDouble());
-        // Fault flag = 0 means nothing bad happened, fault flag > 0 means something bad happened
-        int leftMotorFault=leftMotor.getFaultField().asSupplier().get();
-        if(leftMotorFault!=0){
-            log.append("Left Motor Error: "+leftMotorFault);
-        }
-        int rightMotorFault=leftMotor.getFaultField().asSupplier().get();
-        if(rightMotorFault!=0){
-            log.append("Right Motor Error: "+rightMotorFault);
-        }
-        log.append("Left Motor Supply Current: "+leftMotor.getSupplyCurrent());
-        log.append("Right Motor Supply Current: "+rightMotor.getSupplyCurrent());
-        log.append("Left Motor Supply Voltage: "+leftMotor.getSupplyVoltage());
-        log.append("Right Motor Supply Voltage: "+rightMotor.getSupplyVoltage());
     }
 }

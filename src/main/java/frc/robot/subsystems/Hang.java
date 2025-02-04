@@ -2,8 +2,10 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.HangConstants;
+import frc.robot.other.RobotUtils;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.Compressor;
 
@@ -88,10 +90,19 @@ public class Hang extends SubsystemBase {
      * Logs relevant data from the Hang subsystem.
      * This method is currently a placeholder and should be implemented to log specific data.
      */
-    public void log() {
-        log.append("Climb Solenoid Enabled: "+climbSolenoid.get());
-        log.append("Climb Solenoid Shorted: "+climbSolenoid.isDisabled());
-        log.append("Clamp Solenoid Enabled: "+clampSolenoid.get());
-        log.append("Clamp Solenoid Shorted: "+clampSolenoid.isDisabled());
+    private void telemetry(){
+        SmartDashboard.putBoolean("hang/climbSolenoidEnabled",climbSolenoid.get());
+        SmartDashboard.putBoolean("hang/climbSolenoidShorted",climbSolenoid.isDisabled());
+        SmartDashboard.putBoolean("hang/clampSolenoidEnabled",clampSolenoid.get());
+        SmartDashboard.putBoolean("hang/clampSolenoidShorted",clampSolenoid.isDisabled());
+    }
+
+    @Override
+    public void periodic() {
+        try{
+            telemetry();
+        }catch(Exception e){
+            log.append("Periodic error: "+RobotUtils.getError(e));
+        }
     }
 }

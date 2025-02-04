@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.elastic.*;
 import frc.robot.other.ArmMechanism;
 import frc.robot.other.AutoFactory;
+import frc.robot.other.CageChoice;
 import frc.robot.other.RobotUtils;
 import frc.robot.subsystems.*;
 import frc.robot.commands.*;
@@ -56,6 +57,8 @@ public class RobotContainer {
 	private Reef reef;
 	private ReefScoring reefScoring;
 
+	private CageChoice cageChoice;
+
 	// Factory for autonomous commands
 	private AutoFactory autoFactory;
 
@@ -76,8 +79,6 @@ public class RobotContainer {
 			// Initialize controllers
 			driver = new CommandPS5Controller(0);
 			operator = new CommandPS5Controller(1);
-
-			
 
 			// Initialize Reef and ReefScoring components
 			reef = new Reef();
@@ -103,7 +104,11 @@ public class RobotContainer {
 			wristCommands = new WristCommands(wrist);
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
-			multiCommands = new MultiCommands(arm, elevator, wrist, swerve, intake, hang, armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand);
+			multiCommands = new MultiCommands(armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand);
+
+			// Initialize cage choice
+			cageChoice = new CageChoice();
+
 			// Configure button bindings
 			configureBindings();
 
@@ -134,7 +139,7 @@ public class RobotContainer {
 
 		// Bind buttons to drive to specific locations
 		driver.triangle().onTrue(swerveCommands.driveToStation());
-		driver.square().onTrue(swerveCommands.driveToCage());
+		driver.square().onTrue(swerveCommands.driveToPose(()->cageChoice.getCage()));
 		driver.circle().onTrue(swerveCommands.driveToProcessor());
 
 		// Bind D-pad buttons to drive to specific reef positions
@@ -197,22 +202,5 @@ public class RobotContainer {
 	 */
 	public Command getAutonomousCommand() {
 		return autoFactory.getAuto();
-	}
-
-	/**
-	 * Logs data from all subsystems.
-	 */
-	public void log() {
-		try{
-			arm.log();
-			wrist.log();
-			elevator.log();
-			hang.log();
-			swerve.log();
-			vision.log();
-			intake.log();
-		}catch(Exception e){
-			log.append("Error while logging: "+RobotUtils.getError(e));
-		}
 	}
 }

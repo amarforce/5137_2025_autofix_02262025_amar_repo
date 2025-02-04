@@ -6,5 +6,4 @@ public class GeneralConstants {
     public static final int sides = 6;
     public static final int numAuto = 6;
     public static final double simPeriod = 0.02;
-    public static final double logPeriod = 1;
 }

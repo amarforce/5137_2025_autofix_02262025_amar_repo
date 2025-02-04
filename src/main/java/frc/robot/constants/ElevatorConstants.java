@@ -32,7 +32,7 @@ public class ElevatorConstants {
     public static final double defaultGoal = 0;
 
     // Simulation constants
-    public static final double gearRatio = 60.0; // gear ratio
+    public static final double gearRatio = 30.0; // gear ratio
     public static final double carriageMass = 13.0; // in kg
     public static final double drumRadius = 0.0254; // in meters
     public static final double minHeight = 0; // in meters
@@ -41,7 +41,7 @@ public class ElevatorConstants {
 
     // Encoder transform
     public static final double elevatorOffset = 0;
-    public static final double metersPerRotation = drumRadius*4*Math.PI/gearRatio; // 4pi since elevator is 2-stage
+    public static final double metersPerRotation = drumRadius*2*Math.PI/gearRatio;
     public static final MotorTransform transform = new MotorTransform(metersPerRotation, elevatorOffset);
 
     // Mech constants

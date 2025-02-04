@@ -1,5 +1,7 @@
 package frc.robot.commands;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -127,10 +129,11 @@ public class MultiCommands {
         );
     }
 
-    public Command moveToGoalWithRequirements(int goal){
+    public Command moveToGoalWithRequirements(Supplier<Integer> level){
         return new FunctionalCommand(()->{},()->{
-            moveToGoal(goal);
-        },(e)->{},()->atSetpoint(),arm,wrist,elevator);
+            System.out.println(level.get());
+            moveToGoal(level.get()).schedule();
+        },(e)->{},()->false,arm,wrist,elevator);
     }
 
     private boolean atSetpoint(){
@@ -169,7 +172,7 @@ public class MultiCommands {
         return new SequentialCommandGroup(
             new ParallelCommandGroup(
                 swerveCommands.driveToBranch(branch),
-                moveToGoalWithRequirements(reef.getLevel(branch))
+                moveToGoalWithRequirements(()->reef.getLevel(branch))
             ),
             intakeCommands.outtake());
     }

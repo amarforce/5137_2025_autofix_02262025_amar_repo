@@ -167,6 +167,8 @@ public class RobotContainer {
 		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -operator.getLeftY() / 50));
 		arm.setDefaultCommand(armCommands.changeGoal(() -> -operator.getLeftX() / 50));
 
+		operator.axisLessThan(0,0).onTrue(multiCommands.placeCoral(0));
+
 		// Operator Bindings
 
 		// Bind buttons to move to specific goals

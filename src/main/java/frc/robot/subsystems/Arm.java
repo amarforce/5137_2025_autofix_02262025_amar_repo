@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ArmConstants;
+import frc.robot.constants.ArmSystemConstants;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.other.RobotUtils;
 
@@ -40,7 +41,7 @@ public class Arm extends SubsystemBase {
     private ArmFeedforward feedforward = new ArmFeedforward(ArmConstants.kS, ArmConstants.kG, ArmConstants.kV);
     
     // Goal position for the arm in radians
-    private double goal = ArmConstants.defaultGoal;
+    private double goal = ArmSystemConstants.defaultState.armPosition;
     
     // Simulation model for the arm
     private SingleJointedArmSim armSim = new SingleJointedArmSim(
@@ -51,7 +52,7 @@ public class Arm extends SubsystemBase {
         ArmConstants.minAngle, 
         ArmConstants.maxAngle, 
         true, 
-        ArmConstants.defaultGoal
+        ArmSystemConstants.defaultState.armPosition
     );
 
     // System Identification routine for characterizing the arm

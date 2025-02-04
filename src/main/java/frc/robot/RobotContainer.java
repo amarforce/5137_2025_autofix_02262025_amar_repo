@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.elastic.*;
-import frc.robot.other.ArmMechanism;
 import frc.robot.other.AutoFactory;
 import frc.robot.other.CageChoice;
 import frc.robot.other.RobotUtils;
@@ -41,7 +40,8 @@ public class RobotContainer {
 	private Wrist wrist;
 	private Intake intake;
 	private Hang hang;
-	private ArmMechanism armMechanism;
+	private ArmSystem armSystem;
+
 
 	// Commands for each subsystem
 	private SwerveCommands swerveCommands;
@@ -94,7 +94,7 @@ public class RobotContainer {
 			wrist = new Wrist(new StringLogEntry(dataLog, "wrist"));
 			intake = new Intake(new StringLogEntry(dataLog, "intake"));
 			hang = new Hang(new StringLogEntry(dataLog, "hang"));
-			armMechanism = new ArmMechanism(arm, elevator, wrist);
+			armSystem = new ArmSystem(arm, elevator, wrist);
 
 			// Initialize commands for each subsystem
 			swerveCommands = new SwerveCommands(swerve,swerveLog);
@@ -103,7 +103,7 @@ public class RobotContainer {
 			wristCommands = new WristCommands(wrist);
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
-			multiCommands = new MultiCommands(armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand, reef, arm, wrist, elevator, new StringLogEntry(dataLog, "multi"));
+			multiCommands = new MultiCommands(armSystem, swerveCommands, intakeCommands, hangCommand, reef);
 
 			// Initialize cage choice
 			cageChoice = new CageChoice();
@@ -172,15 +172,11 @@ public class RobotContainer {
 		// Operator Bindings
 
 		// Bind buttons to move to specific goals
-		operator.triangle().onTrue(multiCommands.moveToGoal(4));
-		operator.circle().onTrue(multiCommands.moveToGoal(3));
-		operator.square().onTrue(multiCommands.moveToGoal(2));
-		operator.cross().onTrue(multiCommands.moveToGoal(1));
+		operator.triangle().onTrue(multiCommands.moveToGoal(()->4));
+		operator.circle().onTrue(multiCommands.moveToGoal(()->3));
+		operator.square().onTrue(multiCommands.moveToGoal(()->2));
+		operator.cross().onTrue(multiCommands.moveToGoal(()->1));
 
-		// Bind R1 button to toggle wrist position
-		operator.R1()
-			.onTrue(wristCommands.toPos1())
-			.onFalse(wristCommands.toPos2());
 
 		// Bind L2 button to outtake and stop intake
 		operator.L2()

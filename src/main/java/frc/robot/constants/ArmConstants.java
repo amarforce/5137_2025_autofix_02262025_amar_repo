@@ -27,13 +27,6 @@ public class ArmConstants {
 
     // Arm tolerance
     public static final double armTolerance = 0.1;
-
-    // Arm goals
-    public static final double[] goals = {Units.degreesToRadians(0),Units.degreesToRadians(25),Units.degreesToRadians(50),Units.degreesToRadians(75)};
-    public static final double sourceGoal = Units.degreesToRadians(-10);
-    public static final double groundIntakeGoal = Units.degreesToRadians(-20);
-    public static final double algaeGoal = Units.degreesToRadians(30);
-    public static final double defaultGoal = Units.degreesToRadians(90);
     
     // Simulation constants
     public static final double minAngle = Units.degreesToRadians(-43);
@@ -41,8 +34,4 @@ public class ArmConstants {
     public static final double momentOfInertia = 1.2;
     public static final double armLength = 0.594;
     public static final DCMotor motorSim = DCMotor.getKrakenX60(1);
-
-    // Mechanism constants
-    public static final int mechWidth = 20;
-    public static final int mechHeight = 50;
 }

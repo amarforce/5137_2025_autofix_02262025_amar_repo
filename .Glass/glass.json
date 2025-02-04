@@ -90,11 +90,6 @@
         "window": {
           "visible": true
         }
-      },
-      "/SmartDashboard/Wrist": {
-        "window": {
-          "visible": true
-        }
       }
     }
   },
@@ -104,6 +99,9 @@
   "NetworkTables Settings": {
     "mode": "Client (NT4)",
     "serverTeam": "localhost"
+  },
+  "NetworkTables View": {
+    "visible": false
   },
   "Plots": {
     "Plot <0>": {

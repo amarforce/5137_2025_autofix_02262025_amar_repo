@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.WristConstants;
 import frc.robot.other.RobotUtils;
 import frc.robot.constants.GeneralConstants;
+import frc.robot.constants.ArmSystemConstants;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -37,7 +38,7 @@ public class Wrist extends SubsystemBase {
     private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
     
     // Goal position for the Wrist in radians
-    private double goal = WristConstants.pos1;
+    private double goal = ArmSystemConstants.defaultState.wristPosition;
     
     // Simulation model for the Wrist
     private SingleJointedArmSim wristSim = new SingleJointedArmSim(
@@ -48,7 +49,7 @@ public class Wrist extends SubsystemBase {
         WristConstants.minAngle,
         WristConstants.maxAngle,
         true,
-        WristConstants.pos1
+        ArmSystemConstants.defaultState.wristPosition
     );
 
     // System Identification routine for characterizing the Wrist

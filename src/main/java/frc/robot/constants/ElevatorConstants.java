@@ -4,7 +4,6 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.Robot;
 import frc.robot.other.MotorTransform;
 
-
 public class ElevatorConstants {
     // Motor IDs
     public static final int leftMotorId = Robot.isSimulation()?20:0;
@@ -24,13 +23,6 @@ public class ElevatorConstants {
     // Elevator tolerance
     public static final double elevatorTolerance = 0.1;
 
-    // Elevator goals
-    public static final double[] goals = {0.06,0.26,0.56,1.26};
-    public static final double sourceGoal = 0.76;
-    public static final double groundIntakeGoal = 0.26;
-    public static final double algaeGoal = 0.35;
-    public static final double defaultGoal = 0;
-
     // Simulation constants
     public static final double gearRatio = 30.0; // gear ratio
     public static final double carriageMass = 13.0; // in kg
@@ -43,8 +35,4 @@ public class ElevatorConstants {
     public static final double elevatorOffset = 0;
     public static final double metersPerRotation = drumRadius*2*Math.PI/gearRatio;
     public static final MotorTransform transform = new MotorTransform(metersPerRotation, elevatorOffset);
-
-    // Mech constants
-    public static final double mechWidth = 20;
-    public static final double mechHeight = 50;
 }

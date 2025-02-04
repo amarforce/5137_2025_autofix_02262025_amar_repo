@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.other.RobotUtils;
+import frc.robot.constants.ArmSystemConstants;
 
 /**
  * The Elevator subsystem controls the elevator mechanism of the robot.
@@ -43,12 +44,21 @@ public class Elevator extends SubsystemBase {
     private ElevatorFeedforward feedforward = new ElevatorFeedforward(ElevatorConstants.kS, ElevatorConstants.kG, ElevatorConstants.kV, ElevatorConstants.kA);
 
     // Simulation objects for the elevator
-    private ElevatorSim elevatorSim = new ElevatorSim(ElevatorConstants.motorSim, ElevatorConstants.gearRatio, ElevatorConstants.carriageMass, ElevatorConstants.drumRadius, ElevatorConstants.minHeight, ElevatorConstants.maxHeight, true, ElevatorConstants.defaultGoal);
+    private ElevatorSim elevatorSim = new ElevatorSim(
+        ElevatorConstants.motorSim,
+        ElevatorConstants.gearRatio,
+        ElevatorConstants.carriageMass,
+        ElevatorConstants.drumRadius,
+        ElevatorConstants.minHeight,
+        ElevatorConstants.maxHeight,
+        true,
+        ArmSystemConstants.defaultState.elevatorPosition
+    );
     private TalonFXSimState leftMotorSim = new TalonFXSimState(leftMotor, ChassisReference.CounterClockwise_Positive);
     private TalonFXSimState rightMotorSim = new TalonFXSimState(rightMotor, ChassisReference.Clockwise_Positive);
 
     // Goal position for the elevator
-    private double goal = ElevatorConstants.defaultGoal;
+    private double goal = ArmSystemConstants.defaultState.elevatorPosition;
 
     // SysId routine for system identification
     private final SysIdRoutine sysIdRoutine = 

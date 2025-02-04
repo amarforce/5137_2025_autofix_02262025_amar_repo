@@ -195,8 +195,8 @@ public class Wrist extends SubsystemBase {
         wristMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
         
         // Get the current motor input voltage and update the Wrist simulation
-        double WristInput = wristMotorSim.getMotorVoltage();
-        wristSim.setInputVoltage(WristInput);
+        double wristInput = wristMotorSim.getMotorVoltage();
+        wristSim.setInputVoltage(wristInput);
         wristSim.update(GeneralConstants.simPeriod);
         
         // Update the motor simulation state with the new Wrist position and velocity

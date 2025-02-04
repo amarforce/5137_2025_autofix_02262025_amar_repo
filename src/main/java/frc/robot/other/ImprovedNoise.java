@@ -1,7 +1,5 @@
 package frc.robot.other;
 
-import edu.wpi.first.math.*;
-
 public final class ImprovedNoise {
     static public double noise(double x, double y, double z) {
        int X = (int)Math.floor(x) & 255,                  // FIND UNIT CUBE THAT

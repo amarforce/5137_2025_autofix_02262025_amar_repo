@@ -42,6 +42,7 @@ public class RobotContainer {
 	private Intake intake;
 	private Hang hang;
 	private ArmMechanism armMechanism;
+	private LED led;
 
 	// Commands for each subsystem
 	private SwerveCommands swerveCommands;
@@ -94,6 +95,7 @@ public class RobotContainer {
 			intake = new Intake(new StringLogEntry(dataLog, "intake"));
 			hang = new Hang(new StringLogEntry(dataLog, "hang"));
 			armMechanism = new ArmMechanism(arm, elevator, wrist);
+			led = new LED();
 
 			// Initialize commands for each subsystem
 			swerveCommands = new SwerveCommands(swerve);

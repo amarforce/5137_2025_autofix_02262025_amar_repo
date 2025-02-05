@@ -87,11 +87,43 @@ public class MultiCommands {
         }
     }
 
+    
+
     public Command placeCoral(int branch) {
         return new SequentialCommandGroup(
             new ParallelCommandGroup(
                 swerveCommands.driveToBranch(branch),
                 moveToGoal(() -> reef.getLevel(branch))
+            ),
+            intakeCommands.outtake()
+        );
+    }
+
+    public Command getAlgae(int branch) {
+        Command moveTo;
+        if (reef.isAlgaeLow(branch)) {
+            moveTo = new ParallelCommandGroup(
+                moveTo(()->"algaeLow")
+                //,swerveCommands.driveToPose(()->pose)
+                );
+        } else {
+            moveTo = new ParallelCommandGroup(
+                moveTo(()->"algaeHigh")
+                //,swerveCommands.driveToPose(()->pose)
+                );
+        }
+        
+        return new SequentialCommandGroup(
+            moveTo, 
+            intakeCommands.intakeUntilSwitched(),
+            swerveCommands.functionalDrive(()->0.8, ()->0, ()->0, ()->false));
+    }
+
+    public Command placeAlgae() {
+        return new SequentialCommandGroup(
+            new ParallelCommandGroup(
+                swerveCommands.driveToProcessor(),
+                moveTo(() -> "processor")
             ),
             intakeCommands.outtake()
         );

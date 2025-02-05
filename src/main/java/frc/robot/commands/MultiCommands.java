@@ -1,5 +1,7 @@
 package frc.robot.commands;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -44,14 +46,18 @@ public class MultiCommands {
         }
     }
 
-    public Command placeCoral(int level,int branch) {
+    public Command placeCoral(Supplier<Integer> level,Supplier<Integer> branch) {
         return new SequentialCommandGroup(
             new ParallelCommandGroup(
-                swerveCommands.driveToBranch(() -> reef.getNearestBranch(level,branch)),
-                armSystemCommands.moveToGoal(() -> reef.getNearestLevel(level-2,branch)+2)
+                swerveCommands.driveToBranch(branch),
+                armSystemCommands.moveToGoal(level)
             ),
             intakeCommands.outtake()
         );
+    }
+
+    public Command placeCoralNearest(int level,int branch){
+        return placeCoral(()->reef.getNearestLevel(level-2, branch)+2,()->reef.getNearestBranch(level-2, branch));
     }
 
     /**

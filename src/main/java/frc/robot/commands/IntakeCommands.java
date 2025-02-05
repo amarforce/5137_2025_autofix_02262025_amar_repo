@@ -60,7 +60,7 @@ public class IntakeCommands {
     public Command outtake() {
         return new SequentialCommandGroup(
             Commands.runOnce(() -> intake.setSpeed(IntakeConstants.intakeSpeed)), // Start the intake
-            new WaitCommand(1),                                                   // Wait for 1 second
+            new WaitCommand(IntakeConstants.outtakeTime),                                                   // Wait for 1 second
             stop()                                                                // Stop the intake
         );
     }

@@ -1,8 +1,6 @@
 package frc.robot.other;
 
 import com.pathplanner.lib.commands.PathPlannerAuto;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.MultiCommands;
@@ -16,9 +14,6 @@ import frc.robot.constants.GeneralConstants;
 public class AutoFactory {
     // Array to hold the steps (AutoStep objects) that make up the autonomous routine
     private AutoStep[] choices;
-
-    // A chooser to allow the driver to select whether the auto routine has been built
-    private SendableChooser<Boolean> build;
 
     // The final autonomous command that will be executed
     private PathPlannerAuto auto;
@@ -34,23 +29,10 @@ public class AutoFactory {
         // Initialize the array of AutoStep objects
         choices = new AutoStep[GeneralConstants.numAuto];
 
-        // Initialize the SendableChooser for auto build status
-        build = new SendableChooser<Boolean>();
-        build.setDefaultOption("AUTO NOT BUILT", false);
-        build.addOption("AUTO BUILT", true);
-        SmartDashboard.putData("Auto Builder", build);
-
         // Populate the choices array with AutoStep objects
         for (int i = 0; i < GeneralConstants.numAuto; i++) {
             choices[i] = new AutoStep(i + 1, multiCommands);
         }
-
-        // Set up a listener to trigger auto build when the chooser value changes
-        build.onChange((Boolean build) -> {
-            if (build) {
-                buildAuto();
-            }
-        });
     }
 
     /**

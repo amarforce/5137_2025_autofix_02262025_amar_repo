@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.other.DetectedObject;
+import frc.robot.other.RobotUtils;
 import frc.robot.subsystems.Swerve;
 
 /**
@@ -140,7 +141,11 @@ public class SwerveCommands {
     }
 
     public Command driveToBranch(Supplier<Integer> branch){
-        return driveToPose(()->GeneralConstants.allReef[branch.get()]);
+        return driveToPose(()->RobotUtils.invertPoseToAlliance(GeneralConstants.allReef[branch.get()]));
+    }
+
+    public Command driveToAlgae(Supplier<Integer> side){
+        return driveToPose(()->RobotUtils.invertPoseToAlliance(GeneralConstants.centerReef[side.get()]));
     }
 
     /**

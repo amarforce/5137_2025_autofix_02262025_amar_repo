@@ -59,7 +59,7 @@ public class Wrist extends SubsystemBase {
             new SysIdRoutine.Mechanism(
                 this::setVoltage,
                 log -> {
-                    log.motor("Wrist")
+                    log.motor("wrist")
                         .voltage(Volts.of(wristMotor.get() * RobotController.getBatteryVoltage()))
                         .angularPosition(Radians.of(getMeasurement()))
                         .angularVelocity(RadiansPerSecond.of(getVelocity()));
@@ -86,7 +86,7 @@ public class Wrist extends SubsystemBase {
         controller.setTolerance(WristConstants.wristTolerance);
         
         // Display the PID controller on SmartDashboard for tuning
-        SmartDashboard.putData("Wrist Controller", controller);
+        SmartDashboard.putData("wrist/controller", controller);
 
         this.log=log;
     }

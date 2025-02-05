@@ -85,8 +85,8 @@ public class RobotContainer {
 			// Initialize Reef and ReefScoring components
 			reef = new Reef();
 			reefScoring = new ReefScoring(reef);
-			SmartDashboard.putData("Reef", reef);
-			SmartDashboard.putData("ReefScoring", reefScoring);
+			SmartDashboard.putData("reef", reef);
+			SmartDashboard.putData("reefScoring", reefScoring);
 
 			// // Initialize subsystems with data log
 			vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));

@@ -97,7 +97,7 @@ public class Elevator extends SubsystemBase {
         controller.setTolerance(ElevatorConstants.elevatorTolerance);
 
         // Add the PID controller to SmartDashboard for tuning
-        SmartDashboard.putData("Elevator Controller", controller);
+        SmartDashboard.putData("elevator/controller", controller);
 
         this.log=log;
     }

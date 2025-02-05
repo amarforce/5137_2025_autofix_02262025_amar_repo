@@ -27,6 +27,8 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -91,6 +93,9 @@ public class Swerve extends SubsystemBase {
             .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
     };
 
+    private StructPublisher<Pose2d> currentPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/pose", Pose2d.struct).publish();
+    private StructPublisher<Pose2d> targetPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/targetPose", Pose2d.struct).publish();
+
     /**
      * Constructor for the Swerve subsystem.
      *
@@ -152,10 +157,10 @@ public class Swerve extends SubsystemBase {
         swerve.registerTelemetry(this::telemetry);
 
         field = new Field2d();
-        SmartDashboard.putData("Field", field);
+        SmartDashboard.putData("field", field);
 
         for(int i=0;i<moduleMechanisms.length;i++){
-            SmartDashboard.putData("Module " + i, moduleMechanisms[i]);
+            SmartDashboard.putData("module" + i, moduleMechanisms[i]);
         }
 
         this.log=log;
@@ -313,7 +318,8 @@ public class Swerve extends SubsystemBase {
     private void telemetry(SwerveDriveState state){
         SmartDashboard.putNumber("driveState/odometryPeriod", state.OdometryPeriod);
 
-        SmartDashboard.putNumberArray("driveState/pose", new double[]{state.Pose.getX(),state.Pose.getY(),state.Pose.getRotation().getDegrees()});
+        currentPosePublisher.set(state.Pose);
+
         for (int i = 0; i < 4; ++i) {
             SmartDashboard.putNumberArray("driveState/moduleStates/"+i, new double[]{state.ModuleStates[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
             SmartDashboard.putNumberArray("driveState/moduleTargets/"+i, new double[]{state.ModuleTargets[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
@@ -327,7 +333,7 @@ public class Swerve extends SubsystemBase {
         }
 
         if(targetPose!=null){
-            SmartDashboard.putNumberArray("driveState/targetPose", new double[]{targetPose.getX(),targetPose.getY(),targetPose.getRotation().getDegrees()});
+            targetPosePublisher.set(targetPose);
         }
     }
 

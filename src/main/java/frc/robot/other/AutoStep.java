@@ -43,7 +43,7 @@ public class AutoStep {
         levelChooser.addOption("L1", 1);
         levelChooser.addOption("Algae", 0);
         levelChooser.addOption("No Auto",-1);
-        SmartDashboard.putData("Level Choice " + id, levelChooser);
+        SmartDashboard.putData("levelChoices/" + id, levelChooser);
 
         // Initialize the reef and pickup choosers with coral poses
         switchToCoralPoses();
@@ -70,7 +70,7 @@ public class AutoStep {
         for (int i = 1; i < GeneralConstants.sides * 2; i++) {
             branchChooser.addOption(Character.toString('A' + i), i);
         }
-        SmartDashboard.putData("Branch Choice " + id, branchChooser);
+        SmartDashboard.putData("branchChoices/" + id, branchChooser);
 
         // Initialize the pickup chooser with default and additional options
         pickupChooser = new SendableChooser<Pose2d>();
@@ -81,7 +81,7 @@ public class AutoStep {
         pickupChooser.addOption("Left Ground", GeneralConstants.leftPickup);
         pickupChooser.addOption("Center Ground", GeneralConstants.centerPickup);
         pickupChooser.addOption("Right Ground", GeneralConstants.rightPickup);
-        SmartDashboard.putData("Pickup Choice " + id, pickupChooser);
+        SmartDashboard.putData("pickupChoices/" + id, pickupChooser);
     }
 
     /**
@@ -94,19 +94,19 @@ public class AutoStep {
         for (int i = 1; i < GeneralConstants.sides; i++) {
             branchChooser.addOption(Character.toString('A' + (2 * i)) + Character.toString('A' + (2 * i + 1)), i);
         }
-        SmartDashboard.putData("Branch Choice " + id, branchChooser);
+        SmartDashboard.putData("branchChoices/" + id, branchChooser);
 
         // Initialize the pickup chooser (no options added for algae poses)
         pickupChooser = new SendableChooser<Pose2d>();
-        SmartDashboard.putData("Pickup Choice " + id, pickupChooser);
+        SmartDashboard.putData("pickupChoices/" + id, pickupChooser);
     }
 
     private void switchToNoAuto(){
         pickupChooser = new SendableChooser<Pose2d>();
-        SmartDashboard.putData("Pickup Choice " + id, pickupChooser);
+        SmartDashboard.putData("pickupChoices/" + id, pickupChooser);
 
         branchChooser = new SendableChooser<Integer>();
-        SmartDashboard.putData("Branch Choice " + id, branchChooser);
+        SmartDashboard.putData("branchChoices/" + id, branchChooser);
     }
 
     /**

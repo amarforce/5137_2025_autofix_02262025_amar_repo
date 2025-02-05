@@ -89,7 +89,7 @@ public class Arm extends SubsystemBase {
         controller.setTolerance(ArmConstants.armTolerance);
         
         // Display the PID controller on SmartDashboard for tuning
-        SmartDashboard.putData("Arm Controller", controller);
+        SmartDashboard.putData("arm/controller", controller);
 
         this.log=log;
     }

@@ -29,7 +29,7 @@ public class ArmConstants {
     public static final double armTolerance = 0.1;
     
     // Simulation constants
-    public static final double minAngle = Units.degreesToRadians(-43);
+    public static final double minAngle = Units.degreesToRadians(-10);
     public static final double maxAngle = Units.degreesToRadians(180);
     public static final double momentOfInertia = 1.2;
     public static final double armLength = 0.594;

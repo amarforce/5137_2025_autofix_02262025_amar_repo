@@ -22,7 +22,7 @@ public final class ArmSystemConstants {
     static {
         // Define all states
         ArmSystem.ArmSystemState groundIntakeState = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(-20),  // From ArmConstants.groundIntakeGoal
+            Units.degreesToRadians(-10),  // From ArmConstants.groundIntakeGoal
             0.26,                         // From ElevatorConstants.groundIntakeGoal
             wristDown     // From WristConstants.pos1 (down)
         );
@@ -36,7 +36,7 @@ public final class ArmSystemConstants {
 
 
         ArmSystem.ArmSystemState sourceState = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(-10),  // From ArmConstants.sourceGoal
+            Units.degreesToRadians(45),  // From ArmConstants.sourceGoal
             0.76,                         // From ElevatorConstants.sourceGoal
             wristStraight    // From WristConstants.pos2 (straight)
         );
@@ -50,28 +50,28 @@ public final class ArmSystemConstants {
 
 
         ArmSystem.ArmSystemState l1State = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(0),   // From ArmConstants.goals[0]
+            Units.degreesToRadians(170),   // From ArmConstants.goals[0]
             0.06,                        // From ElevatorConstants.goals[0]
             wristStraight   // Scoring wrist position (straight)
         );
 
 
         ArmSystem.ArmSystemState l2State = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(25),   // From ArmConstants.goals[1]
+            Units.degreesToRadians(135),   // From ArmConstants.goals[1]
             0.26,                        // From ElevatorConstants.goals[1]
             wristStraight   // Scoring wrist position (straight)
         );
 
 
         ArmSystem.ArmSystemState l3State = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(50),   // From ArmConstants.goals[2]
+            Units.degreesToRadians(115),   // From ArmConstants.goals[2]
             0.56,                        // From ElevatorConstants.goals[2]
             wristStraight   // Scoring wrist position (straight)
         );
 
 
         ArmSystem.ArmSystemState l4State = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(75),   // From ArmConstants.goals[3]
+            Units.degreesToRadians(90),   // From ArmConstants.goals[3]
             1.26,                        // From ElevatorConstants.goals[3]
             wristStraight   // Scoring wrist position (straight)
         );

@@ -62,7 +62,7 @@ public class ArmSystem extends SubsystemBase {
         wristMech2d.setColor(MechanismConstants.wristColor);
 
         // Display the mechanism on the SmartDashboard
-        SmartDashboard.putData("Scoring System", mech2d);
+        SmartDashboard.putData("Arm System", mech2d);
     }
 
     /**

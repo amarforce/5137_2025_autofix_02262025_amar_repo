@@ -120,14 +120,14 @@ public class AutoStep {
             return new InstantCommand();
         }else if(level==0){
             return new ParallelCommandGroup(
-                multiCommands.moveTo(()->"algae"),
+                multiCommands.getArmSystemCommands().moveTo(()->"algae"),
                 multiCommands.getSwerveCommands().driveToPose(()->RobotUtils.invertPoseToAlliance(reefChooser.getSelected()))
             );
         }else{
             return new SequentialCommandGroup(
                 multiCommands.getCoral(RobotUtils.invertPoseToAlliance(pickupChooser.getSelected())),
                 new ParallelCommandGroup(
-                    multiCommands.moveToGoal(()->levelChooser.getSelected()),
+                    multiCommands.getArmSystemCommands().moveToGoal(()->levelChooser.getSelected()),
                     multiCommands.getSwerveCommands().driveToPose(() -> RobotUtils.invertPoseToAlliance(reefChooser.getSelected()))
                 ),
                 multiCommands.getIntakeCommands().outtake()

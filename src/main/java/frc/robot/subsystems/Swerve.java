@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
@@ -60,6 +61,9 @@ public class Swerve extends SubsystemBase {
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
 
     private StringLogEntry log;
+
+    // Target pose
+    private Pose2d targetPose;
 
     /* Mechanisms to represent the swerve module states */
     private final Mechanism2d[] moduleMechanisms = new Mechanism2d[] {
@@ -258,6 +262,32 @@ public class Swerve extends SubsystemBase {
         return vision.getGroundCoral(SwerveConstants.coralExpirationTime);
     }
 
+    public Pose2d getTargetPose(){
+        return targetPose;
+    }
+
+    public void setTargetPose(Pose2d target){
+        if(target!=targetPose){
+            targetPose=target;
+            Command auto = AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints);
+            auto.addRequirements(this);
+            auto.schedule();
+        }
+    }
+
+    public boolean atTarget(){
+        Pose2d currentPose=getPose();
+        double dist=currentPose.getTranslation().getDistance(targetPose.getTranslation());
+        if(dist>SwerveConstants.transTol){
+            return false;
+        }
+        double rotDist=currentPose.getRotation().minus(targetPose.getRotation()).getRadians();
+        if(rotDist>SwerveConstants.rotTol){
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Periodic method called every robot loop cycle.
      * Updates vision measurements, processes new objects, and updates field visualization.
@@ -294,6 +324,10 @@ public class Swerve extends SubsystemBase {
             moduleSpeeds[i].setAngle(state.ModuleStates[i].angle);
             moduleDirections[i].setAngle(state.ModuleStates[i].angle);
             moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * maxSpeed));
+        }
+
+        if(targetPose!=null){
+            SmartDashboard.putNumberArray("driveState/targetPose", new double[]{targetPose.getX(),targetPose.getY(),targetPose.getRotation().getDegrees()});
         }
     }
 

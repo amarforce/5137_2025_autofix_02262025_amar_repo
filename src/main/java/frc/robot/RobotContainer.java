@@ -50,6 +50,7 @@ public class RobotContainer {
 	private WristCommands wristCommands;
 	private IntakeCommands intakeCommands;
 	private HangCommand hangCommand;
+	private ArmSystemCommands armSystemCommands;
 	private MultiCommands multiCommands;
 
 	// Additional components
@@ -97,13 +98,14 @@ public class RobotContainer {
 			armSystem = new ArmSystem(arm, elevator, wrist);
 
 			// Initialize commands for each subsystem
-			swerveCommands = new SwerveCommands(swerve,swerveLog);
+			swerveCommands = new SwerveCommands(swerve);
 			elevatorCommands = new ElevatorCommands(elevator);
 			armCommands = new ArmCommands(arm);
 			wristCommands = new WristCommands(wrist);
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
-			multiCommands = new MultiCommands(armSystem, swerveCommands, intakeCommands, hangCommand, reef);
+			armSystemCommands = new ArmSystemCommands(armSystem);
+			multiCommands = new MultiCommands(armSystemCommands, swerveCommands, intakeCommands, hangCommand, reef);
 
 			// Initialize cage choice
 			cageChoice = new CageChoice();
@@ -167,15 +169,15 @@ public class RobotContainer {
 		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -operator.getLeftY() / 50));
 		arm.setDefaultCommand(armCommands.changeGoal(() -> -operator.getLeftX() / 50));
 
-		operator.axisLessThan(0,0).onTrue(multiCommands.placeCoral(0));
+		//operator.axisLessThan(0,0).onTrue(multiCommands.placeCoral(0));
 
 		// Operator Bindings
 
 		// Bind buttons to move to specific goals
-		operator.triangle().onTrue(multiCommands.moveToGoal(()->4));
-		operator.circle().onTrue(multiCommands.moveToGoal(()->3));
-		operator.square().onTrue(multiCommands.moveToGoal(()->2));
-		operator.cross().onTrue(multiCommands.moveToGoal(()->1));
+		operator.triangle().onTrue(armSystemCommands.moveToGoal(()->4));
+		operator.circle().onTrue(armSystemCommands.moveToGoal(()->3));
+		operator.square().onTrue(armSystemCommands.moveToGoal(()->2));
+		operator.cross().onTrue(armSystemCommands.moveToGoal(()->1));
 
 
 		// Bind L2 button to outtake and stop intake

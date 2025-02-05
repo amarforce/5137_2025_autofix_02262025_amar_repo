@@ -2,8 +2,10 @@ package frc.robot.elastic;
 
 import org.json.simple.JSONObject;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.networktables.NTSendableBuilder;
+import frc.robot.constants.GeneralConstants;
 
 public class Reef implements NTSendable{
 
@@ -52,13 +54,34 @@ public class Reef implements NTSendable{
         }
     }
 
-    public int getLevel(int branch){
-        for(int i=2;i>=0;i--){
-            if(!coralPlaced[i][branch]){
-                return i+2;
+    public boolean isCoralOpen(int level,int branch){
+        return !isCoralPlaced(level, branch) && !isCoralBlocked(level, branch);
+    }
+
+    public Pair<Integer,Integer> getNearest(int level,int branch){
+        double minDist=Double.MAX_VALUE;
+        Pair<Integer,Integer> minVal=null;
+        for(int l=0;l<=2;l++){
+            for(int b=0;b<GeneralConstants.sides*2;b++){
+                if(isCoralOpen(level, branch)){
+                    int modDist=Math.min(Math.floorMod(branch-b,GeneralConstants.sides*2),Math.floorMod(b-branch,GeneralConstants.sides*2));
+                    double dist=Math.abs(l-level)+modDist;
+                    if(dist<minDist){
+                        minDist=dist;
+                        minVal=new Pair<Integer,Integer>(level, branch);
+                    }
+                }
             }
         }
-        return 1;
+        return minVal;
+    }
+
+    public int getNearestLevel(int level,int branch){
+        return getNearest(level, branch).getFirst();
+    }
+
+    public int getNearestBranch(int level,int branch){
+        return getNearest(level, branch).getSecond();
     }
 
     @SuppressWarnings("unchecked")

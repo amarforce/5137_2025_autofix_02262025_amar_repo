@@ -7,6 +7,8 @@ import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import com.pathplanner.lib.path.PathConstraints;
 
+import edu.wpi.first.math.util.Units;
+
 public class SwerveConstants {
     public static final double translationalDeadband = 0.1;
     public static final double rotationalDeadband = 0.1;
@@ -27,4 +29,7 @@ public class SwerveConstants {
         RadiansPerSecondPerSecond.of(Math.PI));
 
     public static final double coralExpirationTime = 5;
+
+    public static final double transTol = 0.1; // in meters
+    public static final double rotTol = Units.degreesToRadians(10); // in radians
 }

@@ -33,7 +33,8 @@ public class GeneralConstants {
 
     public static final Translation2d reefCenter = new Translation2d(4.4958,4.0259);
     public static final double d1 = 1.3;
-    public static final double d2 = 0.16;
+    public static final double dLeft = 0.03;
+    public static final double dRight = -0.29;
 
     public static final Pose2d[] leftReef = new Pose2d[GeneralConstants.sides];
     public static final Pose2d[] centerReef = new Pose2d[GeneralConstants.sides];
@@ -45,10 +46,10 @@ public class GeneralConstants {
             Rotation2d angle=forward.rotateBy(Rotation2d.k180deg);
             Translation2d algae=reefCenter.plus(new Translation2d(d1, angle));
             centerReef[i]=new Pose2d(algae,forward);
-            Translation2d left=algae.plus(new Translation2d(d2, angle.rotateBy(Rotation2d.kCW_90deg)));
+            Translation2d left=algae.plus(new Translation2d(dLeft, angle.rotateBy(Rotation2d.kCW_90deg)));
             leftReef[i]=new Pose2d(left,forward);
             allReef[2*i]=leftReef[i];
-            Translation2d right=algae.plus(new Translation2d(d2, angle.rotateBy(Rotation2d.kCCW_90deg)));
+            Translation2d right=algae.plus(new Translation2d(dRight, angle.rotateBy(Rotation2d.kCW_90deg)));
             rightReef[i]=new Pose2d(right,forward);
             allReef[2*i+1]=rightReef[i];
         }

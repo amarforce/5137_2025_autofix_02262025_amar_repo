@@ -4,6 +4,9 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.constants.ArmSystemConstants;
 import frc.robot.subsystems.ArmSystem;
 
 public class ArmSystemCommands {
@@ -19,7 +22,7 @@ public class ArmSystemCommands {
      * @param stateName The name of the state to move to (e.g. "groundIntake", "default", "source", "algae", "L1", "L2", etc.)
      */
     public Command moveTo(Supplier<String> stateName) {
-        return new FunctionalCommand(
+        return new ParallelRaceGroup(new FunctionalCommand(
             () -> {},
             () -> {
                 armSystem.moveTo(stateName.get());
@@ -27,7 +30,7 @@ public class ArmSystemCommands {
             (e) -> {},
             () -> armSystem.atSetpoint(),
             armSystem
-        );
+        ),new WaitCommand(ArmSystemConstants.armSystemTimeout));
     }
 
 

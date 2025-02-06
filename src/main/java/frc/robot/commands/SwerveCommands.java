@@ -9,8 +9,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.GeneralConstants;
+import frc.robot.constants.SwerveConstants;
 import frc.robot.other.DetectedObject;
 import frc.robot.other.RobotUtils;
 import frc.robot.subsystems.Swerve;
@@ -55,7 +58,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the specified pose.
      */
     public Command driveToPose(Supplier<Pose2d> pose){
-        return new FunctionalCommand(
+        return new ParallelCommandGroup(new FunctionalCommand(
             () -> {},
             () -> {
                 swerve.setTargetPose(pose.get());
@@ -63,7 +66,7 @@ public class SwerveCommands {
             (e) -> {},
             () -> swerve.atTarget(),
             swerve
-        );
+        ),new WaitCommand(SwerveConstants.moveTimeout));
     }
 
     /**

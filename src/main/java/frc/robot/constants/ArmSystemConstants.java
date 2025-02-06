@@ -14,6 +14,8 @@ public final class ArmSystemConstants {
     private static final double wristStraight = Units.degreesToRadians(90);
     private static final double wristDown = Units.degreesToRadians(0);
 
+    public static final double armSystemTimeout = 5; // seconds
+
     // Map of named states
     public static final Map<String, ArmSystem.ArmSystemState> states = new HashMap<>();
     

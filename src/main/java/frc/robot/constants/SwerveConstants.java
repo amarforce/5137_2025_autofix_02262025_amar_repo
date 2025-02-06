@@ -32,4 +32,6 @@ public class SwerveConstants {
 
     public static final double transTol = 0.1; // in meters
     public static final double rotTol = Units.degreesToRadians(10); // in radians
+
+    public static final double moveTimeout = 10; // seconds
 }

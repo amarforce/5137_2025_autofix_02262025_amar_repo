@@ -19,9 +19,12 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.pathfinding.LocalADStar;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
@@ -39,7 +42,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 /**
@@ -164,6 +169,11 @@ public class Swerve extends SubsystemBase {
         }
 
         this.log=log;
+
+        // Warmup pathfinding
+        Pathfinding.setPathfinder(new LocalADStar());
+        PathfindingCommand.warmupCommand().schedule();
+        
     }
 
     /**
@@ -244,6 +254,10 @@ public class Swerve extends SubsystemBase {
      * @param poses The list of poses to compare.
      * @return The closest pose to the current robot pose.
      */
+    public Pose2d getClosestFixed(Pose2d[] poses) {
+        return RobotUtils.getClosestPoseToPose(RobotUtils.invertPoseToAlliance(this.getPose()), poses);
+    }
+
     public Pose2d getClosest(Pose2d[] poses) {
         return RobotUtils.getClosestPoseToPose(this.getPose(), poses);
     }
@@ -275,9 +289,12 @@ public class Swerve extends SubsystemBase {
         if(target!=targetPose){
             targetPose=target;
             Command auto = AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints);
-            auto.addRequirements(this);
-            auto.schedule();
+            new ParallelRaceGroup(auto,new WaitCommand(SwerveConstants.moveTimeout)).schedule();
         }
+    }
+
+    public void setTargetPoseFixed(Pose2d target){
+        setTargetPose(RobotUtils.invertPoseToAlliance(target));
     }
 
     public boolean atTarget(){

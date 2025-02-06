@@ -140,7 +140,7 @@ public class RobotContainer {
 
 		// Bind buttons to drive to specific locations
 		driver.triangle().onTrue(swerveCommands.driveToStation());
-		driver.square().onTrue(swerveCommands.driveToPose(()->cageChoice.getCage()));
+		driver.square().onTrue(swerveCommands.driveToPoseStaticFixed(()->cageChoice.getCage()));
 		driver.circle().onTrue(swerveCommands.driveToProcessor());
 
 		// Bind D-pad buttons to drive to specific reef positions

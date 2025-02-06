@@ -42,7 +42,7 @@ public class MultiCommands {
             return new InstantCommand(); // Do nothing if the pose is null
         } else {
             String goalName = (pose.getY() > 1.75 && pose.getY() < 6.3) ? "groundIntake" : "source";
-            return new SequentialCommandGroup(new ParallelCommandGroup(swerveCommands.driveToPose(()->pose),armSystemCommands.moveTo(()->goalName)), intakeCommands.intakeUntilSwitched());
+            return new SequentialCommandGroup(new ParallelCommandGroup(swerveCommands.driveToPoseStatic(()->pose),armSystemCommands.moveTo(()->goalName)), intakeCommands.intakeUntilSwitched());
         }
     }
 

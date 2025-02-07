@@ -166,8 +166,8 @@ public class RobotContainer {
 		driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 
 		// For testing: Set default commands for elevator and arm with joystick inputs
-		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -operator.getLeftY() / 50));
-		arm.setDefaultCommand(armCommands.changeGoal(() -> -operator.getLeftX() / 50));
+		arm.setDefaultCommand(armCommands.changeGoal(() -> operator.getLeftY() / 50));
+		wrist.setDefaultCommand(wristCommands.changeGoal(() -> operator.getLeftX() / 50));
 
 		//operator.axisLessThan(0,0).onTrue(multiCommands.placeCoral(0));
 

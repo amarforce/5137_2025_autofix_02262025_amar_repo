@@ -177,26 +177,21 @@ public class Elevator extends SubsystemBase {
      */
     private void telemetry() {
         SmartDashboard.putNumber("elevator/height",getMeasurement());
-        SmartDashboard.putNumber("elevator/rawHeight",leftMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("elevator/goal",getGoal());
         SmartDashboard.putNumber("elevator/velocity",getVelocity());
         SmartDashboard.putNumber("elevator/error",controller.getError());
-        SmartDashboard.putNumber("elevator/leftMotorTemp",leftMotor.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotorTemp",rightMotor.getDeviceTemp().getValueAsDouble());
-        int leftMotorFault = leftMotor.getFaultField().asSupplier().get();
-        if (leftMotorFault != 0){
-            SmartDashboard.putNumber("elevator/leftMotorFault",leftMotorFault);
-        }
-        int rightMotorFault = rightMotor.getFaultField().asSupplier().get();
-        if (rightMotorFault != 0){
-            SmartDashboard.putNumber("elevator/rightMotorFault",rightMotorFault);
-        }
-        SmartDashboard.putNumber("elevator/leftMotorCurrent",leftMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotorCurrent",rightMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/leftMotorVoltage",leftMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotorVoltage",rightMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/leftMotorSupplyVoltage",leftMotor.getSupplyVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotorSupplyVoltage",rightMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotor/rawHeight",leftMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotor/rawHeight",rightMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotor/temp",leftMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotor/temp",rightMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotor/fault",leftMotor.getFaultField().asSupplier().get());
+        SmartDashboard.putNumber("elevator/rightMotor/fault",rightMotor.getFaultField().asSupplier().get());
+        SmartDashboard.putNumber("elevator/leftMotor/current",leftMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotor/current",rightMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotor/voltage",leftMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotor/voltage",rightMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotor/supplyVoltage",leftMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotor/supplyVoltage",rightMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**

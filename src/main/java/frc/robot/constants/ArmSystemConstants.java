@@ -1,5 +1,6 @@
 package frc.robot.constants;
 
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.ArmSystem;
 
@@ -93,4 +94,7 @@ public final class ArmSystemConstants {
 
     // Default state for subsystem initialization
     public static final ArmSystem.ArmSystemState defaultState = states.get("default");
+
+    // Default state for subsystem initialization
+    public static final Translation3d armTransOffset=new Translation3d(0.11,-0.18,0.26);
 } 

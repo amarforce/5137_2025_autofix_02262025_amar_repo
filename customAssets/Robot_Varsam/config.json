@@ -1,0 +1,26 @@
+{
+    "name": "Varsam",
+    "rotations": [{"axis":"y","degrees":180}],
+    "position": [0.28,0.11,0.22],
+    "disableSimplification": true,
+    "cameras": [
+    ],
+    "components": [
+        {
+            "zeroedRotations":[{"axis":"x","degrees":90},{"axis":"z","degrees":180}],
+            "zeroedPosition":[0.3,-0.03,0.1]
+        },
+        {
+            "zeroedRotations":[{"axis":"x","degrees":90}],
+            "zeroedPosition":[-0.3,-0.08,0.1]
+        },
+        {
+            "zeroedRotations":[{"axis":"x","degrees":-90},{"axis":"y","degrees":90}],
+            "zeroedPosition":[0,0,0]
+        },
+        {
+            "zeroedRotations":[{"axis":"z","degrees":90},{"axis":"y","degrees":-90}],
+            "zeroedPosition":[0,0,0]
+        }
+    ]
+}

@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.MechanismConstants;
+import frc.robot.constants.ArmConstants;
 import frc.robot.constants.ArmSystemConstants;
 
 /**
@@ -92,11 +93,14 @@ public class ArmSystem extends SubsystemBase {
         wristMech2d.setAngle(Units.radiansToDegrees(wrist.getMeasurement() - Math.PI / 2));
 
         firstStagePosePublisher.set(new Pose3d(0,0,elevator.getMeasurement()/2,new Rotation3d()));
-        Pose3d elevatorPose=new Pose3d(0,0,elevator.getMeasurement(),new Rotation3d());
+        Translation3d elevatorTrans=new Translation3d(0,0,elevator.getMeasurement());
+        Pose3d elevatorPose=new Pose3d(elevatorTrans,new Rotation3d());
         secondStagePosePublisher.set(elevatorPose);
-        Pose3d armPose=new Pose3d(0.11,0,elevator.getMeasurement()+0.25,new Rotation3d(0,arm.getMeasurement(),0));
+        Translation3d armTrans=elevatorTrans.plus(ArmSystemConstants.armTransOffset);
+        Pose3d armPose=new Pose3d(armTrans,new Rotation3d(0,arm.getMeasurement(),0));
         armPosePublisher.set(armPose);
-        Pose3d wristPose=new Pose3d(0.11,0,elevator.getMeasurement()+0.25,new Rotation3d(0,arm.getMeasurement(),0)).transformBy(new Transform3d(new Translation3d(-0.6, 0, 0), new Rotation3d(0,wrist.getMeasurement(),0)));
+        Translation3d wristTrans=armTrans.plus(new Translation3d(-ArmConstants.armLength*Math.cos(arm.getMeasurement()), 0, ArmConstants.armLength*Math.sin(arm.getMeasurement())));
+        Pose3d wristPose=new Pose3d(wristTrans,new Rotation3d(0,arm.getMeasurement()+wrist.getMeasurement(),0));
         wristPosePublisher.set(wristPose);
     }
 

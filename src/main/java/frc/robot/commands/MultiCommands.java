@@ -62,24 +62,17 @@ public class MultiCommands {
         return placeCoral(()->reef.getNearestLevel(level-2, branch)+2,()->reef.getNearestBranch(level-2, branch));
     }
 
-    public Command getAlgae(int branch) {
-        Command moveTo;
-        if (reef.isAlgaeLow(branch)) {
-            moveTo = new ParallelCommandGroup(
-                armSystemCommands.moveTo(()->"algaeLow")
-                //,swerveCommands.driveToPose(()->pose)
-                );
-        } else {
-            moveTo = new ParallelCommandGroup(
-                armSystemCommands.moveTo(()->"algaeHigh")
-                //,swerveCommands.driveToPose(()->pose)
-                );
-        }
-        
+    public Command getAlgae(int side) {
+        String goal=reef.isAlgaeLow(side)?"algaeLow":"algaeHigh";
+        Command moveTo=new ParallelCommandGroup(
+            armSystemCommands.moveTo(()->goal),
+            swerveCommands.driveToAlgae(()->side)
+        );
         return new SequentialCommandGroup(
             moveTo, 
             intakeCommands.intakeUntilSwitched(),
-            swerveCommands.functionalDrive(()->0.8, ()->0, ()->0, ()->false));
+            swerveCommands.driveBack()
+        );
     }
 
     public Command placeAlgae() {

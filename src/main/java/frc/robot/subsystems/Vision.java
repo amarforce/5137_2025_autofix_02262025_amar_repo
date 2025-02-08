@@ -17,6 +17,7 @@ import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.elastic.Reef;
 import frc.robot.other.DetectedObject;
@@ -133,9 +134,9 @@ public class Vision extends SubsystemBase {
         double closestDist = VisionConstants.objectMarginOfError;
         int closestBranch = -1;
         int closestLevel = -1;
-        for (int branch = 0; branch < VisionConstants.coralPositions.length; branch++) {
-            for (int level = 0; level < VisionConstants.coralPositions[branch].length; level++) {
-                Translation3d pos = VisionConstants.coralPositions[branch][level];
+        for (int branch = 0; branch < GeneralConstants.coralPositions.length; branch++) {
+            for (int level = 0; level < GeneralConstants.coralPositions[branch].length; level++) {
+                Translation3d pos = GeneralConstants.coralPositions[branch][level];
                 double dist = target3d.minus(pos).getNorm();
                 if (dist < closestDist) {
                     closestDist = dist;

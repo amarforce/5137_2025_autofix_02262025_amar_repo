@@ -14,13 +14,13 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.elastic.*;
-import frc.robot.other.ArmMechanism;
 import frc.robot.other.AutoFactory;
 import frc.robot.other.CageChoice;
 import frc.robot.other.RobotUtils;
@@ -41,7 +41,7 @@ public class RobotContainer {
 	private Wrist wrist;
 	private Intake intake;
 	private Hang hang;
-	private ArmMechanism armMechanism;
+	private ArmSystem armSystem;
 	private LED led;
 
 	// Commands for each subsystem
@@ -51,6 +51,7 @@ public class RobotContainer {
 	private WristCommands wristCommands;
 	private IntakeCommands intakeCommands;
 	private HangCommand hangCommand;
+	private ArmSystemCommands armSystemCommands;
 	private MultiCommands multiCommands;
 
 	// Additional components
@@ -74,6 +75,7 @@ public class RobotContainer {
 		DataLog dataLog=DataLogManager.getLog();
 		DriverStation.startDataLog(dataLog);
 		log = new StringLogEntry(dataLog, "container");
+		StringLogEntry swerveLog = new StringLogEntry(dataLog, "swerve");
 
 		try{
 			// Initialize controllers
@@ -83,18 +85,18 @@ public class RobotContainer {
 			// Initialize Reef and ReefScoring components
 			reef = new Reef();
 			reefScoring = new ReefScoring(reef);
-			SmartDashboard.putData("Reef", reef);
-			SmartDashboard.putData("ReefScoring", reefScoring);
+			SmartDashboard.putData("reef", reef);
+			SmartDashboard.putData("reefScoring", reefScoring);
 
 			// // Initialize subsystems with data log
 			vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
-			swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,new StringLogEntry(dataLog, "swerve"));
+			swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,swerveLog);
 			elevator = new Elevator(new StringLogEntry(dataLog, "elevator"));
 			arm = new Arm(new StringLogEntry(dataLog, "arm"));
 			wrist = new Wrist(new StringLogEntry(dataLog, "wrist"));
 			intake = new Intake(new StringLogEntry(dataLog, "intake"));
 			hang = new Hang(new StringLogEntry(dataLog, "hang"));
-			armMechanism = new ArmMechanism(arm, elevator, wrist);
+			armSystem = new ArmSystem(arm, elevator, wrist);
 			led = new LED();
 
 			// Initialize commands for each subsystem
@@ -104,11 +106,12 @@ public class RobotContainer {
 			wristCommands = new WristCommands(wrist);
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
-			multiCommands = new MultiCommands(armCommands, elevatorCommands, wristCommands, swerveCommands, intakeCommands, hangCommand);
+			armSystemCommands = new ArmSystemCommands(armSystem);
+			multiCommands = new MultiCommands(armSystemCommands, swerveCommands, intakeCommands, hangCommand, reef);
 
 			// Initialize cage choice
 			cageChoice = new CageChoice();
-
+			
 			// Configure button bindings
 			configureBindings();
 
@@ -124,7 +127,6 @@ public class RobotContainer {
 	 */
 	private void configureBindings() {
 		// Driver Bindings
-
 		// Set default command for swerve to drive with joystick inputs
 		swerve.setDefaultCommand(
 			swerveCommands.drive(
@@ -139,7 +141,7 @@ public class RobotContainer {
 
 		// Bind buttons to drive to specific locations
 		driver.triangle().onTrue(swerveCommands.driveToStation());
-		driver.square().onTrue(swerveCommands.driveToPose(()->cageChoice.getCage()));
+		driver.square().onTrue(swerveCommands.driveToPoseStaticFixed(()->cageChoice.getCage()));
 		driver.circle().onTrue(swerveCommands.driveToProcessor());
 
 		// Bind D-pad buttons to drive to specific reef positions
@@ -165,21 +167,19 @@ public class RobotContainer {
 		driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 
 		// For testing: Set default commands for elevator and arm with joystick inputs
-		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -operator.getLeftY() / 50));
-		arm.setDefaultCommand(armCommands.changeGoal(() -> -operator.getLeftX() / 50));
+		arm.setDefaultCommand(armCommands.changeGoal(() -> operator.getLeftY() / 50));
+		wrist.setDefaultCommand(wristCommands.changeGoal(() -> operator.getLeftX() / 50));
+
+		//operator.axisLessThan(0,0).onTrue(multiCommands.placeCoral(0));
 
 		// Operator Bindings
 
 		// Bind buttons to move to specific goals
-		operator.triangle().onTrue(multiCommands.moveToGoal(4));
-		operator.circle().onTrue(multiCommands.moveToGoal(3));
-		operator.square().onTrue(multiCommands.moveToGoal(2));
-		operator.cross().onTrue(multiCommands.moveToGoal(1));
+		operator.triangle().onTrue(armSystemCommands.moveToGoal(()->4));
+		operator.circle().onTrue(armSystemCommands.moveToGoal(()->3));
+		operator.square().onTrue(armSystemCommands.moveToGoal(()->2));
+		operator.cross().onTrue(armSystemCommands.moveToGoal(()->1));
 
-		// Bind R1 button to toggle wrist position
-		operator.R1()
-			.onTrue(wristCommands.toPos1())
-			.onFalse(wristCommands.toPos2());
 
 		// Bind L2 button to outtake and stop intake
 		operator.L2()

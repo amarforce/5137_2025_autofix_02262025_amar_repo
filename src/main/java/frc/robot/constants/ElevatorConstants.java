@@ -1,13 +1,13 @@
 package frc.robot.constants;
 
 import edu.wpi.first.math.system.plant.DCMotor;
+import frc.robot.Robot;
 import frc.robot.other.MotorTransform;
-
 
 public class ElevatorConstants {
     // Motor IDs
-    public static final int leftMotorId = 0;
-    public static final int rightMotorId = 1;
+    public static final int leftMotorId = Robot.isSimulation()?20:0;
+    public static final int rightMotorId = Robot.isSimulation()?21:1;
 
     // PID constants
     public static final double kP = 60;
@@ -21,17 +21,10 @@ public class ElevatorConstants {
     public static final double kA = 0.02;
 
     // Elevator tolerance
-    public static final double elevatorTol = 0.1;
-
-    // Elevator goals
-    public static final double[] goals = {0.06,0.26,0.56,1.26};
-    public static final double sourceGoal = 0.76;
-    public static final double groundIntakeGoal = 0.26;
-    public static final double algaeGoal = 0.35;
-    public static final double defaultGoal = 0;
+    public static final double elevatorTolerance = 0.1;
 
     // Simulation constants
-    public static final double gearRatio = 60.0; // gear ratio
+    public static final double gearRatio = 30.0; // gear ratio
     public static final double carriageMass = 13.0; // in kg
     public static final double drumRadius = 0.0254; // in meters
     public static final double minHeight = 0; // in meters
@@ -40,10 +33,6 @@ public class ElevatorConstants {
 
     // Encoder transform
     public static final double elevatorOffset = 0;
-    public static final double metersPerRotation = drumRadius*4*Math.PI/gearRatio;
+    public static final double metersPerRotation = drumRadius*2*Math.PI/gearRatio;
     public static final MotorTransform transform = new MotorTransform(metersPerRotation, elevatorOffset);
-
-    // Mech constants
-    public static final double mechWidth = 20;
-    public static final double mechHeight = 50;
 }

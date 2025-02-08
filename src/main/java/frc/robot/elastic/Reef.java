@@ -2,8 +2,10 @@ package frc.robot.elastic;
 
 import org.json.simple.JSONObject;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.networktables.NTSendableBuilder;
+import frc.robot.constants.GeneralConstants;
 
 public class Reef implements NTSendable{
 
@@ -38,18 +40,51 @@ public class Reef implements NTSendable{
         algaePlaced[side]=set;
     }
 
+    public boolean isAlgaeLow(int branch){
+        return (branch/2)%2==1;
+    }
+
     public boolean isCoralBlocked(int level,int branch){
         int side=branch/2;
         if(algaePlaced[side]){
-            int lowAlgae=side%2;
-            if(lowAlgae==0){
-                return level==1;
-            }else{
+            if(isAlgaeLow(branch)){
                 return (level==0 || level==1);
+            }else{
+                return level==1;
             }
         }else{
             return false;
         }
+    }
+
+    public boolean isCoralOpen(int level,int branch){
+        return !isCoralPlaced(level, branch) && !isCoralBlocked(level, branch);
+    }
+
+    public Pair<Integer,Integer> getNearest(int level,int branch){
+        double minDist=Double.MAX_VALUE;
+        Pair<Integer,Integer> minVal=null;
+        for(int l=0;l<=2;l++){
+            for(int b=0;b<GeneralConstants.sides*2;b++){
+                if(isCoralOpen(level, branch)){
+                    int modDist=Math.min(Math.floorMod(branch-b,GeneralConstants.sides*2),Math.floorMod(b-branch,GeneralConstants.sides*2));
+                    double dist=Math.abs(l-level)+modDist;
+                    if(dist<minDist){
+                        minDist=dist;
+                        minVal=new Pair<Integer,Integer>(level, branch);
+                    }
+                }
+            }
+        }
+        return minVal;
+    }
+
+    public int getNearestLevel(int level,int branch){
+        return getNearest(level, branch).getFirst();
+    }
+
+    public int getNearestBranch(int level,int branch){
+        return getNearest(level, branch).getSecond();
     }
 
     @SuppressWarnings("unchecked")

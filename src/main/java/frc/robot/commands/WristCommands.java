@@ -1,14 +1,15 @@
 package frc.robot.commands;
 
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.constants.WristConstants;
 import frc.robot.subsystems.Wrist;
 
 /**
  * The `WristCommands` class provides a set of commands for controlling the wrist subsystem.
- * These commands include moving the wrist to specific positions and running system identification routines.
+ * These commands include running system identification routines.
  */
 public class WristCommands {
     private Wrist wrist; // The wrist subsystem that these commands will control.
@@ -23,21 +24,23 @@ public class WristCommands {
     }
 
     /**
-     * Returns a command that moves the wrist to position 1.
+     * Creates a command to set the elevator's goal to a specific value provided by a DoubleSupplier.
      *
-     * @return A command that sets the wrist's goal position to `WristConstants.pos1`.
+     * @param goal A DoubleSupplier that provides the target goal position for the elevator.
+     * @return A command that sets the elevator's goal when executed.
      */
-    public Command toPos1() {
-        return new InstantCommand(() -> wrist.setGoal(WristConstants.pos1));
+    public Command setGoal(DoubleSupplier goal) {
+        return new InstantCommand(() -> wrist.setGoal(goal.getAsDouble()), wrist);
     }
 
     /**
-     * Returns a command that moves the wrist to position 2.
+     * Creates a command to adjust the elevator's goal by a specified amount.
      *
-     * @return A command that sets the wrist's goal position to `WristConstants.pos2`.
+     * @param change A DoubleSupplier that provides the amount by which to change the current goal.
+     * @return A command that adjusts the elevator's goal when executed.
      */
-    public Command toPos2() {
-        return new InstantCommand(() -> wrist.setGoal(WristConstants.pos2));
+    public Command changeGoal(DoubleSupplier change) {
+        return new InstantCommand(() -> wrist.setGoal(wrist.getGoal() + change.getAsDouble()), wrist);
     }
 
     /**

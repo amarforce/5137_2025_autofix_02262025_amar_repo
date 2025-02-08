@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ArmConstants;
+import frc.robot.constants.ArmSystemConstants;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.other.RobotUtils;
 
@@ -40,7 +41,7 @@ public class Arm extends SubsystemBase {
     private ArmFeedforward feedforward = new ArmFeedforward(ArmConstants.kS, ArmConstants.kG, ArmConstants.kV);
     
     // Goal position for the arm in radians
-    private double goal = ArmConstants.defaultGoal;
+    private double goal = ArmSystemConstants.defaultState.armPosition;
     
     // Simulation model for the arm
     private SingleJointedArmSim armSim = new SingleJointedArmSim(
@@ -51,7 +52,7 @@ public class Arm extends SubsystemBase {
         ArmConstants.minAngle, 
         ArmConstants.maxAngle, 
         true, 
-        ArmConstants.defaultGoal
+        ArmSystemConstants.defaultState.armPosition
     );
 
     // System Identification routine for characterizing the arm
@@ -88,7 +89,7 @@ public class Arm extends SubsystemBase {
         controller.setTolerance(ArmConstants.armTolerance);
         
         // Display the PID controller on SmartDashboard for tuning
-        SmartDashboard.putData("Arm Controller", controller);
+        SmartDashboard.putData("arm/controller", controller);
 
         this.log=log;
     }
@@ -138,6 +139,10 @@ public class Arm extends SubsystemBase {
         return ArmConstants.transform.transformVel(armMotor.getPosition().getValueAsDouble());
     }
 
+    public boolean atSetpoint(){
+        return controller.atSetpoint();
+    }
+
     public SysIdRoutine getRoutine(){
         return sysIdRoutine;
     }
@@ -150,15 +155,12 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("arm/goal",getGoal());
         SmartDashboard.putNumber("arm/velocity",getVelocity());
         SmartDashboard.putNumber("arm/error",controller.getError());
-        SmartDashboard.putNumber("arm/motorTemp",armMotor.getDeviceTemp().getValueAsDouble());
-        int motorFault = armMotor.getFaultField().asSupplier().get();
-        if (motorFault != 0){
-            SmartDashboard.putNumber("arm/motorFault",motorFault);
-        }
-        SmartDashboard.putNumber("arm/current",armMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("arm/voltage",armMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("arm/current",armMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("arm/supplyVoltage",armMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/rawAngle",armMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/temp",armMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/fault",armMotor.getFaultField().asSupplier().get());
+        SmartDashboard.putNumber("arm/motor/current",armMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/voltage",armMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/supplyVoltage",armMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**

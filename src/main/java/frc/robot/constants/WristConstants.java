@@ -2,18 +2,18 @@ package frc.robot.constants;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Robot;
 import frc.robot.other.MotorTransform;
 
 public class WristConstants {
     // Motor ID
-    public static final int motorId = 3;
+    public static final int motorId = Robot.isSimulation()?23:3;
 
     // Encoder transform
     public static final double wristOffset = 0.0;
     public static final double gearRatio = 100.0;
     public static final MotorTransform transform = new MotorTransform((2*Math.PI)/gearRatio, wristOffset);
     
-
     // PID constants
     public static final double kP = 30;
     public static final double kI = 0;
@@ -21,10 +21,6 @@ public class WristConstants {
 
     // Tolerance
     public static final double wristTolerance = 0.1;
-
-    // Positions
-    public static final double pos1 = Units.degreesToRadians(0); // down
-    public static final double pos2 = Units.degreesToRadians(90); // straight
 
     // Simulation constants
     public static final double momentOfInertia = 0.0155;

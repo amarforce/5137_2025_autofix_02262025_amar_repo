@@ -15,7 +15,7 @@ public class CageChoice {
         cageChoice.addOption("Center", CageConstants.centerCage);
         cageChoice.addOption("Right", CageConstants.rightCage);
         cageChoice.setDefaultOption("Center",CageConstants.centerCage);
-        SmartDashboard.putData("Cage Choice", cageChoice);
+        SmartDashboard.putData("cageChoice", cageChoice);
     }
 
      /**

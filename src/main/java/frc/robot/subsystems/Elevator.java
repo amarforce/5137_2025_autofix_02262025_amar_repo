@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.other.RobotUtils;
+import frc.robot.constants.ArmSystemConstants;
 
 /**
  * The Elevator subsystem controls the elevator mechanism of the robot.
@@ -43,12 +44,21 @@ public class Elevator extends SubsystemBase {
     private ElevatorFeedforward feedforward = new ElevatorFeedforward(ElevatorConstants.kS, ElevatorConstants.kG, ElevatorConstants.kV, ElevatorConstants.kA);
 
     // Simulation objects for the elevator
-    private ElevatorSim elevatorSim = new ElevatorSim(ElevatorConstants.motorSim, ElevatorConstants.gearRatio, ElevatorConstants.carriageMass, ElevatorConstants.drumRadius, ElevatorConstants.minHeight, ElevatorConstants.maxHeight, true, ElevatorConstants.defaultGoal);
+    private ElevatorSim elevatorSim = new ElevatorSim(
+        ElevatorConstants.motorSim,
+        ElevatorConstants.gearRatio,
+        ElevatorConstants.carriageMass,
+        ElevatorConstants.drumRadius,
+        ElevatorConstants.minHeight,
+        ElevatorConstants.maxHeight,
+        true,
+        ArmSystemConstants.defaultState.elevatorPosition
+    );
     private TalonFXSimState leftMotorSim = new TalonFXSimState(leftMotor, ChassisReference.CounterClockwise_Positive);
     private TalonFXSimState rightMotorSim = new TalonFXSimState(rightMotor, ChassisReference.Clockwise_Positive);
 
     // Goal position for the elevator
-    private double goal = ElevatorConstants.defaultGoal;
+    private double goal = ArmSystemConstants.defaultState.elevatorPosition;
 
     // SysId routine for system identification
     private final SysIdRoutine sysIdRoutine = 
@@ -84,10 +94,10 @@ public class Elevator extends SubsystemBase {
         rightMotor.getConfigurator().apply(currentConfigs);
 
         // Set the tolerance for the PID controller
-        controller.setTolerance(ElevatorConstants.elevatorTol);
+        controller.setTolerance(ElevatorConstants.elevatorTolerance);
 
         // Add the PID controller to SmartDashboard for tuning
-        SmartDashboard.putData("Elevator Controller", controller);
+        SmartDashboard.putData("elevator/controller", controller);
 
         this.log=log;
     }
@@ -167,26 +177,21 @@ public class Elevator extends SubsystemBase {
      */
     private void telemetry() {
         SmartDashboard.putNumber("elevator/height",getMeasurement());
-        SmartDashboard.putNumber("elevator/rawHeight",leftMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("elevator/goal",getGoal());
         SmartDashboard.putNumber("elevator/velocity",getVelocity());
         SmartDashboard.putNumber("elevator/error",controller.getError());
-        SmartDashboard.putNumber("elevator/leftMotorTemp",leftMotor.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotorTemp",rightMotor.getDeviceTemp().getValueAsDouble());
-        int leftMotorFault = leftMotor.getFaultField().asSupplier().get();
-        if (leftMotorFault != 0){
-            SmartDashboard.putNumber("elevator/leftMotorFault",leftMotorFault);
-        }
-        int rightMotorFault = rightMotor.getFaultField().asSupplier().get();
-        if (rightMotorFault != 0){
-            SmartDashboard.putNumber("elevator/rightMotorFault",rightMotorFault);
-        }
-        SmartDashboard.putNumber("elevator/leftMotorCurrent",leftMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotorCurrent",rightMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/leftMotorVoltage",leftMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotorVoltage",rightMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/leftMotorSupplyVoltage",leftMotor.getSupplyVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotorSupplyVoltage",rightMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotor/rawHeight",leftMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotor/rawHeight",rightMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotor/temp",leftMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotor/temp",rightMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotor/fault",leftMotor.getFaultField().asSupplier().get());
+        SmartDashboard.putNumber("elevator/rightMotor/fault",rightMotor.getFaultField().asSupplier().get());
+        SmartDashboard.putNumber("elevator/leftMotor/current",leftMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotor/current",rightMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotor/voltage",leftMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotor/voltage",rightMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/leftMotor/supplyVoltage",leftMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/rightMotor/supplyVoltage",rightMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**
@@ -204,7 +209,6 @@ public class Elevator extends SubsystemBase {
         }catch(Exception e){
             log.append("Periodic error: "+RobotUtils.getError(e));
         }
-        System.out.println("Goal: " + getGoal() + " Measurement: " + getMeasurement());
     }
 
     /**

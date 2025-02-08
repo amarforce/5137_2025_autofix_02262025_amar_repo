@@ -1,10 +1,13 @@
 package frc.robot.commands;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.elastic.Reef;
 
 /**
  * The MultiCommands class is responsible for creating complex commands that involve multiple subsystems.
@@ -12,143 +15,69 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
  */
 public class MultiCommands {
     // Command groups for each subsystem
-    private ArmCommands armCommands;
-    private ElevatorCommands elevatorCommands;
-    private WristCommands wristCommands;
+    private ArmSystemCommands armSystemCommands;
     private SwerveCommands swerveCommands;
     private IntakeCommands intakeCommands;
     @SuppressWarnings("unused")
     private HangCommand hangCommand;
+    private Reef reef;
 
     /**
      * Constructor for MultiCommands.
-     * 
-     * @param armCommands The ArmCommands command group.
-     * @param elevatorCommands The ElevatorCommands command group.
-     * @param wristCommands The WristCommands command group.
-     * @param swerveCommands The SwerveCommands command group.
-     * @param intakeCommands The IntakeCommands command group.
-     * @param hangCommand The HangCommand command group.
      */
-    public MultiCommands(ArmCommands armCommands, ElevatorCommands elevatorCommands, WristCommands wristCommands,
-                         SwerveCommands swerveCommands, IntakeCommands intakeCommands, HangCommand hangCommand) {
-        this.armCommands = armCommands;
-        this.elevatorCommands = elevatorCommands;
-        this.wristCommands = wristCommands;
+    public MultiCommands(ArmSystemCommands armSystemCommands, SwerveCommands swerveCommands, IntakeCommands intakeCommands,
+                         HangCommand hangCommand, Reef reef) {
+        this.armSystemCommands = armSystemCommands;
         this.intakeCommands = intakeCommands;
         this.swerveCommands = swerveCommands;
         this.hangCommand = hangCommand;
-    }
-
-    /**
-     * Command to move the arm, elevator, and wrist to the ground intake position.
-     * 
-     * @return A ParallelCommandGroup that moves the arm, elevator, and wrist to the ground intake position.
-     */
-    public Command moveToGroundIntake() {
-        return new ParallelCommandGroup(
-            armCommands.moveToGroundIntake(),
-            elevatorCommands.moveToGroundIntake(),
-            wristCommands.toPos1()
-        );
-    }
-
-    /**
-     * Command to move the arm, elevator, and wrist to the default position.
-     * 
-     * @return A ParallelCommandGroup that moves the arm, elevator, and wrist to the default position.
-     */
-    public Command moveToDefault() {
-        return new ParallelCommandGroup(
-            armCommands.moveToDefault(),
-            elevatorCommands.moveToDefault(),
-            wristCommands.toPos1()
-        );
-    }
-
-    /**
-     * Command to move the arm, elevator, and wrist to the source position.
-     * 
-     * @return A ParallelCommandGroup that moves the arm, elevator, and wrist to the source position.
-     */
-    public Command moveToSource() {
-        return new ParallelCommandGroup(
-            armCommands.moveToSource(),
-            elevatorCommands.moveToSource(),
-            wristCommands.toPos2()
-        );
-    }
-
-    /**
-     * Command to move the arm, elevator, and wrist to the algae position.
-     * 
-     * @return A ParallelCommandGroup that moves the arm, elevator, and wrist to the algae position.
-     */
-    public Command moveToAlgae() {
-        return new ParallelCommandGroup(
-            armCommands.moveToAlgae(),
-            elevatorCommands.moveToAlgae(),
-            wristCommands.toPos2()
-        );
-    }
-
-    /**
-     * Command to move the arm, elevator, and wrist to a specific goal position.
-     * 
-     * @param goal The goal position to move to.
-     * @return A ParallelCommandGroup that moves the arm, elevator, and wrist to the specified goal position.
-     */
-    public Command moveToGoal(int goal) {
-        return new ParallelCommandGroup(
-            armCommands.moveToGoal(goal),
-            elevatorCommands.moveToGoal(goal),
-            wristCommands.toPos2()
-        );
+        this.reef = reef;
     }
 
     /**
      * Command to retrieve coral based on the robot's current pose.
-     * 
-     * @param pose The current pose of the robot.
-     * @return A ParallelCommandGroup that drives the robot to the specified pose and moves the arm, elevator, and wrist accordingly.
      */
     public Command getCoral(Pose2d pose) {
         if (pose == null) {
             return new InstantCommand(); // Do nothing if the pose is null
         } else {
-            Command moveTo=null;
-            if (pose.getY() > 1.75 && pose.getY() < 6.3) {
-                // If the robot is within a specific Y range, move to the ground intake position
-                moveTo = new ParallelCommandGroup(
-                    swerveCommands.driveToPose(() -> pose),
-                    moveToGroundIntake()
-                );
-            } else {
-                // Otherwise, move to the source position
-                moveTo = new ParallelCommandGroup(
-                    swerveCommands.driveToPose(() -> pose),
-                    moveToSource()
-                );
-            }
-            return new SequentialCommandGroup(moveTo,intakeCommands.intakeUntilSwitched());
+            String goalName = (pose.getY() > 1.75 && pose.getY() < 6.3) ? "groundIntake" : "source";
+            return new SequentialCommandGroup(new ParallelCommandGroup(swerveCommands.driveToPoseStatic(()->pose),armSystemCommands.moveTo(()->goalName)), intakeCommands.intakeUntilSwitched());
         }
+    }
+
+    public Command placeCoral(Supplier<Integer> level,Supplier<Integer> branch) {
+        return new SequentialCommandGroup(
+            new ParallelCommandGroup(
+                swerveCommands.driveToBranch(branch),
+                armSystemCommands.moveToGoal(level)
+            ),
+            intakeCommands.outtake()
+        );
+    }
+
+    public Command placeCoralNearest(int level,int branch){
+        return placeCoral(()->reef.getNearestLevel(level-2, branch)+2,()->reef.getNearestBranch(level-2, branch));
     }
 
     /**
      * Getter for the SwerveCommands.
-     * 
-     * @return The SwerveCommands command group.
      */
     public SwerveCommands getSwerveCommands() {
         return swerveCommands;
     }
 
     /**
-     * Getter for the SwerveCommands.
-     * 
-     * @return The SwerveCommands command group.
+     * Getter for the IntakeCommands.
      */
     public IntakeCommands getIntakeCommands() {
         return intakeCommands;
+    }
+
+    /**
+     * Getter for the IntakeCommands.
+     */
+    public ArmSystemCommands getArmSystemCommands() {
+        return armSystemCommands;
     }
 }

@@ -5,12 +5,14 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.other.DetectedObject;
 import frc.robot.subsystems.Swerve;
@@ -54,10 +56,36 @@ public class SwerveCommands {
      * @param pose The supplier for the target pose.
      * @return A command that drives the swerve subsystem to the specified pose.
      */
-    public Command driveToPose(Supplier<Pose2d> pose){
-        Command auto = AutoBuilder.pathfindToPose(pose.get(), SwerveConstants.constraints);
-        auto.addRequirements(swerve);
-        return auto;
+    public Command driveToPoseDynamic(Supplier<Pose2d> pose){
+        return new ParallelRaceGroup(new FunctionalCommand(
+            () -> {},
+            () -> {
+                swerve.setTargetPose(pose.get());
+            },
+            (e) -> {},
+            () -> swerve.atTarget(),
+            swerve
+        ),new WaitCommand(SwerveConstants.moveTimeout));
+    }
+
+    public Command driveToPoseStatic(Supplier<Pose2d> pose){
+        return new ParallelRaceGroup(new FunctionalCommand(
+            () -> {swerve.setTargetPose(pose.get());},
+            () -> {},
+            (e) -> {},
+            () -> swerve.atTarget(),
+            swerve
+        ),new WaitCommand(SwerveConstants.moveTimeout));
+    }
+
+    public Command driveToPoseStaticFixed(Supplier<Pose2d> pose){
+        return new ParallelRaceGroup(new FunctionalCommand(
+            () -> {swerve.setTargetPoseFixed(pose.get());},
+            () -> {},
+            (e) -> {},
+            () -> swerve.atTarget(),
+            swerve
+        ),new WaitCommand(SwerveConstants.moveTimeout));
     }
 
     /**
@@ -66,7 +94,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the closest station.
      */
     public Command driveToStation() {
-        return driveToPose(() -> swerve.getClosest(SwerveConstants.stations));
+        return driveToPoseStaticFixed(() -> swerve.getClosestFixed(GeneralConstants.stations));
     }
 
     /**
@@ -75,7 +103,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the closest left reef.
      */
     public Command driveToReefLeft() {
-        return driveToPose(() -> swerve.getClosest(SwerveConstants.leftReef));
+        return driveToPoseStaticFixed(() -> swerve.getClosestFixed(GeneralConstants.leftReef));
     }
 
     /**
@@ -84,7 +112,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the closest center reef.
      */
     public Command driveToReefCenter() {
-        return driveToPose(() -> swerve.getClosest(SwerveConstants.centerReef));
+        return driveToPoseStaticFixed(() -> swerve.getClosestFixed(GeneralConstants.centerReef));
     }
 
     /**
@@ -93,7 +121,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the closest right reef.
      */
     public Command driveToReefRight() {
-        return driveToPose(() -> swerve.getClosest(SwerveConstants.rightReef));
+        return driveToPoseStaticFixed(() -> swerve.getClosestFixed(GeneralConstants.rightReef));
     }
 
     /**
@@ -102,7 +130,7 @@ public class SwerveCommands {
      * @return A command that drives the swerve subsystem to the processor.
      */
     public Command driveToProcessor() {
-        return driveToPose(() -> SwerveConstants.processor);
+        return driveToPoseStaticFixed(() -> GeneralConstants.processor);
     }
 
     /**
@@ -124,7 +152,7 @@ public class SwerveCommands {
     }
 
     public Command driveToCoral(){
-        return driveToPose(()->{
+        return driveToPoseDynamic(()->{
             List<DetectedObject> objects=swerve.getGroundCoral();
             Pose2d[] poses=new Pose2d[objects.size()];
             for(int i=0;i<poses.length;i++){
@@ -132,6 +160,14 @@ public class SwerveCommands {
             }
             return swerve.getClosest(poses);
         });
+    }
+
+    public Command driveToBranch(Supplier<Integer> branch){
+        return driveToPoseStaticFixed(()->GeneralConstants.allReef[branch.get()]);
+    }
+
+    public Command driveToAlgae(Supplier<Integer> side){
+        return driveToPoseStaticFixed(()->GeneralConstants.centerReef[side.get()]);
     }
 
     /**

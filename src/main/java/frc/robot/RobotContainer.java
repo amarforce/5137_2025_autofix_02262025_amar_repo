@@ -51,7 +51,6 @@ public class RobotContainer {
 	private WristCommands wristCommands;
 	private IntakeCommands intakeCommands;
 	private HangCommand hangCommand;
-	private LEDCommands ledCommands;
 	private ArmSystemCommands armSystemCommands;
 	private MultiCommands multiCommands;
 
@@ -107,13 +106,12 @@ public class RobotContainer {
 			wristCommands = new WristCommands(wrist);
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
-			ledCommands = new LEDCommands(led);
 			armSystemCommands = new ArmSystemCommands(armSystem);
 			multiCommands = new MultiCommands(armSystemCommands, swerveCommands, intakeCommands, hangCommand, reef);
 
 			// Initialize cage choice
 			cageChoice = new CageChoice();
-			ledCommands.red();
+			
 			// Configure button bindings
 			configureBindings();
 

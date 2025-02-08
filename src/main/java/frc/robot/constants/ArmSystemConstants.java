@@ -25,7 +25,7 @@ public final class ArmSystemConstants {
     static {
         // Define all states
         ArmSystem.ArmSystemState groundIntakeState = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(-10),  // From ArmConstants.groundIntakeGoal
+            Units.degreesToRadians(0),  // From ArmConstants.groundIntakeGoal
             0.26,                         // From ElevatorConstants.groundIntakeGoal
             wristDown     // From WristConstants.pos1 (down)
         );
@@ -46,14 +46,14 @@ public final class ArmSystemConstants {
 
 
         ArmSystem.ArmSystemState algaeState = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(30),   // From ArmConstants.algaeGoal
+            Units.degreesToRadians(120),   // From ArmConstants.algaeGoal
             0.35,                         // From ElevatorConstants.algaeGoal
             wristStraight    // From WristConstants.pos2 (straight)
         );
 
 
         ArmSystem.ArmSystemState l1State = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(170),   // From ArmConstants.goals[0]
+            Units.degreesToRadians(135),   // From ArmConstants.goals[0]
             0.06,                        // From ElevatorConstants.goals[0]
             wristStraight   // Scoring wrist position (straight)
         );
@@ -67,14 +67,14 @@ public final class ArmSystemConstants {
 
 
         ArmSystem.ArmSystemState l3State = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(115),   // From ArmConstants.goals[2]
+            Units.degreesToRadians(135),   // From ArmConstants.goals[2]
             0.56,                        // From ElevatorConstants.goals[2]
             wristStraight   // Scoring wrist position (straight)
         );
 
 
         ArmSystem.ArmSystemState l4State = new ArmSystem.ArmSystemState(
-            Units.degreesToRadians(90),   // From ArmConstants.goals[3]
+            Units.degreesToRadians(120),   // From ArmConstants.goals[3]
             1.26,                        // From ElevatorConstants.goals[3]
             wristStraight   // Scoring wrist position (straight)
         );

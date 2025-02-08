@@ -13,6 +13,8 @@ public class LED extends SubsystemBase{
     private AddressableLEDBuffer ledBuffer;
     private AddressableLEDSim ledSim;
     private int iters = 0;
+    private int inc = 0;
+    private int timing = 0;
 
     public LED(){
         led = new AddressableLED(LEDConstants.ledPort);
@@ -27,6 +29,36 @@ public class LED extends SubsystemBase{
         return (Math.sin(1.5*x)+Math.sin(0.6*x)+Math.sin(2.3*x)+Math.sin(1.8*x)+Math.sin(0.4*x))/5;
     }
 
+    public void redYellow(){
+        if (timing % LEDConstants.redYellowSpeed == 0){
+            inc++;
+            for (int i=0;i<6;i++){
+                for (int j=0;j<10;j++){
+                    ledBuffer.setRGB((j+inc)%10 + (i*10), 200, 200 + (j*15), 0);
+                }
+            timing = 0;
+            }
+        }
+        timing ++;
+    }
+
+    public void blue(){
+        inc++;
+        for (int i=0;i<6;i++){
+            for (int j=0;j<10;j++){
+                ledBuffer.setRGB((j+inc)%10 + (i*10),0,0,200-(j+15));
+            }
+        }
+    }
+
+    public void red(){
+        inc++;
+        for (int i=0;i<6;i++){
+            for (int j=0;j<10;j++){
+                ledBuffer.setRGB((j+inc)%10 + (i*10),200-(j+15),0,0);
+            }
+        }
+    }
     public void noiseFire(){
         double noise=ImprovedNoise.noise(iters*LEDConstants.ledSpeed,1.4,8.6);
         double ledsOn=LEDConstants.ledStripLength/4.*(1+noise);
@@ -60,7 +92,7 @@ public class LED extends SubsystemBase{
     @Override
     public void periodic(){
         iters += 1;
-        noiseFire();
+        redYellow();
         byte[] dataConvert = new byte[LEDConstants.ledStripLength*4];
         for(int i = 0; i<LEDConstants.ledStripLength; i++){
             dataConvert[i*4] = (byte)(ledBuffer.getBlue(i));

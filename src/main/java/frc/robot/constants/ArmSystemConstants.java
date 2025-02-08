@@ -45,7 +45,13 @@ public final class ArmSystemConstants {
         );
 
 
-        ArmSystem.ArmSystemState algaeState = new ArmSystem.ArmSystemState(
+        ArmSystem.ArmSystemState algaeLowState = new ArmSystem.ArmSystemState(
+            Units.degreesToRadians(30),   // From ArmConstants.algaeGoal
+            0.35,                         // From ElevatorConstants.algaeGoal
+            wristStraight    // From WristConstants.pos2 (straight)
+        );
+
+        ArmSystem.ArmSystemState algaeHighState = new ArmSystem.ArmSystemState(
             Units.degreesToRadians(120),   // From ArmConstants.algaeGoal
             0.35,                         // From ElevatorConstants.algaeGoal
             wristStraight    // From WristConstants.pos2 (straight)
@@ -79,16 +85,24 @@ public final class ArmSystemConstants {
             wristStraight   // Scoring wrist position (straight)
         );
 
+        ArmSystem.ArmSystemState processor = new ArmSystem.ArmSystemState(
+            Units.degreesToRadians(75),
+            1.26,
+            wristStraight
+        );
+
 
         // Populate the states map
         states.put("groundIntake", groundIntakeState);
         states.put("default", defaultState);
         states.put("source", sourceState);
-        states.put("algae", algaeState);
+        states.put("algaeLow", algaeLowState);        
+        states.put("algaeHigh", algaeHighState);
         states.put("L1", l1State);
         states.put("L2", l2State);
         states.put("L3", l3State);
         states.put("L4", l4State);
+        states.put("processor", processor);
     }
 
 

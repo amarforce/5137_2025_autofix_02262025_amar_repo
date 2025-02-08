@@ -48,6 +48,19 @@ public class SwerveCommands {
             () -> swerve.setPercentDrive(dx.getAsDouble(), dy.getAsDouble(), dtheta.getAsDouble(), fieldOriented.getAsBoolean()),
             swerve
         );
+
+    }
+
+    public Command functionalDrive(DoubleSupplier dx, DoubleSupplier dy, DoubleSupplier dtheta, BooleanSupplier fieldOriented) {
+        return new ParallelRaceGroup(
+            new FunctionalCommand(
+                ()->{},
+                () ->swerve.setPercentDrive(dx.getAsDouble(),dy.getAsDouble(),dtheta.getAsDouble(),fieldOriented.getAsBoolean()),
+                (cat)->{},
+                ()-> {return false;},
+                swerve),
+            new WaitCommand(0.5));
+        //return new RepeatCommand(new InstantCommand(()->swerve.setPercentDrive(dx.getAsDouble(),dy.getAsDouble(),dtheta.getAsDouble(),fieldOriented.getAsBoolean())));
     }
 
     /**

@@ -46,6 +46,8 @@ public class MultiCommands {
         }
     }
 
+    
+
     public Command placeCoral(Supplier<Integer> level,Supplier<Integer> branch) {
         return new SequentialCommandGroup(
             new ParallelCommandGroup(
@@ -58,6 +60,36 @@ public class MultiCommands {
 
     public Command placeCoralNearest(int level,int branch){
         return placeCoral(()->reef.getNearestLevel(level-2, branch)+2,()->reef.getNearestBranch(level-2, branch));
+    }
+
+    public Command getAlgae(int branch) {
+        Command moveTo;
+        if (reef.isAlgaeLow(branch)) {
+            moveTo = new ParallelCommandGroup(
+                moveTo(()->"algaeLow")
+                //,swerveCommands.driveToPose(()->pose)
+                );
+        } else {
+            moveTo = new ParallelCommandGroup(
+                moveTo(()->"algaeHigh")
+                //,swerveCommands.driveToPose(()->pose)
+                );
+        }
+        
+        return new SequentialCommandGroup(
+            moveTo, 
+            intakeCommands.intakeUntilSwitched(),
+            swerveCommands.functionalDrive(()->0.8, ()->0, ()->0, ()->false));
+    }
+
+    public Command placeAlgae() {
+        return new SequentialCommandGroup(
+            new ParallelCommandGroup(
+                swerveCommands.driveToProcessor(),
+                moveTo(() -> "processor")
+            ),
+            intakeCommands.outtake()
+        );
     }
 
     /**

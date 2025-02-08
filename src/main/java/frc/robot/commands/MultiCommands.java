@@ -1,86 +1,115 @@
 package frc.robot.commands;
 
-
+import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.Hang;
-import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.Swerve;
-import frc.robot.subsystems.Wrist;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.elastic.Reef;
 
+/**
+ * The MultiCommands class is responsible for creating complex commands that involve multiple subsystems.
+ * These commands are typically composed of several simpler commands that run in parallel or sequence.
+ */
 public class MultiCommands {
-    private Arm arm;
-    private Elevator elevator;
-    private Wrist wrist;
-    private Swerve swerve;
-    private Intake intake;
-    private Hang hang;
-    private ArmCommands armCommands;
-    private ElevatorCommands elevatorCommands;
-    private WristCommands wristCommands;
+    // Command groups for each subsystem
+    private ArmSystemCommands armSystemCommands;
     private SwerveCommands swerveCommands;
     private IntakeCommands intakeCommands;
+    @SuppressWarnings("unused")
     private HangCommand hangCommand;
+    private Reef reef;
 
-    public MultiCommands(Arm arm,Elevator elevator,Wrist wrist,Swerve swerve,Intake intake,Hang hang,ArmCommands armCommands,ElevatorCommands elevatorCommands,WristCommands wristCommands,SwerveCommands swerveCommands,IntakeCommands intakeCommands,HangCommand hangCommand) {
-        this.arm=arm;
-        this.elevator=elevator;
-        this.wrist=wrist;
-        this.swerve=swerve;
-        this.intake=intake;
-        this.hang=hang;
-        this.armCommands=armCommands;
-        this.elevatorCommands=elevatorCommands;
-        this.wristCommands=wristCommands;
-        this.intakeCommands=intakeCommands;
-        this.swerveCommands=swerveCommands;
-        this.hangCommand=hangCommand;
+    /**
+     * Constructor for MultiCommands.
+     */
+    public MultiCommands(ArmSystemCommands armSystemCommands, SwerveCommands swerveCommands, IntakeCommands intakeCommands,
+                         HangCommand hangCommand, Reef reef) {
+        this.armSystemCommands = armSystemCommands;
+        this.intakeCommands = intakeCommands;
+        this.swerveCommands = swerveCommands;
+        this.hangCommand = hangCommand;
+        this.reef = reef;
     }
 
-    public Command moveToGroundIntake(){
-        return new ParallelCommandGroup(armCommands.moveToGroundIntake(),elevatorCommands.moveToGroundIntake(),wristCommands.toPos1());
-    }
-
-    public Command moveToDefault(){
-        return new ParallelCommandGroup(armCommands.moveToDefault(),elevatorCommands.moveToDefault(),wristCommands.toPos1());
-    }
-
-    public Command moveToSource(){
-        return new ParallelCommandGroup(armCommands.moveToSource(),elevatorCommands.moveToSource(),wristCommands.toPos2());
-    }
-
-    public Command moveToAlgae(){
-        return new ParallelCommandGroup(armCommands.moveToAlgae(),elevatorCommands.moveToAlgae(),wristCommands.toPos2());
-    }
-
-    public Command moveToGoal(int goal){
-        return new ParallelCommandGroup(armCommands.moveToGoal(goal),elevatorCommands.moveToGoal(goal),wristCommands.toPos2());
-    }
-
+    /**
+     * Command to retrieve coral based on the robot's current pose.
+     */
     public Command getCoral(Pose2d pose) {
         if (pose == null) {
-            return new InstantCommand();
+            return new InstantCommand(); // Do nothing if the pose is null
         } else {
-            if (pose.getY() > 1.75 && pose.getY() < 6.3) {
-                return new ParallelCommandGroup(
-                    swerveCommands.driveToPose(()->pose),
-                    moveToGroundIntake()
-                );
-            } else {
-                return new ParallelCommandGroup(
-                    swerveCommands.driveToPose(()->pose),
-                    moveToSource()
-                );
-            }
+            String goalName = (pose.getY() > 1.75 && pose.getY() < 6.3) ? "groundIntake" : "source";
+            return new SequentialCommandGroup(new ParallelCommandGroup(swerveCommands.driveToPoseStatic(()->pose),armSystemCommands.moveTo(()->goalName)), intakeCommands.intakeUntilSwitched());
         }
     }
 
-    public SwerveCommands getSwerveCommands(){
+    
+
+    public Command placeCoral(Supplier<Integer> level,Supplier<Integer> branch) {
+        return new SequentialCommandGroup(
+            new ParallelCommandGroup(
+                swerveCommands.driveToBranch(branch),
+                armSystemCommands.moveToGoal(level)
+            ),
+            intakeCommands.outtake()
+        );
+    }
+
+    public Command placeCoralNearest(int level,int branch){
+        return placeCoral(()->reef.getNearestLevel(level-2, branch)+2,()->reef.getNearestBranch(level-2, branch));
+    }
+
+    public Command getAlgae(int branch) {
+        Command moveTo;
+        if (reef.isAlgaeLow(branch)) {
+            moveTo = new ParallelCommandGroup(
+                armSystemCommands.moveTo(()->"algaeLow")
+                //,swerveCommands.driveToPose(()->pose)
+                );
+        } else {
+            moveTo = new ParallelCommandGroup(
+                armSystemCommands.moveTo(()->"algaeHigh")
+                //,swerveCommands.driveToPose(()->pose)
+                );
+        }
+        
+        return new SequentialCommandGroup(
+            moveTo, 
+            intakeCommands.intakeUntilSwitched(),
+            swerveCommands.functionalDrive(()->0.8, ()->0, ()->0, ()->false));
+    }
+
+    public Command placeAlgae() {
+        return new SequentialCommandGroup(
+            new ParallelCommandGroup(
+                swerveCommands.driveToProcessor(),
+                armSystemCommands.moveTo(() -> "processor")
+            ),
+            intakeCommands.outtake()
+        );
+    }
+
+    /**
+     * Getter for the SwerveCommands.
+     */
+    public SwerveCommands getSwerveCommands() {
         return swerveCommands;
+    }
+
+    /**
+     * Getter for the IntakeCommands.
+     */
+    public IntakeCommands getIntakeCommands() {
+        return intakeCommands;
+    }
+
+    /**
+     * Getter for the IntakeCommands.
+     */
+    public ArmSystemCommands getArmSystemCommands() {
+        return armSystemCommands;
     }
 }

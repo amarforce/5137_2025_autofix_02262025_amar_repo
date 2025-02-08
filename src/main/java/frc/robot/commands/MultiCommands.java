@@ -66,12 +66,12 @@ public class MultiCommands {
         Command moveTo;
         if (reef.isAlgaeLow(branch)) {
             moveTo = new ParallelCommandGroup(
-                moveTo(()->"algaeLow")
+                armSystemCommands.moveTo(()->"algaeLow")
                 //,swerveCommands.driveToPose(()->pose)
                 );
         } else {
             moveTo = new ParallelCommandGroup(
-                moveTo(()->"algaeHigh")
+                armSystemCommands.moveTo(()->"algaeHigh")
                 //,swerveCommands.driveToPose(()->pose)
                 );
         }
@@ -86,7 +86,7 @@ public class MultiCommands {
         return new SequentialCommandGroup(
             new ParallelCommandGroup(
                 swerveCommands.driveToProcessor(),
-                moveTo(() -> "processor")
+                armSystemCommands.moveTo(() -> "processor")
             ),
             intakeCommands.outtake()
         );

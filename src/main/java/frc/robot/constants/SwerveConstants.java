@@ -34,4 +34,7 @@ public class SwerveConstants {
     public static final double rotTol = Units.degreesToRadians(10); // in radians
 
     public static final double moveTimeout = 10; // seconds
+
+    public static final double driveBackPower = 0.8;
+    public static final double driveBackTime = 0.5; // seconds
 }

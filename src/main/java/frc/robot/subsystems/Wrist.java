@@ -59,7 +59,7 @@ public class Wrist extends SubsystemBase {
             new SysIdRoutine.Mechanism(
                 this::setVoltage,
                 log -> {
-                    log.motor("Wrist")
+                    log.motor("wrist")
                         .voltage(Volts.of(wristMotor.get() * RobotController.getBatteryVoltage()))
                         .angularPosition(Radians.of(getMeasurement()))
                         .angularVelocity(RadiansPerSecond.of(getVelocity()));
@@ -86,7 +86,7 @@ public class Wrist extends SubsystemBase {
         controller.setTolerance(WristConstants.wristTolerance);
         
         // Display the PID controller on SmartDashboard for tuning
-        SmartDashboard.putData("Wrist Controller", controller);
+        SmartDashboard.putData("wrist/controller", controller);
 
         this.log=log;
     }
@@ -152,15 +152,12 @@ public class Wrist extends SubsystemBase {
         SmartDashboard.putNumber("wrist/goal",getGoal());
         SmartDashboard.putNumber("wrist/velocity",getVelocity());
         SmartDashboard.putNumber("wrist/error",controller.getError());
-        SmartDashboard.putNumber("wrist/motorTemp",wristMotor.getDeviceTemp().getValueAsDouble());
-        int motorFault = wristMotor.getFaultField().asSupplier().get();
-        if (motorFault != 0){
-            SmartDashboard.putNumber("wrist/motorFault",motorFault);
-        }
-        SmartDashboard.putNumber("wrist/current",wristMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("wrist/voltage",wristMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("wrist/current",wristMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("wrist/supplyVoltage",wristMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/rawAngle",wristMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/temp",wristMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/fault",wristMotor.getFaultField().asSupplier().get());
+        SmartDashboard.putNumber("wrist/motor/current",wristMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/voltage",wristMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/supplyVoltage",wristMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**

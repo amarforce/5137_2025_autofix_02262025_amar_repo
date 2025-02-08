@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Intake;
@@ -42,13 +43,13 @@ public class IntakeCommands {
      * @return A command that runs the intake until the switch is triggered.
      */
     public Command intakeUntilSwitched() {
-        return new FunctionalCommand(
+        return new ParallelRaceGroup(new FunctionalCommand(
             () -> intake.setSpeed(IntakeConstants.intakeSpeed), // Initialize the intake speed
             () -> {},                                           // No action during execution
             (e) -> {},                                          // No action on end
             () -> intake.isSwitched(),                          // Condition to end the command
             intake                                              // Subsystem requirement
-        );
+        ),new WaitCommand(IntakeConstants.intakeTimeout));
     }
 
     /**
@@ -60,7 +61,7 @@ public class IntakeCommands {
     public Command outtake() {
         return new SequentialCommandGroup(
             Commands.runOnce(() -> intake.setSpeed(IntakeConstants.intakeSpeed)), // Start the intake
-            new WaitCommand(1),                                                   // Wait for 1 second
+            new WaitCommand(IntakeConstants.outtakeTime),                                                   // Wait for 1 second
             stop()                                                                // Stop the intake
         );
     }

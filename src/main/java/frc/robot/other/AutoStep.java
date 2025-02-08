@@ -22,7 +22,7 @@ public class AutoStep {
 
     // Choosers for selecting level, reef position, and pickup position
     private SendableChooser<Integer> levelChooser;
-    private SendableChooser<Pose2d> reefChooser;
+    private SendableChooser<Integer> branchChooser;
     private SendableChooser<Pose2d> pickupChooser;
 
     /**
@@ -43,16 +43,16 @@ public class AutoStep {
         levelChooser.addOption("L1", 1);
         levelChooser.addOption("Algae", 0);
         levelChooser.addOption("No Auto",-1);
-        SmartDashboard.putData("Level Choice " + id, levelChooser);
+        SmartDashboard.putData("levelChoices/" + id, levelChooser);
 
         // Initialize the reef and pickup choosers with coral poses
         switchToCoralPoses();
 
         // Add a listener to the level chooser to switch between coral and algae poses
         levelChooser.onChange((Integer choice) -> {
-            if (choice.equals(0)) {
+            if (choice==0) {
                 switchToAlgaePoses();
-            } else if(choice.equals(-1)){
+            } else if(choice==-1){
                 switchToNoAuto();
             }else{
                 switchToCoralPoses();
@@ -61,16 +61,16 @@ public class AutoStep {
     }
 
     /**
-     * Initializes the reef and pickup choosers with coral poses.
+     * Initializes the branch and pickup choosers with coral poses.
      */
     private void switchToCoralPoses() {
-        // Initialize the reef chooser with default and additional options
-        reefChooser = new SendableChooser<Pose2d>();
-        reefChooser.setDefaultOption("A", GeneralConstants.allReef[0]);
+        // Initialize the branch chooser with default and additional options
+        branchChooser = new SendableChooser<Integer>();
+        branchChooser.setDefaultOption("A", 0);
         for (int i = 1; i < GeneralConstants.sides * 2; i++) {
-            reefChooser.addOption(Character.toString('A' + i), GeneralConstants.allReef[i]);
+            branchChooser.addOption(Character.toString('A' + i), i);
         }
-        SmartDashboard.putData("Reef Choice " + id, reefChooser);
+        SmartDashboard.putData("branchChoices/" + id, branchChooser);
 
         // Initialize the pickup chooser with default and additional options
         pickupChooser = new SendableChooser<Pose2d>();
@@ -81,7 +81,7 @@ public class AutoStep {
         pickupChooser.addOption("Left Ground", GeneralConstants.leftPickup);
         pickupChooser.addOption("Center Ground", GeneralConstants.centerPickup);
         pickupChooser.addOption("Right Ground", GeneralConstants.rightPickup);
-        SmartDashboard.putData("Pickup Choice " + id, pickupChooser);
+        SmartDashboard.putData("pickupChoices/" + id, pickupChooser);
     }
 
     /**
@@ -89,24 +89,24 @@ public class AutoStep {
      */
     private void switchToAlgaePoses() {
         // Initialize the reef chooser with default and additional options for algae poses
-        reefChooser = new SendableChooser<Pose2d>();
-        reefChooser.setDefaultOption("AB", GeneralConstants.centerReef[0]);
+        branchChooser = new SendableChooser<Integer>();
+        branchChooser.setDefaultOption("AB", 0);
         for (int i = 1; i < GeneralConstants.sides; i++) {
-            reefChooser.addOption(Character.toString('A' + (2 * i)) + Character.toString('A' + (2 * i + 1)), GeneralConstants.centerReef[i]);
+            branchChooser.addOption(Character.toString('A' + (2 * i)) + Character.toString('A' + (2 * i + 1)), i);
         }
-        SmartDashboard.putData("Reef Choice " + id, reefChooser);
+        SmartDashboard.putData("branchChoices/" + id, branchChooser);
 
         // Initialize the pickup chooser (no options added for algae poses)
         pickupChooser = new SendableChooser<Pose2d>();
-        SmartDashboard.putData("Pickup Choice " + id, pickupChooser);
+        SmartDashboard.putData("pickupChoices/" + id, pickupChooser);
     }
 
     private void switchToNoAuto(){
         pickupChooser = new SendableChooser<Pose2d>();
-        SmartDashboard.putData("Pickup Choice " + id, pickupChooser);
+        SmartDashboard.putData("pickupChoices/" + id, pickupChooser);
 
-        reefChooser = new SendableChooser<Pose2d>();
-        SmartDashboard.putData("Reef Choice " + id, reefChooser);
+        branchChooser = new SendableChooser<Integer>();
+        SmartDashboard.putData("branchChoices/" + id, branchChooser);
     }
 
     /**
@@ -120,37 +120,15 @@ public class AutoStep {
             return new InstantCommand();
         }else if(level==0){
             return new ParallelCommandGroup(
-                multiCommands.moveTo(()->"algae"),
-                multiCommands.getSwerveCommands().driveToPose(()->RobotUtils.invertPoseToAlliance(reefChooser.getSelected()))
+                multiCommands.getArmSystemCommands().moveTo(()->"algae"),
+                multiCommands.getSwerveCommands().driveToAlgae(()->branchChooser.getSelected())
             );
         }else{
             return new SequentialCommandGroup(
                 multiCommands.getCoral(RobotUtils.invertPoseToAlliance(pickupChooser.getSelected())),
-                new ParallelCommandGroup(
-                    multiCommands.moveToGoal(()->levelChooser.getSelected()),
-                    multiCommands.getSwerveCommands().driveToPose(() -> RobotUtils.invertPoseToAlliance(reefChooser.getSelected()))
-                ),
-                multiCommands.getIntakeCommands().outtake()
+                multiCommands.placeCoral(()->levelChooser.getSelected(), ()->branchChooser.getSelected())
             );
         }
         
-    }
-
-    /**
-     * Retrieves the selected reef pose.
-     *
-     * @return The selected {@link Pose2d} for the reef position.
-     */
-    public Pose2d getPose() {
-        return RobotUtils.invertPoseToAlliance(reefChooser.getSelected());
-    }
-
-    /**
-     * Retrieves the selected pickup pose.
-     *
-     * @return The selected {@link Pose2d} for the pickup position.
-     */
-    public Pose2d getPickup() {
-        return RobotUtils.invertPoseToAlliance(pickupChooser.getSelected());
     }
 }

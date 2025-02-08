@@ -1,6 +1,11 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
@@ -8,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.MechanismConstants;
+import frc.robot.constants.ArmConstants;
 import frc.robot.constants.ArmSystemConstants;
 
 /**
@@ -44,6 +50,11 @@ public class ArmSystem extends SubsystemBase {
     private final MechanismLigament2d armMech2d = elevatorMech2d.append(new MechanismLigament2d("Arm", MechanismConstants.armLength, 0));
     private final MechanismLigament2d wristMech2d = armMech2d.append(new MechanismLigament2d("Wrist", MechanismConstants.wristLength, 0));
 
+    private StructPublisher<Pose3d> firstStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/elevator/firstStage", Pose3d.struct).publish();
+    private StructPublisher<Pose3d> secondStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/elevator/secondStage", Pose3d.struct).publish();
+    private StructPublisher<Pose3d> armPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/arm/pose", Pose3d.struct).publish();
+    private StructPublisher<Pose3d> wristPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/wrist/pose", Pose3d.struct).publish();
+
     /**
      * Constructor for the `ArmMechanism` class.
      *
@@ -62,7 +73,7 @@ public class ArmSystem extends SubsystemBase {
         wristMech2d.setColor(MechanismConstants.wristColor);
 
         // Display the mechanism on the SmartDashboard
-        SmartDashboard.putData("Scoring System", mech2d);
+        SmartDashboard.putData("armSystem", mech2d);
     }
 
     /**
@@ -79,6 +90,17 @@ public class ArmSystem extends SubsystemBase {
 
         // Update the angle of the wrist visualization based on its current angle
         wristMech2d.setAngle(Units.radiansToDegrees(wrist.getMeasurement() - Math.PI / 2));
+
+        firstStagePosePublisher.set(new Pose3d(0,0,elevator.getMeasurement()/2,new Rotation3d()));
+        Translation3d elevatorTrans=new Translation3d(0,0,elevator.getMeasurement());
+        Pose3d elevatorPose=new Pose3d(elevatorTrans,new Rotation3d());
+        secondStagePosePublisher.set(elevatorPose);
+        Translation3d armTrans=elevatorTrans.plus(ArmSystemConstants.armTransOffset);
+        Pose3d armPose=new Pose3d(armTrans,new Rotation3d(0,arm.getMeasurement(),0));
+        armPosePublisher.set(armPose);
+        Translation3d wristTrans=armTrans.plus(new Translation3d(-ArmConstants.armLength*Math.cos(arm.getMeasurement()), 0, ArmConstants.armLength*Math.sin(arm.getMeasurement())));
+        Pose3d wristPose=new Pose3d(wristTrans,new Rotation3d(0,arm.getMeasurement()+wrist.getMeasurement(),0));
+        wristPosePublisher.set(wristPose);
     }
 
     /**

@@ -113,7 +113,6 @@ public class RobotUtils {
      * @return The closest pose from the list.
      */
     public static Pose2d getClosestPoseToPose(Pose2d pose, Pose2d[] others) {
-        pose = RobotUtils.invertPoseToAlliance(pose);
         Pose2d closest = null;
         double closestDistance = Double.MAX_VALUE;
         for (Pose2d other : others) {

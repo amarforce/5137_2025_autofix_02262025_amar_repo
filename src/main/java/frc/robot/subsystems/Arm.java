@@ -89,7 +89,7 @@ public class Arm extends SubsystemBase {
         controller.setTolerance(ArmConstants.armTolerance);
         
         // Display the PID controller on SmartDashboard for tuning
-        SmartDashboard.putData("Arm Controller", controller);
+        SmartDashboard.putData("arm/controller", controller);
 
         this.log=log;
     }
@@ -155,15 +155,12 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("arm/goal",getGoal());
         SmartDashboard.putNumber("arm/velocity",getVelocity());
         SmartDashboard.putNumber("arm/error",controller.getError());
-        SmartDashboard.putNumber("arm/motorTemp",armMotor.getDeviceTemp().getValueAsDouble());
-        int motorFault = armMotor.getFaultField().asSupplier().get();
-        if (motorFault != 0){
-            SmartDashboard.putNumber("arm/motorFault",motorFault);
-        }
-        SmartDashboard.putNumber("arm/current",armMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("arm/voltage",armMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("arm/current",armMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("arm/supplyVoltage",armMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/rawAngle",armMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/temp",armMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/fault",armMotor.getFaultField().asSupplier().get());
+        SmartDashboard.putNumber("arm/motor/current",armMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/voltage",armMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/supplyVoltage",armMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**

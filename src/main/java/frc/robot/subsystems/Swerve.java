@@ -220,6 +220,18 @@ public class Swerve extends SubsystemBase {
         return swerve.getState().Speeds;
     }
 
+    private void cancelAuto(){
+        if(currentAuto!=null){
+            currentAuto.cancel();
+            currentAuto=null;
+        }
+    }
+
+    private void startAuto(Command auto){
+        cancelAuto();
+        auto.schedule();
+        currentAuto=auto;
+    }
     /**
      * Drives the robot with a percentage of maximum speed.
      *
@@ -238,9 +250,7 @@ public class Swerve extends SubsystemBase {
         lastDx=dx;
         lastDy=dy;
         lastDtheta=dtheta;
-        if(currentAuto!=null){
-            currentAuto.cancel();
-        }
+        cancelAuto();
         double absSpeedX = dx*maxSpeed;
         double absSpeedY = dy*maxSpeed;
         double absRot = dtheta*maxAngularSpeed;
@@ -299,8 +309,7 @@ public class Swerve extends SubsystemBase {
     public void setTargetPose(Pose2d target){
         if(target!=targetPose){
             targetPose=target;
-            currentAuto = AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints);
-            currentAuto.schedule();
+            startAuto(AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints));
         }
     }
 

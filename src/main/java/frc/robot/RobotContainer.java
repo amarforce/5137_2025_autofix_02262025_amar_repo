@@ -129,13 +129,6 @@ public class RobotContainer {
 	private void configureBindings() {
 		// Driver Bindings
 		// Set default command for swerve to drive with joystick inputs
-		swerve.setDefaultCommand(
-			swerveCommands.drive(
-				() -> -driver.getLeftY(),
-				() -> -driver.getLeftX(),
-				() -> -driver.getRightX(),
-				() -> driver.R1().negate().getAsBoolean())
-		);
 
 		// Bind cross button to lock swerve
 		driver.cross().whileTrue(swerveCommands.lock());
@@ -206,8 +199,6 @@ public class RobotContainer {
 	}
 
 	public void periodic(){
-		if(Math.abs(driver.getLeftX())>SwerveConstants.translationalDeadband || Math.abs(driver.getLeftY())>SwerveConstants.translationalDeadband || Math.abs(driver.getRightX())>SwerveConstants.rotationalDeadband){
-			swerve.cancelAuto();
-		}
+		swerve.setPercentDrive(-driver.getLeftY(), -driver.getLeftX(), driver.getRightX(), true);
 	}
 }

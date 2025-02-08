@@ -42,9 +42,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 /**
@@ -230,7 +228,19 @@ public class Swerve extends SubsystemBase {
      * @param dtheta      The percentage of maximum angular speed.
      * @param fieldRelative Whether the drive is field-relative or robot-relative.
      */
+    private double lastDx;
+    private double lastDy;
+    private double lastDtheta;
     public void setPercentDrive(double dx, double dy, double dtheta, boolean fieldRelative) {
+        if(dx==lastDx && dy==lastDy && dtheta==lastDtheta){
+            return;
+        }
+        lastDx=dx;
+        lastDy=dy;
+        lastDtheta=dtheta;
+        if(currentAuto!=null){
+            currentAuto.cancel();
+        }
         double absSpeedX = dx*maxSpeed;
         double absSpeedY = dy*maxSpeed;
         double absRot = dtheta*maxAngularSpeed;
@@ -309,12 +319,6 @@ public class Swerve extends SubsystemBase {
             return false;
         }
         return true;
-    }
-
-    public void cancelAuto(){
-        if(currentAuto!=null){
-            currentAuto.cancel();
-        }
     }
 
     /**

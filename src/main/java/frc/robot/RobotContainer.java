@@ -26,6 +26,7 @@ import frc.robot.other.CageChoice;
 import frc.robot.other.RobotUtils;
 import frc.robot.subsystems.*;
 import frc.robot.commands.*;
+import frc.robot.constants.SwerveConstants;
 
 @SuppressWarnings("unused")
 public class RobotContainer {
@@ -202,5 +203,11 @@ public class RobotContainer {
 	 */
 	public Command getAutonomousCommand() {
 		return autoFactory.getAuto();
+	}
+
+	public void periodic(){
+		if(Math.abs(driver.getLeftX())>SwerveConstants.translationalDeadband || Math.abs(driver.getLeftY())>SwerveConstants.translationalDeadband || Math.abs(driver.getRightX())>SwerveConstants.rotationalDeadband){
+			swerve.cancelAuto();
+		}
 	}
 }

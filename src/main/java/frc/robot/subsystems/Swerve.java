@@ -101,6 +101,7 @@ public class Swerve extends SubsystemBase {
     private StructPublisher<Pose2d> currentPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/pose", Pose2d.struct).publish();
     private StructPublisher<Pose2d> targetPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/targetPose", Pose2d.struct).publish();
 
+    private Command currentAuto;
     /**
      * Constructor for the Swerve subsystem.
      *
@@ -288,8 +289,8 @@ public class Swerve extends SubsystemBase {
     public void setTargetPose(Pose2d target){
         if(target!=targetPose){
             targetPose=target;
-            Command auto = AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints);
-            new ParallelRaceGroup(auto,new WaitCommand(SwerveConstants.moveTimeout)).schedule();
+            currentAuto = AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints);
+            currentAuto.schedule();
         }
     }
 
@@ -308,6 +309,12 @@ public class Swerve extends SubsystemBase {
             return false;
         }
         return true;
+    }
+
+    public void cancelAuto(){
+        if(currentAuto!=null){
+            currentAuto.cancel();
+        }
     }
 
     /**

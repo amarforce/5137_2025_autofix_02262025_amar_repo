@@ -5,6 +5,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.datalog.StringLogEntry;
@@ -22,6 +23,7 @@ import frc.robot.constants.ArmSystemConstants;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 /**
@@ -36,6 +38,9 @@ public class Wrist extends SubsystemBase {
     
     // PID controller for Wrist position control
     private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
+
+    // Feedforward controller for arm dynamics
+    private ArmFeedforward feedforward = new ArmFeedforward(WristConstants.kS, WristConstants.kG, WristConstants.kV);
     
     // Goal position for the Wrist in radians
     private double goal = ArmSystemConstants.defaultState.wristPosition;
@@ -52,34 +57,44 @@ public class Wrist extends SubsystemBase {
         ArmSystemConstants.defaultState.wristPosition
     );
 
-    // System Identification routine for characterizing the Wrist
-    private final SysIdRoutine sysIdRoutine =
+    // SysId routine for system identification
+    private final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
-            new SysIdRoutine.Config(),
+            // Empty config defaults to 1 volt/second ramp rate and 7 volt step voltage.
+            new SysIdRoutine.Config(
+                null,        // Use default ramp rate (1 V/s)
+                Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+                null        // Use default timeout (10 s)
+            ),
             new SysIdRoutine.Mechanism(
+                // Tell SysId how to plumb the driving voltage to the motor(s).
                 this::setVoltage,
+                // Tell SysId how to record a frame of data for each motor on the mechanism being characterized.
                 log -> {
+                    // Record a frame for the elevator motor.
                     log.motor("wrist")
-                        .voltage(Volts.of(wristMotor.get() * RobotController.getBatteryVoltage()))
+                        .voltage(getVolts())
                         .angularPosition(Radians.of(getMeasurement()))
-                        .angularVelocity(RadiansPerSecond.of(getVelocity()));
+                        .angularVelocity(RadiansPerSecond.of(getVelocity()))
+                        .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
                 },
-                this
-            )
-        );
+                // Tell SysId to make generated commands require this subsystem, suffix test state in WPILog with this subsystem's name ("elevator")
+                this));
     
     // Simulation state for the motor
     private TalonFXSimState wristMotorSim = wristMotor.getSimState();
+
+    private Arm arm;
 
     private StringLogEntry log;
         
     /**
      * Constructor for the Wrist subsystem.
      */
-    public Wrist(StringLogEntry log) {
-        // Configure the motor to coast when neutral
+    public Wrist(Arm arm, StringLogEntry log) {
+        // Configure the motor to brake when neutral
         var currentConfigs = new MotorOutputConfigs();
-        currentConfigs.NeutralMode = NeutralModeValue.Coast;
+        currentConfigs.NeutralMode = NeutralModeValue.Brake;
         wristMotor.getConfigurator().apply(currentConfigs);
 
         // Set the tolerance for the PID controller
@@ -88,6 +103,7 @@ public class Wrist extends SubsystemBase {
         // Display the PID controller on SmartDashboard for tuning
         SmartDashboard.putData("wrist/controller", controller);
 
+        this.arm=arm;
         this.log=log;
     }
 
@@ -98,6 +114,15 @@ public class Wrist extends SubsystemBase {
      */
     public double getMeasurement() {
         return WristConstants.transform.transformPos(wristMotor.getPosition().getValueAsDouble());
+    }
+
+    /**
+     * Gets the true Wrist position in radians to use with feedforward.
+     * 
+     * @return The current true position of the wrist in radians.
+     */
+    public double getAdjustedMeasurement() {
+        return arm.getMeasurement() + this.getMeasurement();
     }
     
     /**
@@ -119,6 +144,15 @@ public class Wrist extends SubsystemBase {
     }
 
     /**
+     * Gets the true goal in radians to use with feedforward.
+     * 
+     * @return The current true goal in radians.
+     */
+    public double getAdjustedGoal() {
+        return arm.getMeasurement() + this.getMeasurement();
+    }
+
+    /**
      * Sets the voltage applied to the Wrist motor.
      * 
      * @param v The voltage to apply to the motor.
@@ -134,6 +168,24 @@ public class Wrist extends SubsystemBase {
      */
     public double getVelocity() {
         return WristConstants.transform.transformVel(wristMotor.getVelocity().getValueAsDouble());
+    }
+
+    /**
+     * Gets the current voltage applied to the arm motor.
+     * 
+     * @return The voltage applied to the motors.
+     */
+    public Voltage getVolts() {
+        return (wristMotor.getMotorVoltage().getValue());
+    }
+
+    /**
+     * Gets the current Wrist acceleration in radians per second^2.
+     * 
+     * @return The current acceleration of the wrist in radians per second^2.
+     */
+    public double getAcceleration() {
+        return WristConstants.transform.transformVel(wristMotor.getAcceleration().getValueAsDouble());
     }
 
     public boolean atSetpoint(){
@@ -171,7 +223,8 @@ public class Wrist extends SubsystemBase {
             telemetry();
         
             // Calculate PID control outputs
-            double voltage = controller.calculate(getMeasurement(), goal);
+            double feed = feedforward.calculate(getAdjustedMeasurement(), getVelocity());
+            double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));

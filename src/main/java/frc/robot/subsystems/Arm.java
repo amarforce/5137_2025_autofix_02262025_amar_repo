@@ -23,6 +23,7 @@ import frc.robot.other.RobotUtils;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 /**
@@ -55,21 +56,29 @@ public class Arm extends SubsystemBase {
         ArmSystemConstants.defaultState.armPosition
     );
 
-    // System Identification routine for characterizing the arm
-    private final SysIdRoutine sysIdRoutine =
+    // SysId routine for system identification
+    private final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
-            new SysIdRoutine.Config(),
+            // Empty config defaults to 1 volt/second ramp rate and 7 volt step voltage.
+            new SysIdRoutine.Config(
+                null,        // Use default ramp rate (1 V/s)
+                Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+                null        // Use default timeout (10 s)
+            ),
             new SysIdRoutine.Mechanism(
+                // Tell SysId how to plumb the driving voltage to the motor(s).
                 this::setVoltage,
+                // Tell SysId how to record a frame of data for each motor on the mechanism being characterized.
                 log -> {
+                    // Record a frame for the elevator motor.
                     log.motor("arm")
-                        .voltage(Volts.of(armMotor.get() * RobotController.getBatteryVoltage()))
+                        .voltage(getVolts())
                         .angularPosition(Radians.of(getMeasurement()))
-                        .angularVelocity(RadiansPerSecond.of(getVelocity()));
+                        .angularVelocity(RadiansPerSecond.of(getVelocity()))
+                        .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
                 },
-                this
-            )
-        );
+                // Tell SysId to make generated commands require this subsystem, suffix test state in WPILog with this subsystem's name ("elevator")
+                this));
     
     // Simulation state for the motor
     private TalonFXSimState armMotorSim = armMotor.getSimState();
@@ -80,9 +89,9 @@ public class Arm extends SubsystemBase {
      * Constructor for the Arm subsystem.
      */
     public Arm(StringLogEntry log) {
-        // Configure the motor to coast when neutral
+        // Configure the motor to brake when neutral
         var currentConfigs = new MotorOutputConfigs();
-        currentConfigs.NeutralMode = NeutralModeValue.Coast;
+        currentConfigs.NeutralMode = NeutralModeValue.Brake;
         armMotor.getConfigurator().apply(currentConfigs);
 
         // Set the tolerance for the PID controller
@@ -131,12 +140,30 @@ public class Arm extends SubsystemBase {
     }
 
     /**
+     * Gets the current voltage applied to the arm motor.
+     * 
+     * @return The voltage applied to the motors.
+     */
+    public Voltage getVolts() {
+        return (armMotor.getMotorVoltage().getValue());
+    }
+
+    /**
      * Get the current arm velocity in radians per second.
      * 
      * @return The current arm velocity in radians per second.
      */
     public double getVelocity() {
-        return ArmConstants.transform.transformVel(armMotor.getPosition().getValueAsDouble());
+        return ArmConstants.transform.transformVel(armMotor.getVelocity().getValueAsDouble());
+    }
+
+    /**
+     * Get the current arm acceleration in radians per second^2.
+     * 
+     * @return The current arm acceleration in radians per second^2.
+     */
+    public double getAcceleration() {
+        return ArmConstants.transform.transformVel(armMotor.getAcceleration().getValueAsDouble());
     }
 
     public boolean atSetpoint(){
@@ -173,8 +200,8 @@ public class Arm extends SubsystemBase {
             telemetry();
             
             // Calculate feedforward and PID control outputs
-            double extra = feedforward.calculate(getMeasurement(), getVelocity());
-            double voltage = controller.calculate(getMeasurement(), goal) + extra;
+            double feed = feedforward.calculate(getMeasurement(), getVelocity());
+            double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));

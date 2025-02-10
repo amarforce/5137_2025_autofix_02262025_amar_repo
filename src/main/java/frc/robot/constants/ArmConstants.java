@@ -26,7 +26,7 @@ public class ArmConstants {
     public static final double kA = 0.0;
 
     // Arm tolerance
-    public static final double armTolerance = 0.1;
+    public static final double armTolerance = Units.degreesToRadians(1);
     
     // Simulation constants
     public static final double minAngle = Units.degreesToRadians(0);

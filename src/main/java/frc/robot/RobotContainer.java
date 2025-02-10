@@ -32,10 +32,11 @@ public class RobotContainer {
 	// Controllers for driver and operator
 	private CommandPS5Controller driver;
 	private CommandPS5Controller operator;
+	private CommandPS5Controller sysIdTest;
 
 	// Subsystems
 	private Vision vision;
-	private Swerve swerve;
+	//private Swerve swerve;
 	private Elevator elevator;
 	private Arm arm;
 	private Wrist wrist;
@@ -45,14 +46,14 @@ public class RobotContainer {
 	private LED led;
 
 	// Commands for each subsystem
-	private SwerveCommands swerveCommands;
+	//private SwerveCommands swerveCommands;
 	private ElevatorCommands elevatorCommands;
 	private ArmCommands armCommands;
 	private WristCommands wristCommands;
 	private IntakeCommands intakeCommands;
 	private HangCommand hangCommand;
 	private ArmSystemCommands armSystemCommands;
-	private MultiCommands multiCommands;
+	//private MultiCommands multiCommands;
 
 	// Additional components
 	private Reef reef;
@@ -61,7 +62,7 @@ public class RobotContainer {
 	private CageChoice cageChoice;
 
 	// Factory for autonomous commands
-	private AutoFactory autoFactory;
+	//private AutoFactory autoFactory;
 
 	private StringLogEntry log;
 
@@ -75,12 +76,12 @@ public class RobotContainer {
 		DataLog dataLog=DataLogManager.getLog();
 		DriverStation.startDataLog(dataLog);
 		log = new StringLogEntry(dataLog, "container");
-		StringLogEntry swerveLog = new StringLogEntry(dataLog, "swerve");
 
 		try{
 			// Initialize controllers
 			driver = new CommandPS5Controller(0);
 			operator = new CommandPS5Controller(1);
+			sysIdTest = new CommandPS5Controller(2);
 
 			// Initialize Reef and ReefScoring components
 			reef = new Reef();
@@ -90,24 +91,24 @@ public class RobotContainer {
 
 			// // Initialize subsystems with data log
 			vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
-			swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,swerveLog);
+			//swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision, new StringLogEntry(dataLog, "swerve"));
 			elevator = new Elevator(new StringLogEntry(dataLog, "elevator"));
 			arm = new Arm(new StringLogEntry(dataLog, "arm"));
-			wrist = new Wrist(new StringLogEntry(dataLog, "wrist"));
+			wrist = new Wrist(arm, new StringLogEntry(dataLog, "wrist"));
 			intake = new Intake(new StringLogEntry(dataLog, "intake"));
 			hang = new Hang(new StringLogEntry(dataLog, "hang"));
 			armSystem = new ArmSystem(arm, elevator, wrist);
 			led = new LED();
 
 			// Initialize commands for each subsystem
-			swerveCommands = new SwerveCommands(swerve);
+			//swerveCommands = new SwerveCommands(swerve);
 			elevatorCommands = new ElevatorCommands(elevator);
 			armCommands = new ArmCommands(arm);
 			wristCommands = new WristCommands(wrist);
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
 			armSystemCommands = new ArmSystemCommands(armSystem);
-			multiCommands = new MultiCommands(armSystemCommands, swerveCommands, intakeCommands, hangCommand, reef);
+			//multiCommands = new MultiCommands(armSystemCommands, swerveCommands, intakeCommands, hangCommand, reef);
 
 			// Initialize cage choice
 			cageChoice = new CageChoice();
@@ -116,7 +117,7 @@ public class RobotContainer {
 			configureBindings();
 
 			// Initialize autonomous command factory
-			autoFactory = new AutoFactory(multiCommands);
+			//autoFactory = new AutoFactory(multiCommands);
 		}catch(Exception e){
 			log.append("Error while initializing: "+RobotUtils.getError(e));
 		}
@@ -128,6 +129,7 @@ public class RobotContainer {
 	private void configureBindings() {
 		// Driver Bindings
 		// Set default command for swerve to drive with joystick inputs
+		/*
 		swerve.setDefaultCommand(
 			swerveCommands.drive(
 				() -> -driver.getLeftY(),
@@ -150,18 +152,7 @@ public class RobotContainer {
 		driver.povRight().onTrue(swerveCommands.driveToReefRight());
 
 		// Bind options button to reset gyro
-		driver.options().onTrue(swerveCommands.resetGyro());
-
-		/*
-		// Example of SysId bindings (commented out)
-		driver.povUp().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineTranslation)));
-		driver.povLeft().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineSteer)));
-		driver.povRight().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineRotation)));
-		driver.options().and(driver.povDown().negate()).whileTrue(swerveCommands.sysIdDynamic(Direction.kForward));
-		driver.options().and(driver.povDown()).whileTrue(swerveCommands.sysIdDynamic(Direction.kForward));
-		driver.create().and(driver.povDown().negate()).whileTrue(swerveCommands.sysIdQuasistatic(Direction.kReverse));
-		driver.create().and(driver.povDown()).whileTrue(swerveCommands.sysIdQuasistatic(Direction.kReverse));
-		*/
+		driver.options().onTrue(swerveCommands.resetGyro());*/
 
 		// Bind touchpad to cancel all commands
 		driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
@@ -193,6 +184,32 @@ public class RobotContainer {
 
 		// Bind touchpad to execute hang command
 		operator.touchpad().onTrue(hangCommand);
+
+		// SysIdRoutine Bindings
+
+		/*
+		// Swerve Tuning
+		driver.povUp().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineTranslation)));
+		driver.povLeft().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineSteer)));
+		driver.povRight().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineRotation)));
+		*/
+
+		// Tuning Methods (switch to subsystem you want to characterize)
+		sysIdTest.cross()
+		.onTrue(elevatorCommands.sysIdDynamic(Direction.kForward))
+		.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
+
+		sysIdTest.circle()
+		.onTrue(elevatorCommands.sysIdDynamic(Direction.kReverse))
+		.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
+
+		sysIdTest.square()
+		.onTrue(elevatorCommands.sysIdQuasistatic(Direction.kForward))
+		.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
+
+		sysIdTest.triangle()
+		.onTrue(elevatorCommands.sysIdQuasistatic(Direction.kReverse))
+		.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 	}
 
 	/**
@@ -201,6 +218,9 @@ public class RobotContainer {
 	 * @return The autonomous command
 	 */
 	public Command getAutonomousCommand() {
-		return autoFactory.getAuto();
+		//return autoFactory.getAuto();
+		return new Command() {
+			
+		};
 	}
 }

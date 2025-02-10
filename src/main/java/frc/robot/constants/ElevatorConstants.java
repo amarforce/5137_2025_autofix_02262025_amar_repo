@@ -1,6 +1,7 @@
 package frc.robot.constants;
 
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import frc.robot.Robot;
 import frc.robot.other.MotorTransform;
 
@@ -21,7 +22,7 @@ public class ElevatorConstants {
     public static final double kA = 0.02;
 
     // Elevator tolerance
-    public static final double elevatorTolerance = 0.1;
+    public static final double elevatorTolerance =Units.degreesToRadians(1);
 
     // Simulation constants
     public static final double gearRatio = 30.0; // gear ratio

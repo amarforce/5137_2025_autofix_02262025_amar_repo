@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
@@ -18,13 +19,14 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.WristConstants;
 import frc.robot.other.RobotUtils;
 import frc.robot.constants.GeneralConstants;
-import frc.robot.constants.ArmSystemConstants;
+import frc.robot.constants.SwerveSystemConstants;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 /**
+
  * The Wrist subsystem controls the wrist joint of the robot arm.
  * It uses a PID controller to manage the position of the wrist and includes
  * simulation support for testing and tuning.
@@ -38,8 +40,9 @@ public class Wrist extends SubsystemBase {
     private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
     
     // Goal position for the Wrist in radians
-    private double goal = ArmSystemConstants.defaultState.wristPosition;
+    private double goal = SwerveSystemConstants.defaultState.wristPosition;
     
+
     // Simulation model for the Wrist
     private SingleJointedArmSim wristSim = new SingleJointedArmSim(
         WristConstants.motorSim,
@@ -49,8 +52,9 @@ public class Wrist extends SubsystemBase {
         WristConstants.minAngle,
         WristConstants.maxAngle,
         true,
-        ArmSystemConstants.defaultState.wristPosition
+        SwerveSystemConstants.defaultState.wristPosition
     );
+
 
     // System Identification routine for characterizing the Wrist
     private final SysIdRoutine sysIdRoutine =
@@ -79,8 +83,11 @@ public class Wrist extends SubsystemBase {
     public Wrist(StringLogEntry log) {
         // Configure the motor to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
-        currentConfigs.NeutralMode = NeutralModeValue.Coast;
+        currentConfigs.NeutralMode = NeutralModeValue.Brake;
+        currentConfigs.Inverted=InvertedValue.Clockwise_Positive;
         wristMotor.getConfigurator().apply(currentConfigs);
+
+        wristMotor.setPosition(0.0);
 
         // Set the tolerance for the PID controller
         controller.setTolerance(WristConstants.wristTolerance);

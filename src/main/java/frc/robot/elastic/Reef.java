@@ -40,7 +40,7 @@ public class Reef implements NTSendable{
         algaePlaced[side]=set;
     }
 
-    public boolean isAlgaeLow(int side) {
+    public static boolean isAlgaeLow(int side) {
         return side%2 == 1;
     }
 

@@ -25,7 +25,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.other.RobotUtils;
-import frc.robot.constants.ArmSystemConstants;
+import frc.robot.constants.SwerveSystemConstants;
+
 
 /**
  * The Elevator subsystem controls the elevator mechanism of the robot.
@@ -52,13 +53,15 @@ public class Elevator extends SubsystemBase {
         ElevatorConstants.minHeight,
         ElevatorConstants.maxHeight,
         true,
-        ArmSystemConstants.defaultState.elevatorPosition
+        SwerveSystemConstants.defaultState.elevatorPosition
     );
     private TalonFXSimState leftMotorSim = new TalonFXSimState(leftMotor, ChassisReference.CounterClockwise_Positive);
     private TalonFXSimState rightMotorSim = new TalonFXSimState(rightMotor, ChassisReference.Clockwise_Positive);
 
+
     // Goal position for the elevator
-    private double goal = ArmSystemConstants.defaultState.elevatorPosition;
+    private double goal = SwerveSystemConstants.defaultState.elevatorPosition;
+
 
     // SysId routine for system identification
     private final SysIdRoutine sysIdRoutine = 
@@ -87,11 +90,14 @@ public class Elevator extends SubsystemBase {
     public Elevator(StringLogEntry log) {
         // Configure the motors to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
-        currentConfigs.NeutralMode = NeutralModeValue.Coast;
+        currentConfigs.NeutralMode = NeutralModeValue.Brake;
         currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
         leftMotor.getConfigurator().apply(currentConfigs);
         currentConfigs.Inverted = InvertedValue.Clockwise_Positive;
         rightMotor.getConfigurator().apply(currentConfigs);
+
+        leftMotor.setPosition(0.0);
+        rightMotor.setPosition(0.0);
 
         // Set the tolerance for the PID controller
         controller.setTolerance(ElevatorConstants.elevatorTolerance);

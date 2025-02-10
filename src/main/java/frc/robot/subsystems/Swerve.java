@@ -240,17 +240,7 @@ public class Swerve extends SubsystemBase {
      * @param dtheta      The percentage of maximum angular speed.
      * @param fieldRelative Whether the drive is field-relative or robot-relative.
      */
-    private double lastDx;
-    private double lastDy;
-    private double lastDtheta;
     public void setPercentDrive(double dx, double dy, double dtheta, boolean fieldRelative) {
-        if(dx==lastDx && dy==lastDy && dtheta==lastDtheta){
-            return;
-        }
-        lastDx=dx;
-        lastDy=dy;
-        lastDtheta=dtheta;
-        cancelAuto();
         double absSpeedX = dx*maxSpeed;
         double absSpeedY = dy*maxSpeed;
         double absRot = dtheta*maxAngularSpeed;
@@ -318,6 +308,9 @@ public class Swerve extends SubsystemBase {
     }
 
     public boolean atTarget(){
+        if(targetPose==null){
+            return true;
+        }
         Pose2d currentPose=getPose();
         double dist=currentPose.getTranslation().getDistance(targetPose.getTranslation());
         if(dist>SwerveConstants.transTol){

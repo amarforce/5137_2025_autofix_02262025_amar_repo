@@ -15,23 +15,23 @@ import frc.robot.elastic.Reef;
  */
 public class MultiCommands {
     // Command groups for each subsystem
-    private ArmSystemCommands armSystemCommands;
-    private SwerveCommands swerveCommands;
+    private SwerveSystemCommands swerveSystemCommands;
     private IntakeCommands intakeCommands;
     @SuppressWarnings("unused")
     private HangCommand hangCommand;
     private Reef reef;
 
+
     /**
      * Constructor for MultiCommands.
      */
-    public MultiCommands(ArmSystemCommands armSystemCommands, SwerveCommands swerveCommands, IntakeCommands intakeCommands,
+    public MultiCommands(SwerveSystemCommands swerveSystemCommands, IntakeCommands intakeCommands,
                          HangCommand hangCommand, Reef reef) {
-        this.armSystemCommands = armSystemCommands;
+        this.swerveSystemCommands = swerveSystemCommands;
         this.intakeCommands = intakeCommands;
-        this.swerveCommands = swerveCommands;
         this.hangCommand = hangCommand;
         this.reef = reef;
+
     }
 
     /**

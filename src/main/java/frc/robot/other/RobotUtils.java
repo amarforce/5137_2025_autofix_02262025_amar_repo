@@ -148,4 +148,31 @@ public class RobotUtils {
         }
         return in;
     }
+
+    /**
+     * Calculates the weighted distance between two poses, combining translational and rotational distances.
+     * The rotational distance properly handles wraparound (e.g., 350° to 0° is 10°, not 350°).
+     *
+     * @param pose1 The first pose
+     * @param pose2 The second pose
+     * @param rotationWeight Weight for rotational difference (in meters per radian)
+     * @return The weighted sum of translational and rotational distances
+     */
+    public static double getWeightedPoseDistance(Pose2d pose1, Pose2d pose2, double rotationWeight) {
+        // Calculate translational distance
+        double dx = pose1.getX() - pose2.getX();
+        double dy = pose1.getY() - pose2.getY();
+        double translationDist = Math.hypot(dx, dy);
+        
+        // Calculate rotational distance, handling wraparound
+        double angle1 = pose1.getRotation().getRadians();
+        double angle2 = pose2.getRotation().getRadians();
+        double diff = angle1 - angle2;
+        
+        // Normalize to [-pi, pi]
+        diff = (diff + Math.PI) % (2 * Math.PI) - Math.PI;
+        
+        // Return weighted sum using absolute rotational difference
+        return translationDist + Math.abs(diff) * rotationWeight;
+    }
 }

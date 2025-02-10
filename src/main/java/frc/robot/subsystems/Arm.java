@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ArmConstants;
-import frc.robot.constants.ArmSystemConstants;
+import frc.robot.constants.SwerveSystemConstants;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.other.RobotUtils;
 
@@ -41,8 +41,9 @@ public class Arm extends SubsystemBase {
     private ArmFeedforward feedforward = new ArmFeedforward(ArmConstants.kS, ArmConstants.kG, ArmConstants.kV);
     
     // Goal position for the arm in radians
-    private double goal = ArmSystemConstants.defaultState.armPosition;
+    private double goal = SwerveSystemConstants.defaultState.armPosition;
     
+
     // Simulation model for the arm
     private SingleJointedArmSim armSim = new SingleJointedArmSim(
         ArmConstants.motorSim, 
@@ -52,8 +53,9 @@ public class Arm extends SubsystemBase {
         ArmConstants.minAngle, 
         ArmConstants.maxAngle, 
         true, 
-        ArmSystemConstants.defaultState.armPosition
+        SwerveSystemConstants.defaultState.armPosition
     );
+
 
     // System Identification routine for characterizing the arm
     private final SysIdRoutine sysIdRoutine =
@@ -82,8 +84,10 @@ public class Arm extends SubsystemBase {
     public Arm(StringLogEntry log) {
         // Configure the motor to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
-        currentConfigs.NeutralMode = NeutralModeValue.Coast;
+        currentConfigs.NeutralMode = NeutralModeValue.Brake;
         armMotor.getConfigurator().apply(currentConfigs);
+
+        armMotor.setPosition(0.0);
 
         // Set the tolerance for the PID controller
         controller.setTolerance(ArmConstants.armTolerance);

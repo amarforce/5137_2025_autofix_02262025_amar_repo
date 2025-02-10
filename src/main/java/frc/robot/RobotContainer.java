@@ -42,8 +42,9 @@ public class RobotContainer {
 	private Wrist wrist;
 	private Intake intake;
 	private Hang hang;
-	private ArmSystem armSystem;
+	private SwerveSystem swerveSystem;
 	private LED led;
+
 
 	// Commands for each subsystem
 	private SwerveCommands swerveCommands;
@@ -52,7 +53,7 @@ public class RobotContainer {
 	private WristCommands wristCommands;
 	private IntakeCommands intakeCommands;
 	private HangCommand hangCommand;
-	private ArmSystemCommands armSystemCommands;
+	private SwerveSystemCommands swerveSystemCommands;
 	private MultiCommands multiCommands;
 
 	// Additional components
@@ -97,18 +98,20 @@ public class RobotContainer {
 			wrist = new Wrist(new StringLogEntry(dataLog, "wrist"));
 			intake = new Intake(new StringLogEntry(dataLog, "intake"));
 			hang = new Hang(new StringLogEntry(dataLog, "hang"));
-			armSystem = new ArmSystem(arm, elevator, wrist);
+			swerveSystem = new SwerveSystem(arm, elevator, wrist, swerve);
 			led = new LED();
 
+
 			// Initialize commands for each subsystem
-			swerveCommands = new SwerveCommands(swerve);
+			//swerveCommands = new SwerveCommands(swerve);
 			elevatorCommands = new ElevatorCommands(elevator);
 			armCommands = new ArmCommands(arm);
 			wristCommands = new WristCommands(wrist);
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
-			armSystemCommands = new ArmSystemCommands(armSystem);
-			multiCommands = new MultiCommands(armSystemCommands, swerveCommands, intakeCommands, hangCommand, reef);
+			swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
+			multiCommands = new MultiCommands(swerveSystemCommands, intakeCommands, hangCommand, reef);
+
 
 			// Initialize cage choice
 			cageChoice = new CageChoice();
@@ -127,8 +130,14 @@ public class RobotContainer {
 	 * Configures button bindings for driver and operator controllers.
 	 */
 	private void configureBindings() {
-		// Driver Bindings
+		//Driver Bindings
 		// Set default command for swerve to drive with joystick inputs
+		swerve.setDefaultCommand(swerveCommands.drive(
+			() -> -driver.getLeftY(), 
+			() -> -driver.getLeftX(), 
+			() -> driver.getRightX(), 
+			() -> true)
+		);
 
 		// Bind cross button to lock swerve
 		driver.cross().whileTrue(swerveCommands.lock());
@@ -161,18 +170,22 @@ public class RobotContainer {
 		driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 
 		// For testing: Set default commands for elevator and arm with joystick inputs
-		arm.setDefaultCommand(armCommands.changeGoal(() -> operator.getLeftY() / 50));
-		wrist.setDefaultCommand(wristCommands.changeGoal(() -> operator.getLeftX() / 50));
+		arm.setDefaultCommand(armCommands.changeGoal(() -> -operator.getRightX() / 50));
+		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -operator.getLeftY() / 50));
+		operator.L1().onTrue(wristCommands.changeGoal(() -> Math.toRadians(-5)));
+		operator.R1().onTrue(wristCommands.changeGoal(() -> Math.toRadians(5)));
 
 		//operator.axisLessThan(0,0).onTrue(multiCommands.placeCoral(0));
 
 		// Operator Bindings
 
 		// Bind buttons to move to specific goals
-		operator.triangle().onTrue(armSystemCommands.moveToGoal(()->4));
-		operator.circle().onTrue(armSystemCommands.moveToGoal(()->3));
-		operator.square().onTrue(armSystemCommands.moveToGoal(()->2));
-		operator.cross().onTrue(armSystemCommands.moveToGoal(()->1));
+		
+		operator.triangle().onTrue(swerveSystemCommands.moveToGoal(()->4));
+		operator.circle().onTrue(swerveSystemCommands.moveToGoal(()->3));
+		operator.square().onTrue(swerveSystemCommands.moveToGoal(()->2));
+		operator.cross().onTrue(swerveSystemCommands.moveToGoal(()->1));
+
 
 
 		// Bind L2 button to outtake and stop intake
@@ -196,9 +209,5 @@ public class RobotContainer {
 	 */
 	public Command getAutonomousCommand() {
 		return autoFactory.getAuto();
-	}
-
-	public void periodic(){
-		swerve.setPercentDrive(-driver.getLeftY(), -driver.getLeftX(), driver.getRightX(), true);
 	}
 }

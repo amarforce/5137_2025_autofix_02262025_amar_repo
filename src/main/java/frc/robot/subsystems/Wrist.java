@@ -149,7 +149,7 @@ public class Wrist extends SubsystemBase {
      * @return The current true goal in radians.
      */
     public double getAdjustedGoal() {
-        return arm.getMeasurement() + this.getMeasurement();
+        return arm.getGoal() + this.getGoal();
     }
 
     /**

@@ -5,7 +5,9 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.ctre.phoenix6.sim.ChassisReference;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -23,10 +25,10 @@ import frc.robot.constants.SwerveSystemConstants;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 /**
-
  * The Wrist subsystem controls the wrist joint of the robot arm.
  * It uses a PID controller to manage the position of the wrist and includes
  * simulation support for testing and tuning.
@@ -38,10 +40,12 @@ public class Wrist extends SubsystemBase {
     
     // PID controller for Wrist position control
     private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
+
+    // Feedforward controller for arm dynamics
+    private ArmFeedforward feedforward = new ArmFeedforward(WristConstants.kS, WristConstants.kG, WristConstants.kV);
     
     // Goal position for the Wrist in radians
     private double goal = SwerveSystemConstants.getDefaultState().wristPosition;
-    
 
     // Simulation model for the Wrist
     private SingleJointedArmSim wristSim = new SingleJointedArmSim(
@@ -55,34 +59,40 @@ public class Wrist extends SubsystemBase {
         SwerveSystemConstants.getDefaultState().wristPosition
     );
 
-
-    // System Identification routine for characterizing the Wrist
-    private final SysIdRoutine sysIdRoutine =
+    // SysId routine for system identification
+    private final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
-            new SysIdRoutine.Config(),
+            new SysIdRoutine.Config(
+                null,        // Use default ramp rate (1 V/s)
+                Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+                null        // Use default timeout (10 s)
+            ),
             new SysIdRoutine.Mechanism(
                 this::setVoltage,
                 log -> {
                     log.motor("wrist")
-                        .voltage(Volts.of(wristMotor.get() * RobotController.getBatteryVoltage()))
+                        .voltage(getVolts())
                         .angularPosition(Radians.of(getMeasurement()))
-                        .angularVelocity(RadiansPerSecond.of(getVelocity()));
+                        .angularVelocity(RadiansPerSecond.of(getVelocity()))
+                        .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
                 },
-                this
-            )
-        );
+                this));
     
     // Simulation state for the motor
-    private TalonFXSimState wristMotorSim = wristMotor.getSimState();
+    private TalonFXSimState wristMotorSim = new TalonFXSimState(wristMotor, ChassisReference.Clockwise_Positive);
+
+    // Reference to the arm subsystem for feedforward calculations
+    private final Arm arm;
         
     /**
      * Constructor for the Wrist subsystem.
+     * @param arm The arm subsystem that this wrist is attached to
      */
-    public Wrist() {
-        // Configure the motor to coast when neutral
+    public Wrist(Arm arm) {
+        // Configure the motor
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Brake;
-        currentConfigs.Inverted=InvertedValue.Clockwise_Positive;
+        currentConfigs.Inverted = InvertedValue.Clockwise_Positive;
         wristMotor.getConfigurator().apply(currentConfigs);
 
         wristMotor.setPosition(0.0);
@@ -92,6 +102,8 @@ public class Wrist extends SubsystemBase {
         
         // Display the PID controller on SmartDashboard for tuning
         SmartDashboard.putData("wrist/controller", controller);
+
+        this.arm = arm;
     }
 
     /**
@@ -102,6 +114,15 @@ public class Wrist extends SubsystemBase {
     public double getMeasurement() {
         return WristConstants.transform.transformPos(wristMotor.getPosition().getValueAsDouble());
     }
+
+    /**
+     * Gets the true Wrist position in radians to use with feedforward.
+     * 
+     * @return The current true position of the wrist in radians.
+     */
+    public double getAdjustedMeasurement() {
+        return arm.getMeasurement() + this.getMeasurement();
+    }
     
     /**
      * Sets the goal position for the Wrist, clamping it within the allowed range.
@@ -109,7 +130,7 @@ public class Wrist extends SubsystemBase {
      * @param newGoal The desired goal position in radians.
      */
     public void setGoal(double newGoal) {
-        goal = RobotUtils.clamp(newGoal,WristConstants.minAngle,WristConstants.maxAngle);
+        goal = RobotUtils.clamp(newGoal, WristConstants.minAngle, WristConstants.maxAngle);
     }
 
     /**
@@ -119,6 +140,15 @@ public class Wrist extends SubsystemBase {
      */
     public double getGoal() {
         return goal;
+    }
+
+    /**
+     * Gets the true goal in radians to use with feedforward.
+     * 
+     * @return The current true goal in radians.
+     */
+    public double getAdjustedGoal() {
+        return arm.getGoal() + this.getGoal();
     }
 
     /**
@@ -139,11 +169,29 @@ public class Wrist extends SubsystemBase {
         return WristConstants.transform.transformVel(wristMotor.getVelocity().getValueAsDouble());
     }
 
-    public boolean atSetpoint(){
+    /**
+     * Gets the current voltage applied to the arm motor.
+     * 
+     * @return The voltage applied to the motors.
+     */
+    public Voltage getVolts() {
+        return wristMotor.getMotorVoltage().getValue();
+    }
+
+    /**
+     * Gets the current Wrist acceleration in radians per second^2.
+     * 
+     * @return The current acceleration of the wrist in radians per second^2.
+     */
+    public double getAcceleration() {
+        return WristConstants.transform.transformVel(wristMotor.getAcceleration().getValueAsDouble());
+    }
+
+    public boolean atSetpoint() {
         return controller.atSetpoint();
     }
 
-    public SysIdRoutine getRoutine(){
+    public SysIdRoutine getRoutine() {
         return sysIdRoutine;
     }
 
@@ -151,16 +199,16 @@ public class Wrist extends SubsystemBase {
      * Displays telemetry data on SmartDashboard.
      */
     public void telemetry() {
-        SmartDashboard.putNumber("wrist/angle",getMeasurement());
-        SmartDashboard.putNumber("wrist/goal",getGoal());
-        SmartDashboard.putNumber("wrist/velocity",getVelocity());
-        SmartDashboard.putNumber("wrist/error",controller.getError());
-        SmartDashboard.putNumber("wrist/motor/rawAngle",wristMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("wrist/motor/temp",wristMotor.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("wrist/motor/fault",wristMotor.getFaultField().asSupplier().get());
-        SmartDashboard.putNumber("wrist/motor/current",wristMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("wrist/motor/voltage",wristMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("wrist/motor/supplyVoltage",wristMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/angle", getMeasurement());
+        SmartDashboard.putNumber("wrist/goal", getGoal());
+        SmartDashboard.putNumber("wrist/velocity", getVelocity());
+        SmartDashboard.putNumber("wrist/error", controller.getError());
+        SmartDashboard.putNumber("wrist/motor/rawAngle", wristMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/temp", wristMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/fault", wristMotor.getFaultField().asSupplier().get());
+        SmartDashboard.putNumber("wrist/motor/current", wristMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/voltage", wristMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/supplyVoltage", wristMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**
@@ -174,7 +222,8 @@ public class Wrist extends SubsystemBase {
             telemetry();
         
             // Calculate PID control outputs
-            double voltage = controller.calculate(getMeasurement(), goal);
+            double feed = feedforward.calculate(getAdjustedMeasurement(), getVelocity());
+            double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
@@ -182,7 +231,6 @@ public class Wrist extends SubsystemBase {
         } catch (Exception e) {
             DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }
-
     }
 
     /**

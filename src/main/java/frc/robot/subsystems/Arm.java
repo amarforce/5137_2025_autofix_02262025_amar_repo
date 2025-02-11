@@ -2,8 +2,10 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.ctre.phoenix6.sim.ChassisReference;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
@@ -23,6 +25,7 @@ import frc.robot.other.RobotUtils;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 /**
@@ -42,7 +45,6 @@ public class Arm extends SubsystemBase {
     
     // Goal position for the arm in radians
     private double goal = SwerveSystemConstants.getDefaultState().armPosition;
-    
 
     // Simulation model for the arm
     private SingleJointedArmSim armSim = new SingleJointedArmSim(
@@ -56,33 +58,36 @@ public class Arm extends SubsystemBase {
         SwerveSystemConstants.getDefaultState().armPosition
     );
 
-
-    // System Identification routine for characterizing the arm
-    private final SysIdRoutine sysIdRoutine =
+    // SysId routine for system identification
+    private final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
-            new SysIdRoutine.Config(),
+            new SysIdRoutine.Config(
+                null,        // Use default ramp rate (1 V/s)
+                Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+                null        // Use default timeout (10 s)
+            ),
             new SysIdRoutine.Mechanism(
                 this::setVoltage,
                 log -> {
                     log.motor("arm")
-                        .voltage(Volts.of(armMotor.get() * RobotController.getBatteryVoltage()))
+                        .voltage(getVolts())
                         .angularPosition(Radians.of(getMeasurement()))
-                        .angularVelocity(RadiansPerSecond.of(getVelocity()));
+                        .angularVelocity(RadiansPerSecond.of(getVelocity()))
+                        .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
                 },
-                this
-            )
-        );
+                this));
     
     // Simulation state for the motor
-    private TalonFXSimState armMotorSim = armMotor.getSimState();
+    private TalonFXSimState armMotorSim = new TalonFXSimState(armMotor, ChassisReference.CounterClockwise_Positive);
     
     /**
      * Constructor for the Arm subsystem.
      */
     public Arm() {
-        // Configure the motor to coast when neutral
+        // Configure the motor
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Brake;
+        currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
         armMotor.getConfigurator().apply(currentConfigs);
 
         armMotor.setPosition(0.0);
@@ -109,7 +114,7 @@ public class Arm extends SubsystemBase {
      * @param newGoal The desired goal position in radians.
      */
     public void setGoal(double newGoal) {
-        goal = RobotUtils.clamp(newGoal,ArmConstants.minAngle,ArmConstants.maxAngle);
+        goal = RobotUtils.clamp(newGoal, ArmConstants.minAngle, ArmConstants.maxAngle);
     }
 
     /**
@@ -131,6 +136,15 @@ public class Arm extends SubsystemBase {
     }
 
     /**
+     * Gets the current voltage applied to the arm motor.
+     * 
+     * @return The voltage applied to the motors.
+     */
+    public Voltage getVolts() {
+        return armMotor.getMotorVoltage().getValue();
+    }
+
+    /**
      * Get the current arm velocity in radians per second.
      * 
      * @return The current arm velocity in radians per second.
@@ -139,11 +153,20 @@ public class Arm extends SubsystemBase {
         return ArmConstants.transform.transformVel(armMotor.getVelocity().getValueAsDouble());
     }
 
-    public boolean atSetpoint(){
+    /**
+     * Get the current arm acceleration in radians per second^2.
+     * 
+     * @return The current arm acceleration in radians per second^2.
+     */
+    public double getAcceleration() {
+        return ArmConstants.transform.transformVel(armMotor.getAcceleration().getValueAsDouble());
+    }
+
+    public boolean atSetpoint() {
         return controller.atSetpoint();
     }
 
-    public SysIdRoutine getRoutine(){
+    public SysIdRoutine getRoutine() {
         return sysIdRoutine;
     }
 
@@ -151,16 +174,16 @@ public class Arm extends SubsystemBase {
      * Display telemetry data on SmartDashboard.
      */
     public void telemetry() {
-        SmartDashboard.putNumber("arm/angle",getMeasurement());
-        SmartDashboard.putNumber("arm/goal",getGoal());
-        SmartDashboard.putNumber("arm/velocity",getVelocity());
-        SmartDashboard.putNumber("arm/error",controller.getError());
-        SmartDashboard.putNumber("arm/motor/rawAngle",armMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("arm/motor/temp",armMotor.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("arm/motor/fault",armMotor.getFaultField().asSupplier().get());
-        SmartDashboard.putNumber("arm/motor/current",armMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("arm/motor/voltage",armMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("arm/motor/supplyVoltage",armMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("arm/angle", getMeasurement());
+        SmartDashboard.putNumber("arm/goal", getGoal());
+        SmartDashboard.putNumber("arm/velocity", getVelocity());
+        SmartDashboard.putNumber("arm/error", controller.getError());
+        SmartDashboard.putNumber("arm/motor/rawAngle", armMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/temp", armMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/fault", armMotor.getFaultField().asSupplier().get());
+        SmartDashboard.putNumber("arm/motor/current", armMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/voltage", armMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("arm/motor/supplyVoltage", armMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**
@@ -168,17 +191,17 @@ public class Arm extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        try{
+        try {
             // Update telemetry
             telemetry();
             
             // Calculate feedforward and PID control outputs
-            double extra = feedforward.calculate(getMeasurement(), getVelocity());
-            double voltage = controller.calculate(getMeasurement(), goal) + extra;
+            double feed = feedforward.calculate(getMeasurement(), getVelocity());
+            double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
-        }catch(Exception e){
+        } catch (Exception e) {
             DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }
     }

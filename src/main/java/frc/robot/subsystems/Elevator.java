@@ -67,7 +67,11 @@ public class Elevator extends SubsystemBase {
     private final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
             // Empty config defaults to 1 volt/second ramp rate and 7 volt step voltage.
-            new SysIdRoutine.Config(),
+            new SysIdRoutine.Config(
+                null,        // Use default ramp rate (1 V/s)
+                Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+                null        // Use default timeout (10 s)
+            ),
             new SysIdRoutine.Mechanism(
                 // Tell SysId how to plumb the driving voltage to the motor(s).
                 this::setVoltage,
@@ -75,7 +79,7 @@ public class Elevator extends SubsystemBase {
                 log -> {
                     // Record a frame for the elevator motor.
                     log.motor("elevator")
-                        .voltage(Volts.of(getInput() * RobotController.getBatteryVoltage()))
+                        .voltage(getVolts())
                         .linearPosition(Meters.of(getMeasurement()))
                         .linearVelocity(MetersPerSecond.of(getVelocity()));
                 },
@@ -151,12 +155,12 @@ public class Elevator extends SubsystemBase {
     }
 
     /**
-     * Gets the current input to the elevator motors.
+     * Gets the current voltage applied to the elevator motors.
      * 
-     * @return The average input to the motors.
+     * @return The average voltage applied to the motors.
      */
-    public double getInput() {
-        return (leftMotor.get() + rightMotor.get()) / 2;
+    public Voltage getVolts() {
+        return (leftMotor.getMotorVoltage().getValue().plus(rightMotor.getMotorVoltage().getValue())).div(2.0);
     }
 
     /**
@@ -205,8 +209,8 @@ public class Elevator extends SubsystemBase {
         try{
             telemetry();
             // Calculate the feedforward and PID output
-            double extra = feedforward.calculate(getVelocity());
-            double voltage = controller.calculate(getMeasurement(), goal) + extra;
+            double feed = feedforward.calculate(getVelocity());
+            double voltage = controller.calculate(getMeasurement(), goal) + feed;
             setVoltage(Volts.of(voltage));
         }catch(Exception e){
             DataLogManager.log("Periodic error: "+RobotUtils.getError(e));

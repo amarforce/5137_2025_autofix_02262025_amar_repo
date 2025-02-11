@@ -21,7 +21,7 @@ public class ElevatorConstants {
     public static final double kA = 0.02;
 
     // Elevator tolerance
-    public static final double elevatorTolerance = 0.1;
+    public static final double elevatorTolerance = 0.01;
 
     // Simulation constants
     public static final double gearRatio = 30.0; // gear ratio

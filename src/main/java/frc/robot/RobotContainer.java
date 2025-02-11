@@ -33,6 +33,7 @@ public class RobotContainer {
 	// Controllers
 	private CommandPS5Controller driver;
 	private CommandPS5Controller operator;
+	private CommandPS5Controller sysIdTest;
 
 	// Subsystems and their commands
 	private Vision vision;
@@ -71,7 +72,9 @@ public class RobotContainer {
 	 * Initializes all subsystems, commands, and binds controls.
 	 */
 	public RobotContainer() {
+		// Start data logging
 		DataLogManager.start();
+		DriverStation.startDataLog(DataLogManager.getLog());
 
 		try {
 			initControllers();
@@ -103,6 +106,7 @@ public class RobotContainer {
 	private void initControllers() {
 		driver = new CommandPS5Controller(0);
 		operator = new CommandPS5Controller(1);
+		sysIdTest = new CommandPS5Controller(2);
 	}
 
 	private void initReef() {
@@ -130,11 +134,6 @@ public class RobotContainer {
 
 		driver.cross().whileTrue(swerveCommands.lock());
 		driver.options().onTrue(swerveCommands.resetGyro());
-
-		// Commented out reef position bindings
-		// driver.povLeft().onTrue(swerveCommands.driveToReefLeft());
-		// driver.povUp().onTrue(swerveCommands.driveToReefCenter());
-		// driver.povRight().onTrue(swerveCommands.driveToReefRight());
 	}
 
 	private void initElevator() {
@@ -143,6 +142,9 @@ public class RobotContainer {
 
 		// Configure elevator bindings
 		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -operator.getLeftY() / 50));
+
+		// Configure SysId bindings for elevator
+		configureSysIdBindings(elevatorCommands);
 	}
 
 	private void initArm() {
@@ -154,7 +156,7 @@ public class RobotContainer {
 	}
 
 	private void initWrist() {
-		wrist = new Wrist();
+		wrist = new Wrist(arm);
 		wristCommands = new WristCommands(wrist);
 
 		// Configure wrist bindings
@@ -195,7 +197,6 @@ public class RobotContainer {
 		// Configure swerve system bindings
 		driver.triangle().onTrue(swerveSystemCommands.moveToSource());
 		driver.circle().onTrue(swerveSystemCommands.moveToProcessor());
-		//driver.square().onTrue(swerveCommands.driveToPoseStaticFixed(()->cageChoice.getCage()));
 
 		operator.triangle().onTrue(swerveSystemCommands.moveToLevel(3));
 		operator.circle().onTrue(swerveSystemCommands.moveToLevel(2));
@@ -212,13 +213,31 @@ public class RobotContainer {
 		autoFactory = new AutoFactory(multiCommands);
 	}
 
+	private void configureSysIdBindings(ElevatorCommands subsystemCommands) {
+		sysIdTest.cross()
+			.onTrue(subsystemCommands.sysIdDynamic(Direction.kForward))
+			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
+
+		sysIdTest.circle()
+			.onTrue(subsystemCommands.sysIdDynamic(Direction.kReverse))
+			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
+
+		sysIdTest.square()
+			.onTrue(subsystemCommands.sysIdQuasistatic(Direction.kForward))
+			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
+
+		sysIdTest.triangle()
+			.onTrue(subsystemCommands.sysIdQuasistatic(Direction.kReverse))
+			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
+	}
+
 	/**
 	 * Returns the autonomous command to be executed.
 	 *
 	 * @return The autonomous command
 	 */
 	public Command getAutonomousCommand() {
-		if(autoFactory!=null){
+		if (autoFactory != null) {
 			return autoFactory.getAuto();
 		}
 		return new InstantCommand();

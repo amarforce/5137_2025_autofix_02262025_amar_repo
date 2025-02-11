@@ -30,17 +30,11 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -70,34 +64,7 @@ public class Swerve extends SubsystemBase {
     // Target pose
     private Pose2d targetPose;
 
-    /* Mechanisms to represent the swerve module states */
-    private final Mechanism2d[] moduleMechanisms = new Mechanism2d[] {
-        new Mechanism2d(1, 1),
-        new Mechanism2d(1, 1),
-        new Mechanism2d(1, 1),
-        new Mechanism2d(1, 1),
-    };
-    /* A direction and length changing ligament for speed representation */
-    private final MechanismLigament2d[] moduleSpeeds = new MechanismLigament2d[] {
-        moduleMechanisms[0].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
-        moduleMechanisms[1].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
-        moduleMechanisms[2].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
-        moduleMechanisms[3].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
-    };
-    /* A direction changing and length constant ligament for module direction */
-    private final MechanismLigament2d[] moduleDirections = new MechanismLigament2d[] {
-        moduleMechanisms[0].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        moduleMechanisms[1].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        moduleMechanisms[2].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        moduleMechanisms[3].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-    };
-
-    private StructPublisher<Pose2d> currentPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/pose", Pose2d.struct).publish();
-    private StructPublisher<Pose2d> targetPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/targetPose", Pose2d.struct).publish();
+    
 
     private Command currentAuto;
     /**
@@ -162,10 +129,6 @@ public class Swerve extends SubsystemBase {
 
         field = new Field2d();
         SmartDashboard.putData("field", field);
-
-        for(int i=0;i<moduleMechanisms.length;i++){
-            SmartDashboard.putData("module" + i, moduleMechanisms[i]);
-        }
 
         this.log=log;
 
@@ -258,21 +221,7 @@ public class Swerve extends SubsystemBase {
             );
         }
     }
-
-    /**
-     * Gets the closest pose from a list of poses.
-     *
-     * @param poses The list of poses to compare.
-     * @return The closest pose to the current robot pose.
-     */
-    public Pose2d getClosestFixed(Pose2d[] poses) {
-        return RobotUtils.getClosestPoseToPose(RobotUtils.invertPoseToAlliance(this.getPose()), poses);
-    }
-
-    public Pose2d getClosest(Pose2d[] poses) {
-        return RobotUtils.getClosestPoseToPose(this.getPose(), poses);
-    }
-
+    
     /**
      * Resets the gyro and reseeds the field-centric drive.
      */
@@ -348,22 +297,9 @@ public class Swerve extends SubsystemBase {
     private void telemetry(SwerveDriveState state){
         SmartDashboard.putNumber("driveState/odometryPeriod", state.OdometryPeriod);
 
-        currentPosePublisher.set(state.Pose);
-
         for (int i = 0; i < 4; ++i) {
             SmartDashboard.putNumberArray("driveState/moduleStates/"+i, new double[]{state.ModuleStates[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
             SmartDashboard.putNumberArray("driveState/moduleTargets/"+i, new double[]{state.ModuleTargets[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
-        }
-
-        /* Telemeterize the module states to a Mechanism2d */
-        for (int i = 0; i < moduleMechanisms.length; ++i) {
-            moduleSpeeds[i].setAngle(state.ModuleStates[i].angle);
-            moduleDirections[i].setAngle(state.ModuleStates[i].angle);
-            moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * maxSpeed));
-        }
-
-        if(targetPose!=null){
-            targetPosePublisher.set(targetPose);
         }
     }
 

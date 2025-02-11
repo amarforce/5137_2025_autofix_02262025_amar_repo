@@ -4,11 +4,14 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.constants.SwerveSystemConstants;
 import frc.robot.subsystems.SwerveSystem;
+import frc.robot.subsystems.SwerveSystem.SwerveSystemState;
 
 public class SwerveSystemCommands {
     private SwerveSystem swerveSystem;
@@ -18,114 +21,58 @@ public class SwerveSystemCommands {
     }
 
     /**
-     * Creates a command that moves to the closest state from an array of states
-     * 
-     * @param states The array of states to choose from
-     * @param targetPose Optional target pose for states with null positions
-     */
-    private Command moveToClosestStateCommand(SwerveSystem.SwerveSystemState[] states, Supplier<Pose2d> targetPose) {
-        return new ParallelRaceGroup(
-            new FunctionalCommand(
-                () -> {},
-                () -> swerveSystem.moveToClosestState(states, targetPose.get()),
-                (interrupted) -> {},
-                () -> swerveSystem.atSetpoint(),
-                swerveSystem
-            ),
-            new WaitCommand(SwerveSystemConstants.timeout)
-        );
-    }
-
-    /**
      * Creates a command that moves to a specific state
      * 
      * @param state The state to move to
      * @param targetPose Optional target pose for states with null positions
      */
-    private Command moveToStateCommand(SwerveSystem.SwerveSystemState state, Supplier<Pose2d> targetPose) {
+    public Command moveToState(Supplier<SwerveSystem.SwerveSystemState> state) {
+        return new SequentialCommandGroup(
+            new InstantCommand(()->swerveSystem.setState(state.get())),
+            waitUntilFinished()
+        );
+    }
+
+    public Command waitUntilFinished(){
         return new ParallelRaceGroup(
-            new FunctionalCommand(
-                () -> {},
-                () -> swerveSystem.setState(state, targetPose.get()),
-                (interrupted) -> {},
-                () -> swerveSystem.atSetpoint(),
-                swerveSystem
-            ),
+            new WaitUntilCommand(()->swerveSystem.atSetpoint()),
             new WaitCommand(SwerveSystemConstants.timeout)
         );
     }
 
-    /**
-     * Command to move to the closest scoring state for a specific level
-     * 
-     * @param level The scoring level (0=L1, 1=L2, 2=L3, 3=L4)
-     */
-    public Command moveToScoringState(Supplier<Integer> level) {
-        return new FunctionalCommand(
-            () -> {},
-            () -> {
-                int l = level.get();
-                if (l < 0 || l >= 4) {
-                    throw new IllegalArgumentException("Invalid scoring level: " + l);
-                }
-                swerveSystem.moveToClosestState(SwerveSystemConstants.scoringStates[l]);
-            },
-            (interrupted) -> {},
-            () -> swerveSystem.atSetpoint(),
-            swerveSystem
+    private SwerveSystemState sourceState;
+    public Command moveToSource(){
+        return new SequentialCommandGroup(
+            new InstantCommand(()->{
+                sourceState=swerveSystem.getClosestState(SwerveSystemConstants.sourceStates);
+            }),
+            moveToState(()->sourceState)
         );
     }
 
-    /**
-     * Command to move to the closest source state
-     */
-    public Command moveToSourceState() {
-        return moveToClosestStateCommand(SwerveSystemConstants.sourceStates, () -> swerveSystem.swerve.getPose());
+    public Command moveToGround(Supplier<Pose2d> pose){
+        return moveToState(()->SwerveSystemConstants.groundIntake.withPose(pose.get()));
     }
 
-    /**
-     * Command to move to the closest algae state
-     */
-    public Command moveToAlgaeState() {
-        return moveToClosestStateCommand(SwerveSystemConstants.algaeStates, () -> swerveSystem.swerve.getPose());
+    public Command moveToAlgae(Supplier<Integer> side){
+        return moveToState(()->SwerveSystemConstants.algaeStates[side.get()]);
     }
 
-    /**
-     * Command to move to the processor state
-     */
-    public Command moveToProcessor() {
-        return moveToStateCommand(SwerveSystemConstants.processor, () -> swerveSystem.swerve.getPose());
+    public Command moveToBranch(Supplier<Integer> level,Supplier<Integer> branch){
+        return moveToState(()->SwerveSystemConstants.scoringStates[level.get()][branch.get()]);
     }
 
-    /**
-     * Command to move to the ground intake state
-     * 
-     * @param targetPose The target robot pose to use (required since ground intake has no position)
-     */
-    public Command moveToGroundIntake(Supplier<Pose2d> targetPose) {
-        return moveToStateCommand(SwerveSystemConstants.groundIntake, targetPose);
+    public Command moveToProcessor(){
+        return moveToState(()->SwerveSystemConstants.processor);
     }
 
-    /**
-     * Command to move to the ground intake state, using current pose
-     */
-    public Command moveToGroundIntake() {
-        return moveToGroundIntake(() -> swerveSystem.swerve.getPose());
-    }
-
-    /**
-     * Command to move to the default state
-     * 
-     * @param targetPose The target robot pose to use (required since default has no position)
-     */
-    public Command moveToDefault(Supplier<Pose2d> targetPose) {
-        return moveToStateCommand(SwerveSystemConstants.defaultState, targetPose);
-    }
-
-    /**
-     * Command to move to the default state, using current pose
-     */
-    public Command moveToDefault() {
-        return moveToDefault(() -> swerveSystem.swerve.getPose());
+    private SwerveSystemState levelState;
+    public Command moveToLevel(int level){
+        return new SequentialCommandGroup(
+            new InstantCommand(()->{
+                levelState=swerveSystem.getClosestState(SwerveSystemConstants.scoringStates[level]);
+            }),
+            moveToState(()->levelState)
+        );
     }
 }

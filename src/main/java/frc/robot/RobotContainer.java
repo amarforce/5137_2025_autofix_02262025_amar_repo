@@ -110,7 +110,7 @@ public class RobotContainer {
 			intakeCommands = new IntakeCommands(intake);
 			hangCommand = new HangCommand(hang);
 			swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
-			multiCommands = new MultiCommands(swerveSystemCommands, intakeCommands, hangCommand, reef);
+			multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommand);
 
 
 			// Initialize cage choice
@@ -143,14 +143,14 @@ public class RobotContainer {
 		driver.cross().whileTrue(swerveCommands.lock());
 
 		// Bind buttons to drive to specific locations
-		driver.triangle().onTrue(swerveCommands.driveToStation());
-		driver.square().onTrue(swerveCommands.driveToPoseStaticFixed(()->cageChoice.getCage()));
-		driver.circle().onTrue(swerveCommands.driveToProcessor());
+		driver.triangle().onTrue(swerveSystemCommands.moveToSource());
+		//driver.square().onTrue(swerveCommands.driveToPoseStaticFixed(()->cageChoice.getCage()));
+		driver.circle().onTrue(swerveSystemCommands.moveToProcessor());
 
 		// Bind D-pad buttons to drive to specific reef positions
-		driver.povLeft().onTrue(swerveCommands.driveToReefLeft());
-		driver.povUp().onTrue(swerveCommands.driveToReefCenter());
-		driver.povRight().onTrue(swerveCommands.driveToReefRight());
+		// driver.povLeft().onTrue(swerveCommands.driveToReefLeft());
+		// driver.povUp().onTrue(swerveCommands.driveToReefCenter());
+		// driver.povRight().onTrue(swerveCommands.driveToReefRight());
 
 		// Bind options button to reset gyro
 		driver.options().onTrue(swerveCommands.resetGyro());
@@ -181,10 +181,10 @@ public class RobotContainer {
 
 		// Bind buttons to move to specific goals
 		
-		operator.triangle().onTrue(swerveSystemCommands.moveToGoal(()->4));
-		operator.circle().onTrue(swerveSystemCommands.moveToGoal(()->3));
-		operator.square().onTrue(swerveSystemCommands.moveToGoal(()->2));
-		operator.cross().onTrue(swerveSystemCommands.moveToGoal(()->1));
+		operator.triangle().onTrue(swerveSystemCommands.moveToLevel(4));
+		operator.circle().onTrue(swerveSystemCommands.moveToLevel(3));
+		operator.square().onTrue(swerveSystemCommands.moveToLevel(2));
+		operator.cross().onTrue(swerveSystemCommands.moveToLevel(1));
 
 
 

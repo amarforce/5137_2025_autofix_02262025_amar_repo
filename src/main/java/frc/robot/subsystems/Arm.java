@@ -140,7 +140,7 @@ public class Arm extends SubsystemBase {
      * @return The current arm velocity in radians per second.
      */
     public double getVelocity() {
-        return ArmConstants.transform.transformVel(armMotor.getPosition().getValueAsDouble());
+        return ArmConstants.transform.transformVel(armMotor.getVelocity().getValueAsDouble());
     }
 
     public boolean atSetpoint(){

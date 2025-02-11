@@ -4,16 +4,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.constants.ElevatorConstants;
-import frc.robot.constants.MechanismConstants;
 import frc.robot.constants.ArmConstants;
 import frc.robot.constants.SwerveSystemConstants;
 import frc.robot.other.RobotUtils;
@@ -40,6 +33,10 @@ public class SwerveSystem extends SubsystemBase {
             this.wristPosition = wristPosition;
             this.botPosition = botPosition;
         }
+
+        public SwerveSystemState withPose(Pose2d pose){
+            return new SwerveSystemState(armPosition, elevatorPosition, wristPosition, pose);
+        }
     }
 
     // Subsystems
@@ -48,17 +45,12 @@ public class SwerveSystem extends SubsystemBase {
     private Wrist wrist;    // The wrist subsystem
     public final Swerve swerve; // The swerve subsystem
 
-    // Mechanism2d visualization components
-    private final Mechanism2d mech2d = new Mechanism2d(MechanismConstants.mechWidth, MechanismConstants.mechHeight);
-    private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Elevator Root", MechanismConstants.mechWidth / 2, 0);
-    private final MechanismLigament2d elevatorMech2d = mech2dRoot.append(new MechanismLigament2d("Elevator", 0, 90));
-    private final MechanismLigament2d armMech2d = elevatorMech2d.append(new MechanismLigament2d("Arm", MechanismConstants.armLength, 0));
-    private final MechanismLigament2d wristMech2d = armMech2d.append(new MechanismLigament2d("Wrist", MechanismConstants.wristLength, 0));
-
-    private StructPublisher<Pose3d> firstStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/elevator/firstStage", Pose3d.struct).publish();
-    private StructPublisher<Pose3d> secondStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/elevator/secondStage", Pose3d.struct).publish();
-    private StructPublisher<Pose3d> armPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/arm/pose", Pose3d.struct).publish();
-    private StructPublisher<Pose3d> wristPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/wrist/pose", Pose3d.struct).publish();
+    private StructPublisher<Pose2d> botPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/pose", Pose2d.struct).publish();
+    private StructPublisher<Pose2d> targetBotPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/targetPose", Pose2d.struct).publish();
+    private StructPublisher<Pose3d> firstStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/sim/elevatorFirst", Pose3d.struct).publish();
+    private StructPublisher<Pose3d> secondStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/sim/elevatorSecond", Pose3d.struct).publish();
+    private StructPublisher<Pose3d> armPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/sim/arm", Pose3d.struct).publish();
+    private StructPublisher<Pose3d> wristPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/sim/wrist", Pose3d.struct).publish();
 
     /**
      * Constructor for the `ArmMechanism` class.
@@ -72,14 +64,6 @@ public class SwerveSystem extends SubsystemBase {
         this.elevator = elevator;
         this.wrist = wrist;
         this.swerve = swerve;
-
-        // Set the colors for the mechanism components
-        elevatorMech2d.setColor(MechanismConstants.elevatorColor);
-        armMech2d.setColor(MechanismConstants.armColor);
-        wristMech2d.setColor(MechanismConstants.wristColor);
-
-        // Display the mechanism on the SmartDashboard
-        SmartDashboard.putData("armSystem", mech2d);
     }
 
     /**
@@ -88,15 +72,8 @@ public class SwerveSystem extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        // Update the length of the elevator visualization based on its current height
-        elevatorMech2d.setLength((elevator.getMeasurement() / (ElevatorConstants.maxHeight * 2) + 0.25) * MechanismConstants.mechHeight);
-
-        // Update the angle of the arm visualization based on its current angle
-        armMech2d.setAngle(Units.radiansToDegrees(arm.getMeasurement() - Math.PI / 2));
-
-        // Update the angle of the wrist visualization based on its current angle
-        wristMech2d.setAngle(Units.radiansToDegrees(wrist.getMeasurement() - Math.PI / 2));
-
+        botPosePublisher.set(swerve.getPose());
+        targetBotPosePublisher.set(swerve.getTargetPose());
         firstStagePosePublisher.set(new Pose3d(0,0,elevator.getMeasurement()/2,new Rotation3d()));
         Translation3d elevatorTrans=new Translation3d(0,0,elevator.getMeasurement());
         Pose3d elevatorPose=new Pose3d(elevatorTrans,new Rotation3d());
@@ -123,30 +100,14 @@ public class SwerveSystem extends SubsystemBase {
      * @param state The state to set the arm system to.
      * @param targetPose The target robot pose to use if state's position is null
      */
-    public void setState(SwerveSystemState state, Pose2d targetPose) {
+    public void setState(SwerveSystemState state) {
         arm.setGoal(state.armPosition);
         elevator.setGoal(state.elevatorPosition);
         wrist.setGoal(state.wristPosition);
-        swerve.setTargetPose(state.botPosition == null ? targetPose : state.botPosition);
+        swerve.setTargetPose(state.botPosition);
     }
 
-    /**
-     * Sets the arm system to a specific state, using current pose for null positions.
-     * 
-     * @param state The state to set the arm system to.
-     */
-    public void setState(SwerveSystemState state) {
-        setState(state, swerve.getPose());
-    }
-
-    /**
-     * Moves to the closest state from an array of possible states
-     * 
-     * @param states Array of possible states to choose from
-     * @param targetPose The target robot pose to use for states with null positions
-     * @throws IllegalArgumentException if states array is empty
-     */
-    public void moveToClosestState(SwerveSystemState[] states, Pose2d targetPose) {
+    public SwerveSystemState getClosestState(SwerveSystemState[] states){
         if (states == null || states.length == 0) {
             throw new IllegalArgumentException("States array cannot be empty");
         }
@@ -160,25 +121,14 @@ public class SwerveSystem extends SubsystemBase {
         
         for (SwerveSystemState state : states) {
             // Use targetPose if state's position is null
-            Pose2d statePosition = state.botPosition == null ? targetPose : state.botPosition;
-            double distance = calculateDistance(currentPose, statePosition);
+            double distance = calculateDistance(currentPose, state.botPosition);
             if (distance < minDistance) {
                 minDistance = distance;
                 closestState = state;
             }
         }
-        
-        setState(closestState, targetPose);
-    }
 
-    /**
-     * Moves to the closest state from an array of possible states, using current pose for null positions
-     * 
-     * @param states Array of possible states to choose from
-     * @throws IllegalArgumentException if states array is empty
-     */
-    public void moveToClosestState(SwerveSystemState[] states) {
-        moveToClosestState(states, swerve.getPose());
+        return closestState;
     }
 
     /**

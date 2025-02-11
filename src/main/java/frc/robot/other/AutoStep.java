@@ -5,7 +5,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.MultiCommands;
 import frc.robot.constants.GeneralConstants;
@@ -119,13 +118,10 @@ public class AutoStep {
         if(level==-1){
             return new InstantCommand();
         }else if(level==0){
-            return new ParallelCommandGroup(
-                multiCommands.getArmSystemCommands().moveTo(()->"algae"),
-                multiCommands.getSwerveCommands().driveToAlgae(()->branchChooser.getSelected())
-            );
+            return multiCommands.getAlgae(()->branchChooser.getSelected());
         }else{
             return new SequentialCommandGroup(
-                multiCommands.getCoral(RobotUtils.invertPoseToAlliance(pickupChooser.getSelected())),
+                multiCommands.getCoralFromGround(()->pickupChooser.getSelected()),
                 multiCommands.placeCoral(()->levelChooser.getSelected(), ()->branchChooser.getSelected())
             );
         }

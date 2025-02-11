@@ -30,8 +30,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.util.datalog.StringLogEntry;
-import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -60,8 +59,6 @@ public class Swerve extends SubsystemBase {
     private SwerveRequest.ApplyRobotSpeeds setChassisSpeeds; // Request to set chassis speeds directly
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
 
-    private StringLogEntry log;
-
     // Target pose
     private Pose2d targetPose;
 
@@ -74,7 +71,7 @@ public class Swerve extends SubsystemBase {
      * @param file    The configuration file for the swerve drivetrain.
      * @param vision  The vision subsystem for pose estimation.
      */
-    public Swerve(File file, Vision vision,StringLogEntry log) {
+    public Swerve(File file, Vision vision) {
         SwerveFactory factory = new SwerveFactory(file);
         swerve = factory.create(); // Create the swerve drivetrain using the factory
         this.vision = vision;
@@ -130,8 +127,6 @@ public class Swerve extends SubsystemBase {
 
         field = new Field2d();
         SmartDashboard.putData("field", field);
-
-        this.log=log;
 
         // Warmup pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
@@ -286,7 +281,7 @@ public class Swerve extends SubsystemBase {
                 vision.updateSim(this.getPose());
             }
         }catch(Exception e){
-            log.append("Periodic error: "+RobotUtils.getError(e));
+            DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
         }
     }
 

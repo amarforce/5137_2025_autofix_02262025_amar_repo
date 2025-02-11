@@ -44,33 +44,33 @@ public class SwerveSystemCommands {
     public Command moveToSource(){
         return new SequentialCommandGroup(
             new InstantCommand(()->{
-                sourceState=swerveSystem.getClosestState(SwerveSystemConstants.sourceStates());
+                sourceState=swerveSystem.getClosestState(SwerveSystemConstants.sourceStates);
             }),
             moveToState(()->sourceState)
         );
     }
 
     public Command moveToGround(Supplier<Pose2d> pose){
-        return moveToState(()->SwerveSystemConstants.groundIntake().withPose(pose.get()));
+        return moveToState(()->SwerveSystemConstants.groundIntake.withPose(pose.get()));
     }
 
     public Command moveToAlgae(Supplier<Integer> side){
-        return moveToState(()->SwerveSystemConstants.algaeStates()[side.get()]);
+        return moveToState(()->SwerveSystemConstants.algaeStates[side.get()]);
     }
 
     public Command moveToBranch(Supplier<Integer> level,Supplier<Integer> branch){
-        return moveToState(()->SwerveSystemConstants.scoringStates()[level.get()][branch.get()]);
+        return moveToState(()->SwerveSystemConstants.scoringStates[level.get()][branch.get()]);
     }
 
     public Command moveToProcessor(){
-        return moveToState(()->SwerveSystemConstants.processor());
+        return moveToState(()->SwerveSystemConstants.processor);
     }
 
     private SwerveSystemState levelState;
     public Command moveToLevel(int level){
         return new SequentialCommandGroup(
             new InstantCommand(()->{
-                levelState=swerveSystem.getClosestState(SwerveSystemConstants.scoringStates()[level]);
+                levelState=swerveSystem.getClosestState(SwerveSystemConstants.scoringStates[level]);
             }),
             moveToState(()->levelState)
         );

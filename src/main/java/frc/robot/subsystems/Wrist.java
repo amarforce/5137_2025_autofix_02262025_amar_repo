@@ -8,7 +8,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -40,7 +40,7 @@ public class Wrist extends SubsystemBase {
     private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
     
     // Goal position for the Wrist in radians
-    private double goal = SwerveSystemConstants.defaultState().wristPosition;
+    private double goal = SwerveSystemConstants.defaultState.wristPosition;
     
 
     // Simulation model for the Wrist
@@ -52,7 +52,7 @@ public class Wrist extends SubsystemBase {
         WristConstants.minAngle,
         WristConstants.maxAngle,
         true,
-        SwerveSystemConstants.defaultState().wristPosition
+        SwerveSystemConstants.defaultState.wristPosition
     );
 
 
@@ -74,13 +74,11 @@ public class Wrist extends SubsystemBase {
     
     // Simulation state for the motor
     private TalonFXSimState wristMotorSim = wristMotor.getSimState();
-
-    private StringLogEntry log;
         
     /**
      * Constructor for the Wrist subsystem.
      */
-    public Wrist(StringLogEntry log) {
+    public Wrist() {
         // Configure the motor to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Brake;
@@ -94,8 +92,6 @@ public class Wrist extends SubsystemBase {
         
         // Display the PID controller on SmartDashboard for tuning
         SmartDashboard.putData("wrist/controller", controller);
-
-        this.log=log;
     }
 
     /**
@@ -184,7 +180,7 @@ public class Wrist extends SubsystemBase {
             setVoltage(Volts.of(voltage));
             
         } catch (Exception e) {
-            log.append("Periodic error: " + RobotUtils.getError(e));
+            DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }
 
     }

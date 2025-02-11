@@ -8,7 +8,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -41,7 +41,7 @@ public class Arm extends SubsystemBase {
     private ArmFeedforward feedforward = new ArmFeedforward(ArmConstants.kS, ArmConstants.kG, ArmConstants.kV);
     
     // Goal position for the arm in radians
-    private double goal = SwerveSystemConstants.defaultState().armPosition;
+    private double goal = SwerveSystemConstants.defaultState.armPosition;
     
 
     // Simulation model for the arm
@@ -53,7 +53,7 @@ public class Arm extends SubsystemBase {
         ArmConstants.minAngle, 
         ArmConstants.maxAngle, 
         true, 
-        SwerveSystemConstants.defaultState().armPosition
+        SwerveSystemConstants.defaultState.armPosition
     );
 
 
@@ -75,13 +75,11 @@ public class Arm extends SubsystemBase {
     
     // Simulation state for the motor
     private TalonFXSimState armMotorSim = armMotor.getSimState();
-        
-    private StringLogEntry log;
     
     /**
      * Constructor for the Arm subsystem.
      */
-    public Arm(StringLogEntry log) {
+    public Arm() {
         // Configure the motor to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Brake;
@@ -94,8 +92,6 @@ public class Arm extends SubsystemBase {
         
         // Display the PID controller on SmartDashboard for tuning
         SmartDashboard.putData("arm/controller", controller);
-
-        this.log=log;
     }
 
     /**
@@ -183,7 +179,7 @@ public class Arm extends SubsystemBase {
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
         }catch(Exception e){
-            log.append("Periodic error: " + RobotUtils.getError(e));
+            DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }
     }
 

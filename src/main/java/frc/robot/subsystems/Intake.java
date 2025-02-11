@@ -3,7 +3,7 @@ package frc.robot.subsystems;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
-import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -22,19 +22,15 @@ public class Intake extends SubsystemBase {
     // Limit switch to detect the position of the intake
     private DigitalInput limitSwitch;
 
-    private StringLogEntry log;
-
     /**
      * Constructs an Intake subsystem.
      */
-    public Intake(StringLogEntry log) {
+    public Intake() {
         // Initialize the motor controller with the ID and type from constants
         intakeMotor = new SparkMax(IntakeConstants.motorId, MotorType.kBrushless);
 
         // Initialize the limit switch with the channel from constants
         limitSwitch = new DigitalInput(IntakeConstants.switchChannel);
-
-        this.log=log;
     }
 
     /**
@@ -80,7 +76,7 @@ public class Intake extends SubsystemBase {
         try{
             telemetry();
         }catch(Exception e){
-            log.append("Periodic error: "+RobotUtils.getError(e));
+            DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
         }
     }
 }

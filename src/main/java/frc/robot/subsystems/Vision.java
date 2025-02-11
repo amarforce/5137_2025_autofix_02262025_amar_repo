@@ -38,14 +38,12 @@ public class Vision extends SubsystemBase {
 
     private Reef reef; // Reference to the Reef object for coral placement tracking
 
-    private StringLogEntry log;
-
     /**
      * Constructor for the Vision subsystem.
      *
      * @param reef The Reef object used for tracking coral placements.
      */
-    public Vision(Reef reef,StringLogEntry log) {
+    public Vision(Reef reef) {
         // Load the AprilTag field layout from the default field
         fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
@@ -69,7 +67,6 @@ public class Vision extends SubsystemBase {
         }
 
         this.reef = reef;
-        this.log=log;
     }
 
     /**
@@ -134,10 +131,9 @@ public class Vision extends SubsystemBase {
         double closestDist = VisionConstants.objectMarginOfError;
         int closestBranch = -1;
         int closestLevel = -1;
-        Translation3d[][] coralPositions=GeneralConstants.coralPositions();
-        for (int branch = 0; branch < coralPositions.length; branch++) {
-            for (int level = 0; level < coralPositions[branch].length; level++) {
-                Translation3d pos = coralPositions[branch][level];
+        for (int branch = 0; branch < GeneralConstants.coralPositions.length; branch++) {
+            for (int level = 0; level < GeneralConstants.coralPositions[branch].length; level++) {
+                Translation3d pos = GeneralConstants.coralPositions[branch][level];
                 double dist = target3d.minus(pos).getNorm();
                 if (dist < closestDist) {
                     closestDist = dist;
@@ -149,7 +145,7 @@ public class Vision extends SubsystemBase {
         if (closestBranch == -1) {
             return null;
         } else {
-            log.append("Detected coral on level "+(closestLevel+2)+" branch "+closestBranch);
+            DataLogManager.log("Detected coral on level "+(closestLevel+2)+" branch "+closestBranch);
             return Pair.of(closestLevel, closestBranch);
         }
     }

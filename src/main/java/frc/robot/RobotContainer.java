@@ -74,10 +74,6 @@ public class RobotContainer {
 	public RobotContainer() {
 		// Start data log
 		DataLogManager.start();
-		DataLog dataLog=DataLogManager.getLog();
-		DriverStation.startDataLog(dataLog);
-		log = new StringLogEntry(dataLog, "container");
-		StringLogEntry swerveLog = new StringLogEntry(dataLog, "swerve");
 
 		try{
 			// Initialize controllers
@@ -91,13 +87,13 @@ public class RobotContainer {
 			SmartDashboard.putData("reefScoring", reefScoring);
 
 			// // Initialize subsystems with data log
-			vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
-			swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision,swerveLog);
-			elevator = new Elevator(new StringLogEntry(dataLog, "elevator"));
-			arm = new Arm(new StringLogEntry(dataLog, "arm"));
-			wrist = new Wrist(new StringLogEntry(dataLog, "wrist"));
-			intake = new Intake(new StringLogEntry(dataLog, "intake"));
-			hang = new Hang(new StringLogEntry(dataLog, "hang"));
+			vision = new Vision(reef);
+			swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision);
+			elevator = new Elevator();
+			arm = new Arm();
+			wrist = new Wrist();
+			intake = new Intake();
+			hang = new Hang();
 			swerveSystem = new SwerveSystem(arm, elevator, wrist, swerve);
 			led = new LED();
 

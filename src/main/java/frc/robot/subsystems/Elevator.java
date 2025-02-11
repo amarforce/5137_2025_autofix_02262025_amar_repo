@@ -14,7 +14,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -53,14 +53,14 @@ public class Elevator extends SubsystemBase {
         ElevatorConstants.minHeight,
         ElevatorConstants.maxHeight,
         true,
-        SwerveSystemConstants.defaultState().elevatorPosition
+        SwerveSystemConstants.defaultState.elevatorPosition
     );
     private TalonFXSimState leftMotorSim = new TalonFXSimState(leftMotor, ChassisReference.CounterClockwise_Positive);
     private TalonFXSimState rightMotorSim = new TalonFXSimState(rightMotor, ChassisReference.Clockwise_Positive);
 
 
     // Goal position for the elevator
-    private double goal = SwerveSystemConstants.defaultState().elevatorPosition;
+    private double goal = SwerveSystemConstants.defaultState.elevatorPosition;
 
 
     // SysId routine for system identification
@@ -82,12 +82,10 @@ public class Elevator extends SubsystemBase {
                 // Tell SysId to make generated commands require this subsystem, suffix test state in WPILog with this subsystem's name ("elevator")
                 this));
 
-    private StringLogEntry log;
-
     /**
      * Constructor for the Elevator subsystem.
      */
-    public Elevator(StringLogEntry log) {
+    public Elevator() {
         // Configure the motors to coast when neutral
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Brake;
@@ -104,8 +102,6 @@ public class Elevator extends SubsystemBase {
 
         // Add the PID controller to SmartDashboard for tuning
         SmartDashboard.putData("elevator/controller", controller);
-
-        this.log=log;
     }
 
     /**
@@ -213,7 +209,7 @@ public class Elevator extends SubsystemBase {
             double voltage = controller.calculate(getMeasurement(), goal) + extra;
             setVoltage(Volts.of(voltage));
         }catch(Exception e){
-            log.append("Periodic error: "+RobotUtils.getError(e));
+            DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
         }
     }
 

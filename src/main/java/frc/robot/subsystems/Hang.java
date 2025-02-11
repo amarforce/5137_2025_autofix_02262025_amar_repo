@@ -6,8 +6,8 @@ import frc.robot.other.RobotUtils;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DataLogManager;
 
 /**
  * The Hang subsystem controls the pneumatics for the robot's hanging mechanism.
@@ -23,12 +23,10 @@ public class Hang extends SubsystemBase {
     // Compressor to maintain air pressure within the specified range
     private final Compressor compressor;
 
-    private StringLogEntry log;
-
     /**
      * Constructs a new Hang subsystem.
      */
-    public Hang(StringLogEntry log) {
+    public Hang() {
         // Initialize the solenoids with the appropriate channels from HangConstants
         clampSolenoid = new Solenoid(PneumaticsModuleType.REVPH, HangConstants.clampSolenoid);
         climbSolenoid = new Solenoid(PneumaticsModuleType.REVPH, HangConstants.climbSolenoid);
@@ -36,8 +34,6 @@ public class Hang extends SubsystemBase {
         // Initialize the compressor and enable it to maintain pressure within the specified range
         compressor = new Compressor(PneumaticsModuleType.REVPH);
         compressor.enableAnalog(HangConstants.minPressure, HangConstants.maxPressure);
-
-        this.log=log;
     }
     
     /**
@@ -102,7 +98,7 @@ public class Hang extends SubsystemBase {
         try{
             telemetry();
         }catch(Exception e){
-            log.append("Periodic error: "+RobotUtils.getError(e));
+            DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
         }
     }
 }

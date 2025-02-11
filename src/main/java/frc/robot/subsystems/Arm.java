@@ -71,7 +71,7 @@ public class Arm extends SubsystemBase {
                 log -> {
                     log.motor("arm")
                         .voltage(getVolts())
-                        .angularPosition(Radians.of(getMeasurement()))
+                        .angularPosition(Radians.of(getMeasurement()+Math.PI/2))
                         .angularVelocity(RadiansPerSecond.of(getVelocity()))
                         .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
                 },

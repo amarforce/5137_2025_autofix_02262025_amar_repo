@@ -29,10 +29,6 @@ public class WristConstants {
     public static final double kV = 0.25757; // 0.62
     public static final double kA = 0.050664;
 
-    // Motion Profile constants
-    public static final double maxVelocity = Units.degreesToRadians(45);
-    public static final double maxAcceleration = Units.degreesToRadians(30);
-
     // Tolerance
     public static final double wristTolerance = Units.degreesToRadians(1);
 

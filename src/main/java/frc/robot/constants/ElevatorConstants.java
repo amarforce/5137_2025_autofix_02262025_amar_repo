@@ -31,10 +31,6 @@ public class ElevatorConstants {
     public static final double maxHeight = 1.3; // in meters
     public static final DCMotor motorSim = DCMotor.getFalcon500(2);
 
-    // Motion Profile constants
-    public static final double maxVelocity = 0.5;
-    public static final double maxAcceleration = 0.25;
-
     // Encoder transform
     public static final double elevatorOffset = 0;
     public static final double metersPerRotation = drumRadius*2*Math.PI/gearRatio;

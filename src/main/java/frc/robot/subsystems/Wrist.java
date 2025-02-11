@@ -8,13 +8,10 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.sim.ChassisReference;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
@@ -43,7 +40,7 @@ public class Wrist extends SubsystemBase {
     private TalonFX wristMotor = new TalonFX(WristConstants.motorId, "rio");
     
     // PID controller for Wrist position control
-    private ProfiledPIDController controller = new ProfiledPIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD, new Constraints(WristConstants.maxVelocity, WristConstants.maxAcceleration));
+    private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
 
     // Feedforward controller for arm dynamics
     private ArmFeedforward feedforward = new ArmFeedforward(WristConstants.kS, WristConstants.kG, WristConstants.kV);
@@ -122,7 +119,7 @@ public class Wrist extends SubsystemBase {
      * @return The current true position of the wrist in radians.
      */
     public double getAdjustedMeasurement() {
-        return this.getMeasurement() - arm.getMeasurement() - WristConstants.feedOffset;
+        return this.getMeasurement() + arm.getMeasurement();
     }
     
     /**
@@ -223,15 +220,12 @@ public class Wrist extends SubsystemBase {
             telemetry();
         
             // Calculate PID control outputs
-            double feed = feedforward.calculate(getAdjustedMeasurement(), getVelocity());
+            double feed = feedforward.calculate(getAdjustedGoal()+Math.PI/2, 0);
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
 
-            // Keep track of previous values to calculate acceleration
-            lastSpeed = state.velocity;
-            lastTime = time;
         } catch (Exception e) {
             DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }

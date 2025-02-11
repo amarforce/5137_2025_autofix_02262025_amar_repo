@@ -21,9 +21,9 @@ public class ArmConstants {
 
     // Feedforward constants
     public static final double kS = 0.135;
-    public static final double kG = 0.0;
-    public static final double kV = 0.0;
-    public static final double kA = 0.0;
+    public static final double kG = 1.83;
+    public static final double kV = 0.62;
+    public static final double kA = 0.09;
 
     // Arm tolerance
     public static final double armTolerance = Units.degreesToRadians(1);

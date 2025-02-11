@@ -10,7 +10,7 @@ public class MotorTransform {
     }
 
     public double transformPos(double input){
-        return (input*mul)-offset;
+        return (input*mul)+offset;
     }
 
     public double transformVel(double input){
@@ -18,7 +18,7 @@ public class MotorTransform {
     }
 
     public double transformPosInv(double input){
-        return (input+offset)/mul;
+        return (input-offset)/mul;
     }
 
     public double transformVelInv(double input){

@@ -72,17 +72,35 @@ public class SwerveSystem extends SubsystemBase {
      */
     @Override
     public void periodic() {
+        // Update robot pose visualization
         botPosePublisher.set(swerve.getPose());
         targetBotPosePublisher.set(swerve.getTargetPose());
-        firstStagePosePublisher.set(new Pose3d(0,0,elevator.getMeasurement()/2,new Rotation3d()));
-        Translation3d elevatorTrans=new Translation3d(0,0,elevator.getMeasurement());
-        Pose3d elevatorPose=new Pose3d(elevatorTrans,new Rotation3d());
+
+        // Calculate elevator positions
+        double elevatorHeight = elevator.getMeasurement();
+        firstStagePosePublisher.set(new Pose3d(0, 0, elevatorHeight/2, new Rotation3d()));
+        
+        // Calculate elevator end position
+        Translation3d elevatorTrans = new Translation3d(0, 0, elevatorHeight);
+        Pose3d elevatorPose = new Pose3d(elevatorTrans, new Rotation3d());
         secondStagePosePublisher.set(elevatorPose);
-        Translation3d armTrans=elevatorTrans.plus(SwerveSystemConstants.armTransOffset);
-        Pose3d armPose=new Pose3d(armTrans,new Rotation3d(0,arm.getMeasurement(),0));
+
+        // Calculate arm pivot position (offset from elevator end)
+        Translation3d armPivotTrans = elevatorTrans.plus(SwerveSystemConstants.armTransOffset);
+        
+        // Calculate arm end position (arm angle is now relative to vertical)
+        double armAngle = arm.getMeasurement();
+        double armX = ArmConstants.armLength * -Math.sin(armAngle); // negative because forward is negative X
+        double armZ = ArmConstants.armLength * Math.cos(armAngle);  // cosine for vertical component
+        Translation3d armEndTrans = armPivotTrans.plus(new Translation3d(armX, 0, armZ));
+        
+        // Publish arm pose
+        Pose3d armPose = new Pose3d(armPivotTrans, new Rotation3d(0, -armAngle, 0));
         armPosePublisher.set(armPose);
-        Translation3d wristTrans=armTrans.plus(new Translation3d(-ArmConstants.armLength*Math.cos(arm.getMeasurement()), 0, ArmConstants.armLength*Math.sin(arm.getMeasurement())));
-        Pose3d wristPose=new Pose3d(wristTrans,new Rotation3d(0,arm.getMeasurement()+wrist.getMeasurement(),0));
+
+        // Calculate and publish wrist pose
+        double wristAngle = wrist.getAdjustedMeasurement();
+        Pose3d wristPose = new Pose3d(armEndTrans, new Rotation3d(0, -wristAngle, 0));
         wristPosePublisher.set(wristPose);
     }
 

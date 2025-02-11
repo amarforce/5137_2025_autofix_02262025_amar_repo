@@ -15,7 +15,7 @@ public class ElevatorConstants {
     public static final double kD = 1;
 
     // Feedforward constants
-    public static final double kS = 0;
+    public static final double kS = Robot.isSimulation() ? 0.0 : 0.0;
     public static final double kG = 0.18;
     public static final double kV = 0.88;
     public static final double kA = 0.02;

@@ -90,13 +90,15 @@ public class Arm extends SubsystemBase {
         currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
         armMotor.getConfigurator().apply(currentConfigs);
 
-        armMotor.setPosition(0.0);
-
         // Set the tolerance for the PID controller
         controller.setTolerance(ArmConstants.armTolerance);
         
         // Display the PID controller on SmartDashboard for tuning
         SmartDashboard.putData("arm/controller", controller);
+    }
+
+    public void resetPos(){
+        armMotor.setPosition(0.0);
     }
 
     /**
@@ -196,7 +198,7 @@ public class Arm extends SubsystemBase {
             telemetry();
             
             // Calculate feedforward and PID control outputs
-            double feed = feedforward.calculate(getMeasurement(), getVelocity());
+            double feed = feedforward.calculate(goal+Math.PI/2, 0); // Offset so that 0 = horizontal
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor

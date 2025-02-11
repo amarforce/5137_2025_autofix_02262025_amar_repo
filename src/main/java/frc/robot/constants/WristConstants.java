@@ -10,11 +10,11 @@ public class WristConstants {
     public static final int motorId = Robot.isSimulation() ? 23 : 3;
 
     // Limits
-    public static final double minAngle = Units.degreesToRadians(-25);
+    public static final double minAngle = Units.degreesToRadians(-115);
     public static final double maxAngle = Units.degreesToRadians(90);
 
     // Encoder transform
-    public static final double wristOffset = Units.degreesToRadians(25);
+    public static final double wristOffset = Units.degreesToRadians(180);
     public static final double gearRatio = 31.5;
     public static final MotorTransform transform = new MotorTransform((2*Math.PI)/gearRatio, wristOffset);
     
@@ -24,7 +24,7 @@ public class WristConstants {
     public static final double kD = 0.05;
 
     // Feedforward constants
-    public static final double kS = 0.0;
+    public static final double kS = Robot.isSimulation() ? 0.0 : 0.0;
     public static final double kG = 0.1;
     public static final double kV = 0.62;
     public static final double kA = 0.0;

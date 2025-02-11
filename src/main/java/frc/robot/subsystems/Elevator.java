@@ -98,14 +98,16 @@ public class Elevator extends SubsystemBase {
         currentConfigs.Inverted = InvertedValue.Clockwise_Positive;
         rightMotor.getConfigurator().apply(currentConfigs);
 
-        leftMotor.setPosition(0.0);
-        rightMotor.setPosition(0.0);
-
         // Set the tolerance for the PID controller
         controller.setTolerance(ElevatorConstants.elevatorTolerance);
 
         // Add the PID controller to SmartDashboard for tuning
         SmartDashboard.putData("elevator/controller", controller);
+    }
+
+    public void resetPos(){
+        leftMotor.setPosition(0);
+        rightMotor.setPosition(0);
     }
 
     /**

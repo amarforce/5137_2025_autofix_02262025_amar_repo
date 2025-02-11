@@ -16,19 +16,19 @@ public final class SwerveSystemConstants {
     // Higher values mean rotation differences matter more
     public static final double rotationWeight = 1.0; // meters per radian
 
-    private static final double wristStraight = Units.degreesToRadians(90);
-    private static final double wristDown = Units.degreesToRadians(0);
+    private static final double wristStraight = Units.degreesToRadians(0);    // 90 - 90 = 0 (vertical)
+    private static final double wristDown = Units.degreesToRadians(-90);      // 0 - 90 = -90 (horizontal)
 
     // Basic states without specific robot positions
     private static final SwerveSystem.SwerveSystemState baseGroundIntake = new SwerveSystem.SwerveSystemState(
-        Units.degreesToRadians(0),  // From ArmConstants.groundIntakeGoal
+        Units.degreesToRadians(-90),  // From ArmConstants.groundIntakeGoal
         0.26,                       // From ElevatorConstants.groundIntakeGoal
         wristDown,                  // From WristConstants.pos1 (down)
         null                        // Robot position determined at runtime
     );
 
     private static final SwerveSystem.SwerveSystemState baseDefaultState = new SwerveSystem.SwerveSystemState(
-        Units.degreesToRadians(90),  // From ArmConstants.defaultGoal
+        Units.degreesToRadians(0),  // From ArmConstants.defaultGoal (vertical)
         0.0,                         // From ElevatorConstants.defaultGoal
         wristDown,                   // From WristConstants.pos1 (down)
         null                         // Robot position determined at runtime
@@ -46,7 +46,7 @@ public final class SwerveSystemConstants {
     static {
         // Initialize processor state
         baseProcessor = new SwerveSystem.SwerveSystemState(
-            Units.degreesToRadians(75),
+            Units.degreesToRadians(-15),  // 75 - 90 = -15 degrees
             1.26,
             wristStraight,
             GeneralConstants.getProcessor()
@@ -56,7 +56,7 @@ public final class SwerveSystemConstants {
         baseSourceStates = new SwerveSystem.SwerveSystemState[GeneralConstants.sides * 2 / 3];
         for (int i = 0; i < baseSourceStates.length; i++) {
             baseSourceStates[i] = new SwerveSystem.SwerveSystemState(
-                Units.degreesToRadians(45),  // From ArmConstants.sourceGoal
+                Units.degreesToRadians(-45),  // 45 - 90 = -45 degrees
                 0.76,                        // From ElevatorConstants.sourceGoal
                 wristStraight,              // From WristConstants.pos2 (straight)
                 GeneralConstants.getStations()[i]
@@ -68,7 +68,7 @@ public final class SwerveSystemConstants {
         for (int i = 0; i < baseAlgaeStates.length; i++) {
             boolean isLow = Reef.isAlgaeLow(i);
             baseAlgaeStates[i] = new SwerveSystem.SwerveSystemState(
-                Units.degreesToRadians(isLow ? 30 : 120),  // From ArmConstants.algaeGoal
+                Units.degreesToRadians(isLow ? -60 : 30),  // 30 - 90 = -60, 120 - 90 = 30
                 0.35,                                       // From ElevatorConstants.algaeGoal
                 wristStraight,                             // From WristConstants.pos2 (straight)
                 GeneralConstants.getCenterReef()[i]
@@ -78,10 +78,10 @@ public final class SwerveSystemConstants {
         // Initialize scoring states
         baseScoringStates = new SwerveSystem.SwerveSystemState[4][GeneralConstants.sides*2];
         double[] armAngles = {
-            Units.degreesToRadians(135),  // L1
-            Units.degreesToRadians(135),  // L2
-            Units.degreesToRadians(135),  // L3
-            Units.degreesToRadians(120)   // L4
+            Units.degreesToRadians(45),   // L1 (135 - 90)
+            Units.degreesToRadians(45),   // L2 (135 - 90)
+            Units.degreesToRadians(45),   // L3 (135 - 90)
+            Units.degreesToRadians(30)    // L4 (120 - 90)
         };
         double[] elevatorHeights = {
             0.06,  // L1

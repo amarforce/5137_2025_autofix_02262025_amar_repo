@@ -10,7 +10,7 @@ public class ArmConstants {
     public static final int motorId = Robot.isSimulation()?22:2;
 
     // Encoder transform
-    public static final double armOffset = -Math.PI/2;
+    public static final double armOffset = 0;
     public static final double gearRatio = 31.5;
     public static final MotorTransform transform = new MotorTransform((2*Math.PI)/gearRatio, armOffset);
     
@@ -20,7 +20,7 @@ public class ArmConstants {
     public static final double kD = 0.05;
 
     // Feedforward constants
-    public static final double kS = 0.0;
+    public static final double kS = Robot.isSimulation() ? 0.0 : 0.0;
     public static final double kG = 1.67;
     public static final double kV = 0.0;
     public static final double kA = 0.0;
@@ -29,8 +29,8 @@ public class ArmConstants {
     public static final double armTolerance = Units.degreesToRadians(1);
     
     // Simulation constants
-    public static final double minAngle = Units.degreesToRadians(0);
-    public static final double maxAngle = Units.degreesToRadians(135);
+    public static final double minAngle = Units.degreesToRadians(-90);
+    public static final double maxAngle = Units.degreesToRadians(45);
     public static final double momentOfInertia = 1.2;
     public static final double armLength = 0.594;
     public static final DCMotor motorSim = DCMotor.getKrakenX60(1);

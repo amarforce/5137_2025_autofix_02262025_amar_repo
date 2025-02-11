@@ -95,8 +95,6 @@ public class Wrist extends SubsystemBase {
         currentConfigs.Inverted = InvertedValue.Clockwise_Positive;
         wristMotor.getConfigurator().apply(currentConfigs);
 
-        wristMotor.setPosition(0.0);
-
         // Set the tolerance for the PID controller
         controller.setTolerance(WristConstants.wristTolerance);
         
@@ -104,6 +102,10 @@ public class Wrist extends SubsystemBase {
         SmartDashboard.putData("wrist/controller", controller);
 
         this.arm = arm;
+    }
+
+    public void resetPos(){
+        wristMotor.setPosition(0.0);
     }
 
     /**
@@ -222,7 +224,7 @@ public class Wrist extends SubsystemBase {
             telemetry();
         
             // Calculate PID control outputs
-            double feed = feedforward.calculate(getAdjustedMeasurement(), getVelocity());
+            double feed = feedforward.calculate(getAdjustedGoal()+Math.PI/2, 0);
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor

@@ -135,7 +135,7 @@ public class Wrist extends SubsystemBase {
      * @return The current true position of the wrist in radians.
      */
     public double getAdjustedMeasurement() {
-        return arm.getMeasurement() + this.getMeasurement() - WristConstants.feedOffset;
+        return this.getMeasurement() - arm.getMeasurement() - WristConstants.feedOffset;
     }
     
     /**
@@ -239,7 +239,7 @@ public class Wrist extends SubsystemBase {
             // Calculate PID control outputs
             double time = Timer.getFPGATimestamp();
             State state = controller.getSetpoint();
-            double feed = feedforward.calculate(state.position, state.velocity, (state.velocity-lastSpeed)/(time-lastTime));
+            double feed = feedforward.calculate(state.position - arm.getMeasurement() + WristConstants.feedOffset, state.velocity, (state.velocity-lastSpeed)/(time-lastTime));
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor

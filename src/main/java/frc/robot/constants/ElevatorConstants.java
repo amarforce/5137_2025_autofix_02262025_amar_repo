@@ -1,7 +1,6 @@
 package frc.robot.constants;
 
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.util.Units;
 import frc.robot.Robot;
 import frc.robot.other.MotorTransform;
 

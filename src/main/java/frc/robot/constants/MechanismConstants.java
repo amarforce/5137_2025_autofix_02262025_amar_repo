@@ -14,4 +14,8 @@ public class MechanismConstants {
     public static final Color8Bit elevatorColor = new Color8Bit(0,0,255);
     public static final Color8Bit armColor = new Color8Bit(255, 0, 0);
     public static final Color8Bit wristColor = new Color8Bit(0,255,0);
+
+    public static final Color8Bit elevatorGoalColor = new Color8Bit(0,0,100);
+    public static final Color8Bit armGoalColor = new Color8Bit(100, 0, 0);
+    public static final Color8Bit wristGoalColor = new Color8Bit(0,100,0);
 }

@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.MechanismConstants;
+import frc.robot.constants.WristConstants;
 import frc.robot.constants.ArmConstants;
 import frc.robot.constants.ArmSystemConstants;
 
@@ -46,6 +47,9 @@ public class ArmSystem extends SubsystemBase {
     // Mechanism2d visualization components
     private final Mechanism2d mech2d = new Mechanism2d(MechanismConstants.mechWidth, MechanismConstants.mechHeight);
     private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Elevator Root", MechanismConstants.mechWidth / 2, 0);
+    private final MechanismLigament2d elevatorGoalMech2d = mech2dRoot.append(new MechanismLigament2d("ElevatorGoal", 0, 90));
+    private final MechanismLigament2d armGoalMech2d = elevatorGoalMech2d.append(new MechanismLigament2d("ArmGoal", MechanismConstants.armLength, 0));
+    private final MechanismLigament2d wristGoalMech2d = armGoalMech2d.append(new MechanismLigament2d("WristGoal", MechanismConstants.wristLength, 0));
     private final MechanismLigament2d elevatorMech2d = mech2dRoot.append(new MechanismLigament2d("Elevator", 0, 90));
     private final MechanismLigament2d armMech2d = elevatorMech2d.append(new MechanismLigament2d("Arm", MechanismConstants.armLength, 0));
     private final MechanismLigament2d wristMech2d = armMech2d.append(new MechanismLigament2d("Wrist", MechanismConstants.wristLength, 0));
@@ -68,6 +72,10 @@ public class ArmSystem extends SubsystemBase {
         this.wrist = wrist;
 
         // Set the colors for the mechanism components
+        elevatorGoalMech2d.setColor(MechanismConstants.elevatorGoalColor);
+        armGoalMech2d.setColor(MechanismConstants.armGoalColor);
+        wristGoalMech2d.setColor(MechanismConstants.wristGoalColor);
+
         elevatorMech2d.setColor(MechanismConstants.elevatorColor);
         armMech2d.setColor(MechanismConstants.armColor);
         wristMech2d.setColor(MechanismConstants.wristColor);
@@ -83,13 +91,16 @@ public class ArmSystem extends SubsystemBase {
     @Override
     public void periodic() {
         // Update the length of the elevator visualization based on its current height
+        elevatorGoalMech2d.setLength((elevator.getGoal() / (ElevatorConstants.maxHeight * 2) + 0.25) * MechanismConstants.mechHeight);
         elevatorMech2d.setLength((elevator.getMeasurement() / (ElevatorConstants.maxHeight * 2) + 0.25) * MechanismConstants.mechHeight);
 
         // Update the angle of the arm visualization based on its current angle
-        armMech2d.setAngle(Units.radiansToDegrees(arm.getMeasurement() - Math.PI / 2));
+        armGoalMech2d.setAngle(Units.radiansToDegrees(arm.getGoal() + ArmConstants.armOffset));
+        armMech2d.setAngle(Units.radiansToDegrees(arm.getMeasurement() + ArmConstants.armOffset));
 
         // Update the angle of the wrist visualization based on its current angle
-        wristMech2d.setAngle(Units.radiansToDegrees(wrist.getMeasurement() - Math.PI / 2));
+        wristGoalMech2d.setAngle(Units.radiansToDegrees(wrist.getGoal() + WristConstants.wristOffset));
+        wristMech2d.setAngle(Units.radiansToDegrees(wrist.getMeasurement() + WristConstants.wristOffset));
 
         firstStagePosePublisher.set(new Pose3d(0,0,elevator.getMeasurement()/2,new Rotation3d()));
         Translation3d elevatorTrans=new Translation3d(0,0,elevator.getMeasurement());

@@ -221,7 +221,7 @@ public class Elevator extends SubsystemBase {
         try{
             telemetry();
 
-            double feed = feedforward.calculate(0,0);
+            double feed = feedforward.calculate(0);
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor

@@ -3,6 +3,7 @@ package frc.robot.constants;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.SwerveSystem;
+import frc.robot.elastic.Reef;
 
 /**
  * Constants for coordinated positions of the arm, elevator, and wrist mechanisms.
@@ -19,72 +20,63 @@ public final class SwerveSystemConstants {
     private static final double wristDown = Units.degreesToRadians(0);
 
     // Basic states without specific robot positions
-    public static SwerveSystem.SwerveSystemState groundIntake=new SwerveSystem.SwerveSystemState(
+    private static final SwerveSystem.SwerveSystemState baseGroundIntake = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(0),  // From ArmConstants.groundIntakeGoal
         0.26,                       // From ElevatorConstants.groundIntakeGoal
         wristDown,                  // From WristConstants.pos1 (down)
         null                        // Robot position determined at runtime
     );
 
-    public static final SwerveSystem.SwerveSystemState defaultState = new SwerveSystem.SwerveSystemState(
+    private static final SwerveSystem.SwerveSystemState baseDefaultState = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(90),  // From ArmConstants.defaultGoal
         0.0,                         // From ElevatorConstants.defaultGoal
         wristDown,                   // From WristConstants.pos1 (down)
         null                         // Robot position determined at runtime
     );
 
-    // Processor state
-    public static SwerveSystem.SwerveSystemState processor;
-
-    // Source states - one for each station position
-    public static SwerveSystem.SwerveSystemState[] sourceStates;
-
-    // Algae states - one for each reef position, alternating between low and high
-    public static SwerveSystem.SwerveSystemState[] algaeStates;
-
-    // Scoring states - one for each reef position (left and right) and level (L1-L4)
-    // First index is level (0=L1, 1=L2, 2=L3, 3=L4), second index is position
-    public static SwerveSystem.SwerveSystemState[][] scoringStates;
-
-    
+    // Base states (without alliance inversion)
+    private static final SwerveSystem.SwerveSystemState baseProcessor;
+    private static final SwerveSystem.SwerveSystemState[] baseSourceStates;
+    private static final SwerveSystem.SwerveSystemState[] baseAlgaeStates;
+    private static final SwerveSystem.SwerveSystemState[][] baseScoringStates;
 
     // Offset for the arm pivot in AdvantageScope simulation
     public static final Translation3d armTransOffset = new Translation3d(0.11,-0.18,0.26);
 
-    public static void init(){
-        processor = new SwerveSystem.SwerveSystemState(
+    static {
+        // Initialize processor state
+        baseProcessor = new SwerveSystem.SwerveSystemState(
             Units.degreesToRadians(75),
             1.26,
             wristStraight,
-            GeneralConstants.processor    // Processor position
+            GeneralConstants.getProcessor()
         );
 
-        sourceStates=new SwerveSystem.SwerveSystemState[GeneralConstants.stations.length];
         // Initialize source states
-        for (int i = 0; i < sourceStates.length; i++) {
-            sourceStates[i] = new SwerveSystem.SwerveSystemState(
+        baseSourceStates = new SwerveSystem.SwerveSystemState[GeneralConstants.sides * 2 / 3];
+        for (int i = 0; i < baseSourceStates.length; i++) {
+            baseSourceStates[i] = new SwerveSystem.SwerveSystemState(
                 Units.degreesToRadians(45),  // From ArmConstants.sourceGoal
                 0.76,                        // From ElevatorConstants.sourceGoal
                 wristStraight,              // From WristConstants.pos2 (straight)
-                GeneralConstants.stations[i] // Station position
+                GeneralConstants.getStations()[i]
             );
         }
 
-        algaeStates=new SwerveSystem.SwerveSystemState[GeneralConstants.sides];
         // Initialize algae states
-        for (int i = 0; i < algaeStates.length; i++) {
-            // Use Reef.isAlgaeLow to determine if this side should be low or high
-            boolean isLow = frc.robot.elastic.Reef.isAlgaeLow(i);
-            algaeStates[i] = new SwerveSystem.SwerveSystemState(
+        baseAlgaeStates = new SwerveSystem.SwerveSystemState[GeneralConstants.sides];
+        for (int i = 0; i < baseAlgaeStates.length; i++) {
+            boolean isLow = Reef.isAlgaeLow(i);
+            baseAlgaeStates[i] = new SwerveSystem.SwerveSystemState(
                 Units.degreesToRadians(isLow ? 30 : 120),  // From ArmConstants.algaeGoal
                 0.35,                                       // From ElevatorConstants.algaeGoal
                 wristStraight,                             // From WristConstants.pos2 (straight)
-                GeneralConstants.centerReef[i]             // Center reef position
+                GeneralConstants.getCenterReef()[i]
             );
         }
 
-        scoringStates=new SwerveSystem.SwerveSystemState[4][GeneralConstants.sides*2];
         // Initialize scoring states
+        baseScoringStates = new SwerveSystem.SwerveSystemState[4][GeneralConstants.sides*2];
         double[] armAngles = {
             Units.degreesToRadians(135),  // L1
             Units.degreesToRadians(135),  // L2
@@ -98,15 +90,76 @@ public final class SwerveSystemConstants {
             1.26   // L4
         };
 
-        for (int level = 0; level < scoringStates.length; level++) {
-            for (int pos = 0; pos < scoringStates[level].length; pos++) {
-                scoringStates[level][pos] = new SwerveSystem.SwerveSystemState(
+        for (int level = 0; level < baseScoringStates.length; level++) {
+            for (int pos = 0; pos < baseScoringStates[level].length; pos++) {
+                baseScoringStates[level][pos] = new SwerveSystem.SwerveSystemState(
                     armAngles[level],
                     elevatorHeights[level],
-                    wristStraight,               // Scoring wrist position (straight)
-                    GeneralConstants.branchReef[pos] // All reef positions (left and right)
+                    wristStraight,
+                    GeneralConstants.getBranchReef()[pos]
                 );
             }
         }
+    }
+
+    public static SwerveSystem.SwerveSystemState getGroundIntake() {
+        return baseGroundIntake;
+    }
+
+    public static SwerveSystem.SwerveSystemState getDefaultState() {
+        return baseDefaultState;
+    }
+
+    public static SwerveSystem.SwerveSystemState getProcessor() {
+        return new SwerveSystem.SwerveSystemState(
+            baseProcessor.armPosition,
+            baseProcessor.elevatorPosition,
+            baseProcessor.wristPosition,
+            GeneralConstants.getProcessor()
+        );
+    }
+
+    public static SwerveSystem.SwerveSystemState[] getSourceStates() {
+        SwerveSystem.SwerveSystemState[] states = new SwerveSystem.SwerveSystemState[baseSourceStates.length];
+        var stations = GeneralConstants.getStations();
+        for (int i = 0; i < states.length; i++) {
+            states[i] = new SwerveSystem.SwerveSystemState(
+                baseSourceStates[i].armPosition,
+                baseSourceStates[i].elevatorPosition,
+                baseSourceStates[i].wristPosition,
+                stations[i]
+            );
+        }
+        return states;
+    }
+
+    public static SwerveSystem.SwerveSystemState[] getAlgaeStates() {
+        SwerveSystem.SwerveSystemState[] states = new SwerveSystem.SwerveSystemState[baseAlgaeStates.length];
+        var centerReef = GeneralConstants.getCenterReef();
+        for (int i = 0; i < states.length; i++) {
+            states[i] = new SwerveSystem.SwerveSystemState(
+                baseAlgaeStates[i].armPosition,
+                baseAlgaeStates[i].elevatorPosition,
+                baseAlgaeStates[i].wristPosition,
+                centerReef[i]
+            );
+        }
+        return states;
+    }
+
+    public static SwerveSystem.SwerveSystemState[][] getScoringStates() {
+        SwerveSystem.SwerveSystemState[][] states = new SwerveSystem.SwerveSystemState[baseScoringStates.length][baseScoringStates[0].length];
+        var branchReef = GeneralConstants.getBranchReef();
+        for (int level = 0; level < states.length; level++) {
+            for (int pos = 0; pos < states[level].length; pos++) {
+                states[level][pos] = new SwerveSystem.SwerveSystemState(
+                    baseScoringStates[level][pos].armPosition,
+                    baseScoringStates[level][pos].elevatorPosition,
+                    baseScoringStates[level][pos].wristPosition,
+                    branchReef[pos]
+                );
+            }
+        }
+        return states;
     }
 } 

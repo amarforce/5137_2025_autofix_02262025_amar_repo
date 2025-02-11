@@ -30,105 +30,97 @@ import frc.robot.constants.SwerveConstants;
 
 @SuppressWarnings("unused")
 public class RobotContainer {
-	// Controllers for driver and operator
+	// Controllers
 	private CommandPS5Controller driver;
 	private CommandPS5Controller operator;
 
-	// Subsystems
+	// Subsystems and their commands
 	private Vision vision;
 	private Swerve swerve;
-	private Elevator elevator;
-	private Arm arm;
-	private Wrist wrist;
-	private Intake intake;
-	private Hang hang;
+	private SwerveCommands swerveCommands;
 	private SwerveSystem swerveSystem;
+	private SwerveSystemCommands swerveSystemCommands;
+
+	private Elevator elevator;
+	private ElevatorCommands elevatorCommands;
+
+	private Arm arm;
+	private ArmCommands armCommands;
+
+	private Wrist wrist;
+	private WristCommands wristCommands;
+
+	private Intake intake;
+	private IntakeCommands intakeCommands;
+
+	private Hang hang;
+	private HangCommand hangCommand;
+
 	private LED led;
 
-
-	// Commands for each subsystem
-	private SwerveCommands swerveCommands;
-	private ElevatorCommands elevatorCommands;
-	private ArmCommands armCommands;
-	private WristCommands wristCommands;
-	private IntakeCommands intakeCommands;
-	private HangCommand hangCommand;
-	private SwerveSystemCommands swerveSystemCommands;
 	private MultiCommands multiCommands;
 
 	// Additional components
 	private Reef reef;
 	private ReefScoring reefScoring;
-
 	private CageChoice cageChoice;
-
-	// Factory for autonomous commands
 	private AutoFactory autoFactory;
-
-	private StringLogEntry log;
 
 	/**
 	 * Constructor for RobotContainer.
 	 * Initializes all subsystems, commands, and binds controls.
 	 */
 	public RobotContainer() {
-		// Start data log
 		DataLogManager.start();
 
-		try{
-			// Initialize controllers
-			driver = new CommandPS5Controller(0);
-			operator = new CommandPS5Controller(1);
-
-			// Initialize Reef and ReefScoring components
-			reef = new Reef();
-			reefScoring = new ReefScoring(reef);
-			SmartDashboard.putData("reef", reef);
-			SmartDashboard.putData("reefScoring", reefScoring);
-
-			// // Initialize subsystems with data log
-			vision = new Vision(reef);
-			swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision);
-			elevator = new Elevator();
-			arm = new Arm();
-			wrist = new Wrist();
-			intake = new Intake();
-			hang = new Hang();
-			swerveSystem = new SwerveSystem(arm, elevator, wrist, swerve);
-			led = new LED();
-
-
-			// Initialize commands for each subsystem
-			swerveCommands = new SwerveCommands(swerve);
-			elevatorCommands = new ElevatorCommands(elevator);
-			armCommands = new ArmCommands(arm);
-			wristCommands = new WristCommands(wrist);
-			intakeCommands = new IntakeCommands(intake);
-			hangCommand = new HangCommand(hang);
-			swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
-			multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommand);
-
-
-			// Initialize cage choice
-			cageChoice = new CageChoice();
+		try {
+			initControllers();
 			
-			// Configure button bindings
-			configureBindings();
-
-			// Initialize autonomous command factory
-			autoFactory = new AutoFactory(multiCommands);
+			// Configure emergency stop - this should always be available
+			driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 			
-		}catch(Exception e){
-			log.append("Error while initializing: "+RobotUtils.getError(e));
+			initReef();
+			
+			// Initialize subsystems
+			initVision();
+			initSwerve();
+			initElevator();
+			initArm();
+			initWrist();
+			initIntake();
+			initHang();
+			initLED();
+			
+			// Initialize combined systems and commands
+			initSwerveSystem();
+			initMultiCommands();
+			initAdditionalComponents();
+		} catch (Exception e) {
+			DataLogManager.log("Error while initializing: " + RobotUtils.getError(e));
 		}
 	}
 
-	/**
-	 * Configures button bindings for driver and operator controllers.
-	 */
-	private void configureBindings() {
-		//Driver Bindings
-		// Set default command for swerve to drive with joystick inputs
+	private void initControllers() {
+		driver = new CommandPS5Controller(0);
+		operator = new CommandPS5Controller(1);
+	}
+
+	private void initReef() {
+		reef = new Reef();
+		reefScoring = new ReefScoring(reef);
+		SmartDashboard.putData("reef", reef);
+		SmartDashboard.putData("reefScoring", reefScoring);
+	}
+
+	private void initVision() {
+		vision = new Vision(reef);
+	}
+
+	private void initSwerve() {
+		swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision);
+		swerveCommands = new SwerveCommands(swerve);
+
+		// Configure swerve bindings
 		swerve.setDefaultCommand(swerveCommands.drive(
 			() -> -driver.getLeftY(), 
 			() -> -driver.getLeftX(), 
@@ -136,67 +128,88 @@ public class RobotContainer {
 			() -> true)
 		);
 
-		// Bind cross button to lock swerve
 		driver.cross().whileTrue(swerveCommands.lock());
+		driver.options().onTrue(swerveCommands.resetGyro());
 
-		// Bind buttons to drive to specific locations
-		driver.triangle().onTrue(swerveSystemCommands.moveToSource());
-		//driver.square().onTrue(swerveCommands.driveToPoseStaticFixed(()->cageChoice.getCage()));
-		driver.circle().onTrue(swerveSystemCommands.moveToProcessor());
-
-		// Bind D-pad buttons to drive to specific reef positions
+		// Commented out reef position bindings
 		// driver.povLeft().onTrue(swerveCommands.driveToReefLeft());
 		// driver.povUp().onTrue(swerveCommands.driveToReefCenter());
 		// driver.povRight().onTrue(swerveCommands.driveToReefRight());
+	}
 
-		// Bind options button to reset gyro
-		driver.options().onTrue(swerveCommands.resetGyro());
+	private void initElevator() {
+		elevator = new Elevator();
+		elevatorCommands = new ElevatorCommands(elevator);
 
-		/*
-		// Example of SysId bindings (commented out)
-		driver.povUp().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineTranslation)));
-		driver.povLeft().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineSteer)));
-		driver.povRight().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineRotation)));
-		driver.options().and(driver.povDown().negate()).whileTrue(swerveCommands.sysIdDynamic(Direction.kForward));
-		driver.options().and(driver.povDown()).whileTrue(swerveCommands.sysIdDynamic(Direction.kForward));
-		driver.create().and(driver.povDown().negate()).whileTrue(swerveCommands.sysIdQuasistatic(Direction.kReverse));
-		driver.create().and(driver.povDown()).whileTrue(swerveCommands.sysIdQuasistatic(Direction.kReverse));
-		*/
-
-		// Bind touchpad to cancel all commands
-		driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
-
-		// For testing: Set default commands for elevator and arm with joystick inputs
-		arm.setDefaultCommand(armCommands.changeGoal(() -> -operator.getRightX() / 50));
+		// Configure elevator bindings
 		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -operator.getLeftY() / 50));
+	}
+
+	private void initArm() {
+		arm = new Arm();
+		armCommands = new ArmCommands(arm);
+
+		// Configure arm bindings
+		arm.setDefaultCommand(armCommands.changeGoal(() -> -operator.getRightX() / 50));
+	}
+
+	private void initWrist() {
+		wrist = new Wrist();
+		wristCommands = new WristCommands(wrist);
+
+		// Configure wrist bindings
 		operator.L1().onTrue(wristCommands.changeGoal(() -> Math.toRadians(-5)));
 		operator.R1().onTrue(wristCommands.changeGoal(() -> Math.toRadians(5)));
+	}
 
-		//operator.axisLessThan(0,0).onTrue(multiCommands.placeCoral(0));
+	private void initIntake() {
+		intake = new Intake();
+		intakeCommands = new IntakeCommands(intake);
 
-		// Operator Bindings
-
-		// Bind buttons to move to specific goals
-		
-		operator.triangle().onTrue(swerveSystemCommands.moveToLevel(3)); // L1
-		operator.circle().onTrue(swerveSystemCommands.moveToLevel(2)); // L2
-		operator.square().onTrue(swerveSystemCommands.moveToLevel(1)); // L3
-		operator.cross().onTrue(swerveSystemCommands.moveToLevel(0)); // L4
-
-
-
-		// Bind L2 button to outtake and stop intake
+		// Configure intake bindings
 		operator.L2()
 			.onTrue(intakeCommands.outtake())
 			.onFalse(intakeCommands.stop());
 
-		// Bind R2 button to intake until switched and stop intake
 		operator.R2()
 			.onTrue(intakeCommands.intakeUntilSwitched())
 			.onFalse(intakeCommands.stop());
+	}
 
-		// Bind touchpad to execute hang command
+	private void initHang() {
+		hang = new Hang();
+		hangCommand = new HangCommand(hang);
+
+		// Configure hang bindings
 		operator.touchpad().onTrue(hangCommand);
+	}
+
+	private void initLED() {
+		led = new LED();
+	}
+
+	private void initSwerveSystem() {
+		swerveSystem = new SwerveSystem(arm, elevator, wrist, swerve);
+		swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
+
+		// Configure swerve system bindings
+		driver.triangle().onTrue(swerveSystemCommands.moveToSource());
+		driver.circle().onTrue(swerveSystemCommands.moveToProcessor());
+		//driver.square().onTrue(swerveCommands.driveToPoseStaticFixed(()->cageChoice.getCage()));
+
+		operator.triangle().onTrue(swerveSystemCommands.moveToLevel(3));
+		operator.circle().onTrue(swerveSystemCommands.moveToLevel(2));
+		operator.square().onTrue(swerveSystemCommands.moveToLevel(1));
+		operator.cross().onTrue(swerveSystemCommands.moveToLevel(0));
+	}
+
+	private void initMultiCommands() {
+		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommand);
+	}
+
+	private void initAdditionalComponents() {
+		cageChoice = new CageChoice();
+		autoFactory = new AutoFactory(multiCommands);
 	}
 
 	/**
@@ -205,6 +218,9 @@ public class RobotContainer {
 	 * @return The autonomous command
 	 */
 	public Command getAutonomousCommand() {
-		return autoFactory.getAuto();
+		if(autoFactory!=null){
+			return autoFactory.getAuto();
+		}
+		return new InstantCommand();
 	}
 }

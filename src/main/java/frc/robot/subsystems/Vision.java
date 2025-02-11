@@ -131,9 +131,10 @@ public class Vision extends SubsystemBase {
         double closestDist = VisionConstants.objectMarginOfError;
         int closestBranch = -1;
         int closestLevel = -1;
-        for (int branch = 0; branch < GeneralConstants.coralPositions.length; branch++) {
-            for (int level = 0; level < GeneralConstants.coralPositions[branch].length; level++) {
-                Translation3d pos = GeneralConstants.coralPositions[branch][level];
+        Translation3d[][] coralPositions = GeneralConstants.getCoralPositions();
+        for (int branch = 0; branch < coralPositions.length; branch++) {
+            for (int level = 0; level < coralPositions[branch].length; level++) {
+                Translation3d pos = coralPositions[branch][level];
                 double dist = target3d.minus(pos).getNorm();
                 if (dist < closestDist) {
                     closestDist = dist;

@@ -73,13 +73,13 @@ public class AutoStep {
 
         // Initialize the pickup chooser with default and additional options
         pickupChooser = new SendableChooser<Pose2d>();
-        pickupChooser.setDefaultOption("RightStation Right", GeneralConstants.stationRR);
-        pickupChooser.addOption("RightStation Left", GeneralConstants.stationRL);
-        pickupChooser.addOption("LeftStation Right", GeneralConstants.stationLR);
-        pickupChooser.addOption("LeftStation Left", GeneralConstants.stationLL);
-        pickupChooser.addOption("Left Ground", GeneralConstants.leftPickup);
-        pickupChooser.addOption("Center Ground", GeneralConstants.centerPickup);
-        pickupChooser.addOption("Right Ground", GeneralConstants.rightPickup);
+        pickupChooser.setDefaultOption("RightStation Right", GeneralConstants.getStations()[0]);
+        pickupChooser.addOption("RightStation Left", GeneralConstants.getStations()[1]);
+        pickupChooser.addOption("LeftStation Right", GeneralConstants.getStations()[2]);
+        pickupChooser.addOption("LeftStation Left", GeneralConstants.getStations()[3]);
+        pickupChooser.addOption("Left Ground", GeneralConstants.getPickups()[0]);
+        pickupChooser.addOption("Center Ground", GeneralConstants.getPickups()[1]);
+        pickupChooser.addOption("Right Ground", GeneralConstants.getPickups()[2]);
         SmartDashboard.putData("pickupChoices/" + id, pickupChooser);
     }
 

@@ -103,7 +103,7 @@ public class RobotContainer {
 
 
 			// Initialize commands for each subsystem
-			//swerveCommands = new SwerveCommands(swerve);
+			swerveCommands = new SwerveCommands(swerve);
 			elevatorCommands = new ElevatorCommands(elevator);
 			armCommands = new ArmCommands(arm);
 			wristCommands = new WristCommands(wrist);

@@ -147,6 +147,15 @@ public class Elevator extends SubsystemBase {
     }
 
     /**
+     * Gets the current acceleration of the elevator.
+     * 
+     * @return The current acceleration in meters per second^2.
+     */
+    public double getAcceleration() {
+        return ElevatorConstants.transform.transformVel((leftMotor.getAcceleration().getValueAsDouble() + rightMotor.getAcceleration().getValueAsDouble()) / 2);
+    }
+
+    /**
      * Checks if the elevator is at the setpoint.
      * 
      * @return True if the elevator is at the setpoint, false otherwise.
@@ -210,7 +219,7 @@ public class Elevator extends SubsystemBase {
         try{
             telemetry();
             // Calculate the feedforward and PID output
-            double feed = feedforward.calculate(getVelocity());
+            double feed = feedforward.calculate(getVelocity(), getAcceleration());
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             setVoltage(Volts.of(voltage));
         }catch(Exception e){

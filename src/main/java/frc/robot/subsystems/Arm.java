@@ -201,7 +201,7 @@ public class Arm extends SubsystemBase {
             telemetry();
             
             // Calculate feedforward and PID control outputs
-            double feed = feedforward.calculate(getMeasurement(), getVelocity());
+            double feed = feedforward.calculate(getMeasurement(), getVelocity(), getAcceleration());
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor

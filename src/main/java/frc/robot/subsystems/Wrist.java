@@ -6,10 +6,13 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
@@ -38,7 +41,7 @@ public class Wrist extends SubsystemBase {
     private TalonFX wristMotor = new TalonFX(WristConstants.motorId, "rio");
     
     // PID controller for Wrist position control
-    private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
+    private ProfiledPIDController controller = new ProfiledPIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD, new Constraints(WristConstants.maxVelocity, WristConstants.maxAcceleration));
 
     // Feedforward controller for arm dynamics
     private ArmFeedforward feedforward = new ArmFeedforward(WristConstants.kS, WristConstants.kG, WristConstants.kV);
@@ -88,6 +91,10 @@ public class Wrist extends SubsystemBase {
     private Arm arm;
 
     private StringLogEntry log;
+
+    // Used for calculating acceleration
+    private double lastSpeed;
+    private double lastTime;
         
     /**
      * Constructor for the Wrist subsystem.
@@ -106,6 +113,9 @@ public class Wrist extends SubsystemBase {
 
         this.arm=arm;
         this.log=log;
+
+        lastSpeed = 0.0;
+        lastTime = 0.0;
 
         //wristMotor.setPosition(0.0);
     }
@@ -206,7 +216,8 @@ public class Wrist extends SubsystemBase {
         SmartDashboard.putNumber("wrist/angle",getMeasurement());
         SmartDashboard.putNumber("wrist/goal",getGoal());
         SmartDashboard.putNumber("wrist/velocity",getVelocity());
-        SmartDashboard.putNumber("wrist/error",controller.getError());
+        SmartDashboard.putNumber("wrist/positionError",controller.getPositionError());
+        SmartDashboard.putNumber("wrist/velocityError",controller.getVelocityError());
         SmartDashboard.putNumber("wrist/motor/rawAngle",wristMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("wrist/motor/temp",wristMotor.getDeviceTemp().getValueAsDouble());
         SmartDashboard.putNumber("wrist/motor/fault",wristMotor.getFaultField().asSupplier().get());
@@ -221,20 +232,26 @@ public class Wrist extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        //try {
+        try {
             // Update telemetry
             telemetry();
         
             // Calculate PID control outputs
-            double feed = feedforward.calculate(getAdjustedMeasurement(), getVelocity());
+            double time = Timer.getFPGATimestamp();
+            State state = controller.getSetpoint();
+            double feed = feedforward.calculate(state.position, state.velocity, (state.velocity-lastSpeed)/(time-lastTime));
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
+
+            // Keep track of previous values to calculate acceleration
+            lastSpeed = state.velocity;
+            lastSpeed = time;
             
-        /*} catch (Exception e) {
+        } catch (Exception e) {
             log.append("Periodic error: " + RobotUtils.getError(e));
-        }*/
+        }
 
     }
 

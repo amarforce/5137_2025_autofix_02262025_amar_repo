@@ -104,6 +104,9 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putData("elevator/controller", controller);
 
         this.log=log;
+
+        //leftMotor.setPosition(0.0);
+        //rightMotor.setPosition(0.0);
     }
 
     /**

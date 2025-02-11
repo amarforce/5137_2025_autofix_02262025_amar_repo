@@ -17,7 +17,7 @@ public class ArmConstants {
     // PID constants
     public static final double kP = 2.0;
     public static final double kI = 0;
-    public static final double kD = 0.05;
+    public static final double kD = 0.5;
 
     // Feedforward constants
     public static final double kS = 0.135;
@@ -29,7 +29,7 @@ public class ArmConstants {
     public static final double armTolerance = Units.degreesToRadians(1);
     
     // Simulation constants
-    public static final double minAngle = Units.degreesToRadians(0);
+    public static final double minAngle = Units.degreesToRadians(-45);
     public static final double maxAngle = Units.degreesToRadians(135);
     public static final double momentOfInertia = 1.2;
     public static final double armLength = 0.594;

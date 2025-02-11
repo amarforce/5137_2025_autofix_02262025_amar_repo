@@ -230,7 +230,7 @@ public class Wrist extends SubsystemBase {
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
-            //setVoltage(Volts.of(voltage));
+            setVoltage(Volts.of(voltage));
             
         /*} catch (Exception e) {
             log.append("Periodic error: " + RobotUtils.getError(e));

@@ -1,7 +1,9 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -17,10 +19,10 @@ import frc.robot.other.RobotUtils;
  */
 public class Intake extends SubsystemBase {
     // Motor controller for the intake mechanism
-    private SparkMax intakeMotor;
+    private TalonFX intakeMotor;
 
     // Limit switch to detect the position of the intake
-    private DigitalInput limitSwitch;
+    //sprivate DigitalInput limitSwitch;
 
     private StringLogEntry log;
 
@@ -29,10 +31,14 @@ public class Intake extends SubsystemBase {
      */
     public Intake(StringLogEntry log) {
         // Initialize the motor controller with the ID and type from constants
-        intakeMotor = new SparkMax(IntakeConstants.motorId, MotorType.kBrushless);
+        intakeMotor = new TalonFX(IntakeConstants.motorId, "rio");
 
         // Initialize the limit switch with the channel from constants
-        limitSwitch = new DigitalInput(IntakeConstants.switchChannel);
+        //limitSwitch = new DigitalInput(IntakeConstants.switchChannel);
+        var currentConfigs = new MotorOutputConfigs();
+        currentConfigs.NeutralMode = NeutralModeValue.Coast;
+        currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
+        intakeMotor.getConfigurator().apply(currentConfigs);
 
         this.log=log;
     }
@@ -59,7 +65,8 @@ public class Intake extends SubsystemBase {
      * @return True if the limit switch is triggered, false otherwise.
      */
     public boolean isSwitched() {
-        return limitSwitch.get();
+        //return limitSwitch.get();
+        return false;
     }
 
     /**
@@ -67,12 +74,12 @@ public class Intake extends SubsystemBase {
      * This method is intended to be called periodically to record data.
      */
     public void telemetry(){
-        SmartDashboard.putNumber("intake/speed",intakeMotor.get());
-        SmartDashboard.putNumber("intake/appliedOutput",intakeMotor.getAppliedOutput());
-        SmartDashboard.putNumber("intake/busVoltage",intakeMotor.getBusVoltage());
-        SmartDashboard.putNumber("intake/motorTemp",intakeMotor.getMotorTemperature());
-        SmartDashboard.putNumber("intake/outputCurrent",intakeMotor.getOutputCurrent());
-        SmartDashboard.putBoolean("intake/isSwitched",isSwitched());
+        // SmartDashboard.putNumber("intake/speed",intakeMotor.get());
+        // SmartDashboard.putNumber("intake/appliedOutput",intakeMotor.getAppliedOutput());
+        // SmartDashboard.putNumber("intake/busVoltage",intakeMotor.getBusVoltage());
+        // SmartDashboard.putNumber("intake/motorTemp",intakeMotor.getMotorTemperature());
+        // SmartDashboard.putNumber("intake/outputCurrent",intakeMotor.getOutputCurrent());
+        // SmartDashboard.putBoolean("intake/isSwitched",isSwitched());
     }
 
     @Override

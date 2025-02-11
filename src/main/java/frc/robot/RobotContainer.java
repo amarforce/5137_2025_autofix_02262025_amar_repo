@@ -37,7 +37,7 @@ public class RobotContainer {
 
 	// Subsystems
 	private Vision vision;
-	//private Swerve swerve;
+	private Swerve swerve;
 	private Elevator elevator;
 	private Arm arm;
 	private Wrist wrist;
@@ -47,14 +47,14 @@ public class RobotContainer {
 	private LED led;
 
 	// Commands for each subsystem
-	//private SwerveCommands swerveCommands;
+	private SwerveCommands swerveCommands;
 	private ElevatorCommands elevatorCommands;
 	private ArmCommands armCommands;
 	private WristCommands wristCommands;
 	private IntakeCommands intakeCommands;
 	private HangCommand hangCommand;
 	private ArmSystemCommands armSystemCommands;
-	//private MultiCommands multiCommands;
+	private MultiCommands multiCommands;
 
 	// Additional components
 	private Reef reef;
@@ -63,7 +63,7 @@ public class RobotContainer {
 	private CageChoice cageChoice;
 
 	// Factory for autonomous commands
-	//private AutoFactory autoFactory;
+	private AutoFactory autoFactory;
 
 	private StringLogEntry log;
 
@@ -91,25 +91,25 @@ public class RobotContainer {
 			SmartDashboard.putData("reefScoring", reefScoring);
 
 			// // Initialize subsystems with data log
-			//vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
-			//swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision, new StringLogEntry(dataLog, "swerve"));
-			//elevator = new Elevator(new StringLogEntry(dataLog, "elevator"));
+			vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
+			swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision, new StringLogEntry(dataLog, "swerve"));
+			elevator = new Elevator(new StringLogEntry(dataLog, "elevator"));
 			arm = new Arm(new StringLogEntry(dataLog, "arm"));
 			wrist = new Wrist(arm, new StringLogEntry(dataLog, "wrist"));
-			//intake = new Intake(new StringLogEntry(dataLog, "intake"));
-			//hang = new Hang(new StringLogEntry(dataLog, "hang"));
-			//armSystem = new ArmSystem(arm, elevator, wrist);
+			intake = new Intake(new StringLogEntry(dataLog, "intake"));
+			hang = new Hang(new StringLogEntry(dataLog, "hang"));
+			armSystem = new ArmSystem(arm, elevator, wrist);
 			led = new LED();
 
 			// Initialize commands for each subsystem
-			//swerveCommands = new SwerveCommands(swerve);
-			//elevatorCommands = new ElevatorCommands(elevator);
+			swerveCommands = new SwerveCommands(swerve);
+			elevatorCommands = new ElevatorCommands(elevator);
 			armCommands = new ArmCommands(arm);
 			wristCommands = new WristCommands(wrist);
-			//intakeCommands = new IntakeCommands(intake);
-			//hangCommand = new HangCommand(hang);
-			//armSystemCommands = new ArmSystemCommands(armSystem);
-			//multiCommands = new MultiCommands(armSystemCommands, swerveCommands, intakeCommands, hangCommand, reef);
+			intakeCommands = new IntakeCommands(intake);
+			hangCommand = new HangCommand(hang);
+			armSystemCommands = new ArmSystemCommands(armSystem);
+			multiCommands = new MultiCommands(armSystemCommands, swerveCommands, intakeCommands, hangCommand, reef);
 
 			// Initialize cage choice
 			cageChoice = new CageChoice();
@@ -118,7 +118,7 @@ public class RobotContainer {
 			configureBindings();
 
 			// Initialize autonomous command factory
-			//autoFactory = new AutoFactory(multiCommands);
+			autoFactory = new AutoFactory(multiCommands);
 		}catch(Exception e){
 			log.append("Error while initializing: "+RobotUtils.getError(e));
 		}
@@ -129,8 +129,8 @@ public class RobotContainer {
 	 */
 	private void configureBindings() {
 		// Driver Bindings
-		// Set default command for swerve to drive with joystick inputs
-		/*
+		/*/ Set default command for swerve to drive with joystick inputs
+		
 		swerve.setDefaultCommand(
 			swerveCommands.drive(
 				() -> -driver.getLeftY(),
@@ -159,6 +159,7 @@ public class RobotContainer {
 		driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 
 		// For testing: Set default commands for elevator and arm with joystick inputs
+		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> operator.getLeftY() / 50));
 		arm.setDefaultCommand(armCommands.changeGoal(() -> operator.getRightX() / 50));
 		operator.L1().onTrue(wristCommands.changeGoal(() -> Units.degreesToRadians(-5)));
 		operator.R1().onTrue(wristCommands.changeGoal(() -> Units.degreesToRadians(5)));
@@ -175,14 +176,14 @@ public class RobotContainer {
 
 
 		// // Bind L2 button to outtake and stop intake
-		// operator.L2()
-		// 	.onTrue(intakeCommands.outtake())
-		// 	.onFalse(intakeCommands.stop());
+		operator.L2()
+			.onTrue(intakeCommands.outtake())
+			.onFalse(intakeCommands.stop());
 
 		// // Bind R2 button to intake until switched and stop intake
-		// operator.R2()
-		// 	.onTrue(intakeCommands.intakeUntilSwitched())
-		// 	.onFalse(intakeCommands.stop());
+		operator.R2()
+			.onTrue(intakeCommands.intake())
+			.onFalse(intakeCommands.stop());
 
 		// // Bind touchpad to execute hang command
 		// operator.touchpad().onTrue(hangCommand);
@@ -196,7 +197,7 @@ public class RobotContainer {
 		driver.povRight().onTrue(new InstantCommand(() -> swerve.setRoutine(swerve.m_sysIdRoutineRotation)));
 		*/
 
-		// Tuning Methods (switch to subsystem you want to characterize)
+		/*/ Tuning Methods (switch to subsystem you want to characterize)
 		sysIdTest.cross()
 		.onTrue(armCommands.sysIdDynamic(Direction.kForward))
 		.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
@@ -211,7 +212,7 @@ public class RobotContainer {
 
 		sysIdTest.triangle()
 		.onTrue(armCommands.sysIdQuasistatic(Direction.kReverse))
-		.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
+		.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));*/
 	}
 
 	/**

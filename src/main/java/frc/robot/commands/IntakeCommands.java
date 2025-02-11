@@ -60,6 +60,20 @@ public class IntakeCommands {
      */
     public Command outtake() {
         return new SequentialCommandGroup(
+            Commands.runOnce(() -> intake.setSpeed(-IntakeConstants.intakeSpeed)), // Start the intake
+            new WaitCommand(IntakeConstants.outtakeTime),                                                   // Wait for 1 second
+            stop()                                                                // Stop the intake
+        );
+    }
+
+    /**
+     * Creates a command that outtakes (reverses the intake) for a specified duration.
+     * The command will run the intake in reverse for 1 second and then stop it.
+     *
+     * @return A command that outtakes for 1 second and then stops.
+     */
+    public Command intake() {
+        return new SequentialCommandGroup(
             Commands.runOnce(() -> intake.setSpeed(IntakeConstants.intakeSpeed)), // Start the intake
             new WaitCommand(IntakeConstants.outtakeTime),                                                   // Wait for 1 second
             stop()                                                                // Stop the intake

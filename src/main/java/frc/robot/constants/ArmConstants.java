@@ -25,6 +25,10 @@ public class ArmConstants {
     public static final double kV = 0.62;
     public static final double kA = 0.09;
 
+    // Motion Profile constants
+    public static final double maxVelocity = Units.degreesToRadians(45);
+    public static final double maxAcceleration = Units.degreesToRadians(30);
+
     // Arm tolerance
     public static final double armTolerance = Units.degreesToRadians(1);
     

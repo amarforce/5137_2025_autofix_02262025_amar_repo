@@ -247,8 +247,7 @@ public class Wrist extends SubsystemBase {
 
             // Keep track of previous values to calculate acceleration
             lastSpeed = state.velocity;
-            lastSpeed = time;
-            
+            lastTime = time;
         } catch (Exception e) {
             log.append("Periodic error: " + RobotUtils.getError(e));
         }

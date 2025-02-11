@@ -12,10 +12,13 @@ import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -40,7 +43,7 @@ public class Elevator extends SubsystemBase {
     private TalonFX rightMotor = new TalonFX(ElevatorConstants.rightMotorId, "rio");
 
     // PID controller and feedforward controller for elevator control
-    private PIDController controller = new PIDController(ElevatorConstants.kP, ElevatorConstants.kI, ElevatorConstants.kD);
+    private ProfiledPIDController controller = new ProfiledPIDController(ElevatorConstants.kP, ElevatorConstants.kI, ElevatorConstants.kD, new Constraints(ElevatorConstants.maxVelocity, ElevatorConstants.maxAcceleration));
     private ElevatorFeedforward feedforward = new ElevatorFeedforward(ElevatorConstants.kS, ElevatorConstants.kG, ElevatorConstants.kV, ElevatorConstants.kA);
 
     // Simulation objects for the elevator
@@ -85,6 +88,10 @@ public class Elevator extends SubsystemBase {
 
     private StringLogEntry log;
 
+    // Used for calculating acceleration
+    private double lastSpeed;
+    private double lastTime;
+
     /**
      * Constructor for the Elevator subsystem.
      */
@@ -104,6 +111,9 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putData("elevator/controller", controller);
 
         this.log=log;
+
+        lastSpeed = 0.0;
+        lastTime = 0.0;
 
         //leftMotor.setPosition(0.0);
         //rightMotor.setPosition(0.0);
@@ -195,7 +205,8 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("elevator/height",getMeasurement());
         SmartDashboard.putNumber("elevator/goal",getGoal());
         SmartDashboard.putNumber("elevator/velocity",getVelocity());
-        SmartDashboard.putNumber("elevator/error",controller.getError());
+        SmartDashboard.putNumber("elevator/positionError",controller.getPositionError());
+        SmartDashboard.putNumber("elevator/velocityError",controller.getVelocityError());
         SmartDashboard.putNumber("elevator/leftMotor/rawHeight",leftMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("elevator/rightMotor/rawHeight",rightMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("elevator/leftMotor/temp",leftMotor.getDeviceTemp().getValueAsDouble());
@@ -218,10 +229,19 @@ public class Elevator extends SubsystemBase {
     public void periodic() {
         try{
             telemetry();
-            // Calculate the feedforward and PID output
-            double feed = feedforward.calculate(getVelocity(), getAcceleration());
+
+            // Calculate PID control outputs
+            double time = Timer.getFPGATimestamp();
+            State state = controller.getSetpoint();
+            double feed = feedforward.calculate(state.velocity, (state.velocity-lastSpeed)/(time-lastTime));
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
+            
+            // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
+
+            // Keep track of previous values to calculate acceleration
+            lastSpeed = state.velocity;
+            lastTime = time;
         }catch(Exception e){
             log.append("Periodic error: "+RobotUtils.getError(e));
         }

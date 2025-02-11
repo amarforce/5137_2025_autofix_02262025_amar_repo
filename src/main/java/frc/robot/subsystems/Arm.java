@@ -6,10 +6,13 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
@@ -36,7 +39,7 @@ public class Arm extends SubsystemBase {
     private TalonFX armMotor = new TalonFX(ArmConstants.motorId, "rio");
     
     // PID controller for arm position control
-    private PIDController controller = new PIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kD);
+    private ProfiledPIDController controller = new ProfiledPIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kD, new Constraints(ArmConstants.maxVelocity, ArmConstants.maxAcceleration));
     
     // Feedforward controller for arm dynamics
     private ArmFeedforward feedforward = new ArmFeedforward(ArmConstants.kS, ArmConstants.kG, ArmConstants.kV);
@@ -84,6 +87,10 @@ public class Arm extends SubsystemBase {
     private TalonFXSimState armMotorSim = armMotor.getSimState();
         
     private StringLogEntry log;
+
+    // Used for calculating acceleration
+    private double lastSpeed;
+    private double lastTime;
     
     /**
      * Constructor for the Arm subsystem.
@@ -101,6 +108,10 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putData("arm/controller", controller);
 
         this.log=log;
+
+        lastSpeed = 0.0;
+        lastTime = 0.0;
+
         //armMotor.setPosition(0.0);
     }
 
@@ -182,7 +193,8 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("arm/angle",getMeasurement());
         SmartDashboard.putNumber("arm/goal",getGoal());
         SmartDashboard.putNumber("arm/velocity",getVelocity());
-        SmartDashboard.putNumber("arm/error",controller.getError());
+        SmartDashboard.putNumber("arm/positionError",controller.getPositionError());
+        SmartDashboard.putNumber("arm/velocityError",controller.getVelocityError());
         SmartDashboard.putNumber("arm/motor/rawAngle",armMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("arm/motor/temp",armMotor.getDeviceTemp().getValueAsDouble());
         SmartDashboard.putNumber("arm/motor/fault",armMotor.getFaultField().asSupplier().get());
@@ -200,12 +212,18 @@ public class Arm extends SubsystemBase {
             // Update telemetry
             telemetry();
             
-            // Calculate feedforward and PID control outputs
-            double feed = feedforward.calculate(getMeasurement(), getVelocity(), getAcceleration());
+            // Calculate PID control outputs
+            double time = Timer.getFPGATimestamp();
+            State state = controller.getSetpoint();
+            double feed = feedforward.calculate(state.position, state.velocity, (state.velocity-lastSpeed)/(time-lastTime));
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
+
+            // Keep track of previous values to calculate acceleration
+            lastSpeed = state.velocity;
+            lastTime = time;
         }catch(Exception e){
             log.append("Periodic error: " + RobotUtils.getError(e));
         }

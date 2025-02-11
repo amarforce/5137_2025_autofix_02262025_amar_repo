@@ -24,9 +24,10 @@ import frc.robot.constants.ArmSystemConstants;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-/**
+/**k
  * The Wrist subsystem controls the wrist joint of the robot arm.
  * It uses a PID controller to manage the position of the wrist and includes
  * simulation support for testing and tuning.
@@ -62,8 +63,8 @@ public class Wrist extends SubsystemBase {
         new SysIdRoutine(
             // Empty config defaults to 1 volt/second ramp rate and 7 volt step voltage.
             new SysIdRoutine.Config(
-                null,        // Use default ramp rate (1 V/s)
-                Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+                Volts.of(0.2).div(Seconds.of(1.0)),        // Use default ramp rate (1 V/s)
+                Volts.of(1), // Reduce dynamic step voltage to 4 V to prevent brownout
                 null        // Use default timeout (10 s)
             ),
             new SysIdRoutine.Mechanism(
@@ -105,6 +106,8 @@ public class Wrist extends SubsystemBase {
 
         this.arm=arm;
         this.log=log;
+
+        //wristMotor.setPosition(0.0);
     }
 
     /**
@@ -122,7 +125,7 @@ public class Wrist extends SubsystemBase {
      * @return The current true position of the wrist in radians.
      */
     public double getAdjustedMeasurement() {
-        return arm.getMeasurement() + this.getMeasurement();
+        return arm.getMeasurement() + this.getMeasurement() - WristConstants.feedOffset;
     }
     
     /**
@@ -218,7 +221,7 @@ public class Wrist extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        try {
+        //try {
             // Update telemetry
             telemetry();
         
@@ -227,11 +230,11 @@ public class Wrist extends SubsystemBase {
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
-            setVoltage(Volts.of(voltage));
+            //setVoltage(Volts.of(voltage));
             
-        } catch (Exception e) {
+        /*} catch (Exception e) {
             log.append("Periodic error: " + RobotUtils.getError(e));
-        }
+        }*/
 
     }
 

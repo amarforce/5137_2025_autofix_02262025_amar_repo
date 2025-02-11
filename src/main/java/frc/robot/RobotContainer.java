@@ -3,6 +3,7 @@ package frc.robot;
 import java.io.File;
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -90,24 +91,24 @@ public class RobotContainer {
 			SmartDashboard.putData("reefScoring", reefScoring);
 
 			// // Initialize subsystems with data log
-			vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
+			//vision = new Vision(reef,new StringLogEntry(dataLog, "vision"));
 			//swerve = new Swerve(new File(Filesystem.getDeployDirectory(), "swerve.json"), vision, new StringLogEntry(dataLog, "swerve"));
-			elevator = new Elevator(new StringLogEntry(dataLog, "elevator"));
+			//elevator = new Elevator(new StringLogEntry(dataLog, "elevator"));
 			arm = new Arm(new StringLogEntry(dataLog, "arm"));
 			wrist = new Wrist(arm, new StringLogEntry(dataLog, "wrist"));
-			intake = new Intake(new StringLogEntry(dataLog, "intake"));
-			hang = new Hang(new StringLogEntry(dataLog, "hang"));
-			armSystem = new ArmSystem(arm, elevator, wrist);
+			//intake = new Intake(new StringLogEntry(dataLog, "intake"));
+			//hang = new Hang(new StringLogEntry(dataLog, "hang"));
+			//armSystem = new ArmSystem(arm, elevator, wrist);
 			led = new LED();
 
 			// Initialize commands for each subsystem
 			//swerveCommands = new SwerveCommands(swerve);
-			elevatorCommands = new ElevatorCommands(elevator);
+			//elevatorCommands = new ElevatorCommands(elevator);
 			armCommands = new ArmCommands(arm);
 			wristCommands = new WristCommands(wrist);
-			intakeCommands = new IntakeCommands(intake);
-			hangCommand = new HangCommand(hang);
-			armSystemCommands = new ArmSystemCommands(armSystem);
+			//intakeCommands = new IntakeCommands(intake);
+			//hangCommand = new HangCommand(hang);
+			//armSystemCommands = new ArmSystemCommands(armSystem);
 			//multiCommands = new MultiCommands(armSystemCommands, swerveCommands, intakeCommands, hangCommand, reef);
 
 			// Initialize cage choice
@@ -158,32 +159,33 @@ public class RobotContainer {
 		driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 
 		// For testing: Set default commands for elevator and arm with joystick inputs
-		arm.setDefaultCommand(armCommands.changeGoal(() -> operator.getLeftY() / 50));
-		wrist.setDefaultCommand(wristCommands.changeGoal(() -> operator.getLeftX() / 50));
+		arm.setDefaultCommand(armCommands.changeGoal(() -> operator.getRightX() / 50));
+		operator.L1().onTrue(wristCommands.changeGoal(() -> Units.degreesToRadians(-5)));
+		operator.R1().onTrue(wristCommands.changeGoal(() -> Units.degreesToRadians(5)));
 
 		//operator.axisLessThan(0,0).onTrue(multiCommands.placeCoral(0));
 
 		// Operator Bindings
 
 		// Bind buttons to move to specific goals
-		operator.triangle().onTrue(armSystemCommands.moveToGoal(()->4));
-		operator.circle().onTrue(armSystemCommands.moveToGoal(()->3));
-		operator.square().onTrue(armSystemCommands.moveToGoal(()->2));
-		operator.cross().onTrue(armSystemCommands.moveToGoal(()->1));
+		// operator.triangle().onTrue(armSystemCommands.moveToGoal(()->4));
+		// operator.circle().onTrue(armSystemCommands.moveToGoal(()->3));
+		// operator.square().onTrue(armSystemCommands.moveToGoal(()->2));
+		// operator.cross().onTrue(armSystemCommands.moveToGoal(()->1));
 
 
-		// Bind L2 button to outtake and stop intake
-		operator.L2()
-			.onTrue(intakeCommands.outtake())
-			.onFalse(intakeCommands.stop());
+		// // Bind L2 button to outtake and stop intake
+		// operator.L2()
+		// 	.onTrue(intakeCommands.outtake())
+		// 	.onFalse(intakeCommands.stop());
 
-		// Bind R2 button to intake until switched and stop intake
-		operator.R2()
-			.onTrue(intakeCommands.intakeUntilSwitched())
-			.onFalse(intakeCommands.stop());
+		// // Bind R2 button to intake until switched and stop intake
+		// operator.R2()
+		// 	.onTrue(intakeCommands.intakeUntilSwitched())
+		// 	.onFalse(intakeCommands.stop());
 
-		// Bind touchpad to execute hang command
-		operator.touchpad().onTrue(hangCommand);
+		// // Bind touchpad to execute hang command
+		// operator.touchpad().onTrue(hangCommand);
 
 		// SysIdRoutine Bindings
 
@@ -196,19 +198,19 @@ public class RobotContainer {
 
 		// Tuning Methods (switch to subsystem you want to characterize)
 		sysIdTest.cross()
-		.onTrue(elevatorCommands.sysIdDynamic(Direction.kForward))
+		.onTrue(armCommands.sysIdDynamic(Direction.kForward))
 		.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 
 		sysIdTest.circle()
-		.onTrue(elevatorCommands.sysIdDynamic(Direction.kReverse))
+		.onTrue(armCommands.sysIdDynamic(Direction.kReverse))
 		.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 
 		sysIdTest.square()
-		.onTrue(elevatorCommands.sysIdQuasistatic(Direction.kForward))
+		.onTrue(armCommands.sysIdQuasistatic(Direction.kForward))
 		.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 
 		sysIdTest.triangle()
-		.onTrue(elevatorCommands.sysIdQuasistatic(Direction.kReverse))
+		.onTrue(armCommands.sysIdQuasistatic(Direction.kReverse))
 		.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 	}
 

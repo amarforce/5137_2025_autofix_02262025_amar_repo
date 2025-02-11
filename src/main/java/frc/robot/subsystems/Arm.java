@@ -101,6 +101,7 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putData("arm/controller", controller);
 
         this.log=log;
+        //armMotor.setPosition(0.0);
     }
 
     /**
@@ -204,7 +205,7 @@ public class Arm extends SubsystemBase {
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
-            setVoltage(Volts.of(voltage));
+            //setVoltage(Volts.of(voltage));
         }catch(Exception e){
             log.append("Periodic error: " + RobotUtils.getError(e));
         }

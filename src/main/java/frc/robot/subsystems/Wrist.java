@@ -40,7 +40,7 @@ public class Wrist extends SubsystemBase {
     private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
     
     // Goal position for the Wrist in radians
-    private double goal = SwerveSystemConstants.defaultState.wristPosition;
+    private double goal = SwerveSystemConstants.defaultState().wristPosition;
     
 
     // Simulation model for the Wrist
@@ -52,7 +52,7 @@ public class Wrist extends SubsystemBase {
         WristConstants.minAngle,
         WristConstants.maxAngle,
         true,
-        SwerveSystemConstants.defaultState.wristPosition
+        SwerveSystemConstants.defaultState().wristPosition
     );
 
 

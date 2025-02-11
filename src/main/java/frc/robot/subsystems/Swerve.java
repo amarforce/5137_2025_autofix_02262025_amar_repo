@@ -31,6 +31,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -135,7 +136,6 @@ public class Swerve extends SubsystemBase {
         // Warmup pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
         PathfindingCommand.warmupCommand().schedule();
-        
     }
 
     /**
@@ -250,10 +250,6 @@ public class Swerve extends SubsystemBase {
             targetPose=target;
             startAuto(AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints));
         }
-    }
-
-    public void setTargetPoseFixed(Pose2d target){
-        setTargetPose(RobotUtils.invertPoseToAlliance(target));
     }
 
     public boolean atTarget(){

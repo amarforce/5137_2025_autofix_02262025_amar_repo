@@ -53,14 +53,14 @@ public class Elevator extends SubsystemBase {
         ElevatorConstants.minHeight,
         ElevatorConstants.maxHeight,
         true,
-        SwerveSystemConstants.defaultState.elevatorPosition
+        SwerveSystemConstants.defaultState().elevatorPosition
     );
     private TalonFXSimState leftMotorSim = new TalonFXSimState(leftMotor, ChassisReference.CounterClockwise_Positive);
     private TalonFXSimState rightMotorSim = new TalonFXSimState(rightMotor, ChassisReference.Clockwise_Positive);
 
 
     // Goal position for the elevator
-    private double goal = SwerveSystemConstants.defaultState.elevatorPosition;
+    private double goal = SwerveSystemConstants.defaultState().elevatorPosition;
 
 
     // SysId routine for system identification

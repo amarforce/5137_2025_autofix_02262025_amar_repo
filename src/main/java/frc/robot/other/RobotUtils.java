@@ -49,12 +49,28 @@ public class RobotUtils {
      * @param pose The pose to invert.
      * @return The pose transformed to the current alliance's perspective.
      */
-    public static Pose2d invertPoseToAlliance(Pose2d pose) {
+    public static Pose2d invertToAlliance(Pose2d pose) {
         if (onRedAlliance()) {
             return invertPose(pose);
         } else {
             return pose;
         }
+    }
+
+    public static Pose2d[] invertToAlliance(Pose2d[] poses) {
+        Pose2d[] newPoses=new Pose2d[poses.length];
+        for(int i=0;i<poses.length;i++){
+            newPoses[i]=invertToAlliance(poses[i]);
+        }
+        return newPoses;
+    }
+
+    public static Pose2d[][] invertToAlliance(Pose2d[][] poses) {
+        Pose2d[][] newPoses=new Pose2d[poses.length][];
+        for(int i=0;i<poses.length;i++){
+            newPoses[i]=invertToAlliance(poses[i]);
+        }
+        return newPoses;
     }
 
     /**
@@ -79,12 +95,28 @@ public class RobotUtils {
      * @param trans The 3D translation to invert.
      * @return The 3D translation transformed to the current alliance's perspective.
      */
-    public static Translation3d invertTrans3dToAlliance(Translation3d trans) {
+    public static Translation3d invertToAlliance(Translation3d trans) {
         if (onRedAlliance()) {
             return invertTrans3d(trans);
         } else {
             return trans;
         }
+    }
+
+    public static Translation3d[] invertToAlliance(Translation3d[] poses) {
+        Translation3d[] newPoses=new Translation3d[poses.length];
+        for(int i=0;i<poses.length;i++){
+            newPoses[i]=invertToAlliance(poses[i]);
+        }
+        return newPoses;
+    }
+
+    public static Translation3d[][] invertToAlliance(Translation3d[][] poses) {
+        Translation3d[][] newPoses=new Translation3d[poses.length][];
+        for(int i=0;i<poses.length;i++){
+            newPoses[i]=invertToAlliance(poses[i]);
+        }
+        return newPoses;
     }
 
     /**

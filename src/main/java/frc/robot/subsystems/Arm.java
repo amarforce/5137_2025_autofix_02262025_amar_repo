@@ -41,7 +41,7 @@ public class Arm extends SubsystemBase {
     private ArmFeedforward feedforward = new ArmFeedforward(ArmConstants.kS, ArmConstants.kG, ArmConstants.kV);
     
     // Goal position for the arm in radians
-    private double goal = SwerveSystemConstants.defaultState.armPosition;
+    private double goal = SwerveSystemConstants.defaultState().armPosition;
     
 
     // Simulation model for the arm
@@ -53,7 +53,7 @@ public class Arm extends SubsystemBase {
         ArmConstants.minAngle, 
         ArmConstants.maxAngle, 
         true, 
-        SwerveSystemConstants.defaultState.armPosition
+        SwerveSystemConstants.defaultState().armPosition
     );
 
 

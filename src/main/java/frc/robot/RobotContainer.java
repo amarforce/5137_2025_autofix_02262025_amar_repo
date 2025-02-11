@@ -121,6 +121,7 @@ public class RobotContainer {
 
 			// Initialize autonomous command factory
 			autoFactory = new AutoFactory(multiCommands);
+			
 		}catch(Exception e){
 			log.append("Error while initializing: "+RobotUtils.getError(e));
 		}
@@ -181,10 +182,10 @@ public class RobotContainer {
 
 		// Bind buttons to move to specific goals
 		
-		operator.triangle().onTrue(swerveSystemCommands.moveToLevel(4));
-		operator.circle().onTrue(swerveSystemCommands.moveToLevel(3));
-		operator.square().onTrue(swerveSystemCommands.moveToLevel(2));
-		operator.cross().onTrue(swerveSystemCommands.moveToLevel(1));
+		operator.triangle().onTrue(swerveSystemCommands.moveToLevel(3)); // L1
+		operator.circle().onTrue(swerveSystemCommands.moveToLevel(2)); // L2
+		operator.square().onTrue(swerveSystemCommands.moveToLevel(1)); // L3
+		operator.cross().onTrue(swerveSystemCommands.moveToLevel(0)); // L4
 
 
 

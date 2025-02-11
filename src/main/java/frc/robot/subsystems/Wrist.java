@@ -8,10 +8,13 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.sim.ChassisReference;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
@@ -26,9 +29,10 @@ import frc.robot.constants.SwerveSystemConstants;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-/**
+/**k
  * The Wrist subsystem controls the wrist joint of the robot arm.
  * It uses a PID controller to manage the position of the wrist and includes
  * simulation support for testing and tuning.
@@ -39,7 +43,7 @@ public class Wrist extends SubsystemBase {
     private TalonFX wristMotor = new TalonFX(WristConstants.motorId, "rio");
     
     // PID controller for Wrist position control
-    private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
+    private ProfiledPIDController controller = new ProfiledPIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD, new Constraints(WristConstants.maxVelocity, WristConstants.maxAcceleration));
 
     // Feedforward controller for arm dynamics
     private ArmFeedforward feedforward = new ArmFeedforward(WristConstants.kS, WristConstants.kG, WristConstants.kV);
@@ -63,8 +67,8 @@ public class Wrist extends SubsystemBase {
     private final SysIdRoutine sysIdRoutine = 
         new SysIdRoutine(
             new SysIdRoutine.Config(
-                null,        // Use default ramp rate (1 V/s)
-                Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+                Volts.of(0.2).div(Seconds.of(1.0)),        // Use default ramp rate (1 V/s)
+                Volts.of(1), // Reduce dynamic step voltage to 4 V to prevent brownout
                 null        // Use default timeout (10 s)
             ),
             new SysIdRoutine.Mechanism(
@@ -81,8 +85,7 @@ public class Wrist extends SubsystemBase {
     // Simulation state for the motor
     private TalonFXSimState wristMotorSim = new TalonFXSimState(wristMotor, ChassisReference.Clockwise_Positive);
 
-    // Reference to the arm subsystem for feedforward calculations
-    private final Arm arm;
+    private Arm arm;
         
     /**
      * Constructor for the Wrist subsystem.
@@ -101,11 +104,7 @@ public class Wrist extends SubsystemBase {
         // Display the PID controller on SmartDashboard for tuning
         SmartDashboard.putData("wrist/controller", controller);
 
-        this.arm = arm;
-    }
-
-    public void resetPos(){
-        wristMotor.setPosition(0.0);
+        this.arm=arm;
     }
 
     /**
@@ -123,7 +122,7 @@ public class Wrist extends SubsystemBase {
      * @return The current true position of the wrist in radians.
      */
     public double getAdjustedMeasurement() {
-        return arm.getMeasurement() + this.getMeasurement();
+        return this.getMeasurement() - arm.getMeasurement() - WristConstants.feedOffset;
     }
     
     /**
@@ -201,16 +200,16 @@ public class Wrist extends SubsystemBase {
      * Displays telemetry data on SmartDashboard.
      */
     public void telemetry() {
-        SmartDashboard.putNumber("wrist/angle", getMeasurement());
-        SmartDashboard.putNumber("wrist/goal", getGoal());
-        SmartDashboard.putNumber("wrist/velocity", getVelocity());
-        SmartDashboard.putNumber("wrist/error", controller.getError());
-        SmartDashboard.putNumber("wrist/motor/rawAngle", wristMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("wrist/motor/temp", wristMotor.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("wrist/motor/fault", wristMotor.getFaultField().asSupplier().get());
-        SmartDashboard.putNumber("wrist/motor/current", wristMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("wrist/motor/voltage", wristMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("wrist/motor/supplyVoltage", wristMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/angle",getMeasurement());
+        SmartDashboard.putNumber("wrist/goal",getGoal());
+        SmartDashboard.putNumber("wrist/velocity",getVelocity());
+        SmartDashboard.putNumber("wrist/error",controller.getError());
+        SmartDashboard.putNumber("wrist/motor/rawAngle",wristMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/temp",wristMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/fault",wristMotor.getFaultField().asSupplier().get());
+        SmartDashboard.putNumber("wrist/motor/current",wristMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/voltage",wristMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("wrist/motor/supplyVoltage",wristMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     /**
@@ -224,12 +223,15 @@ public class Wrist extends SubsystemBase {
             telemetry();
         
             // Calculate PID control outputs
-            double feed = feedforward.calculate(getAdjustedGoal()+Math.PI/2, 0);
+            double feed = feedforward.calculate(getAdjustedMeasurement(), getVelocity());
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
-            
+
+            // Keep track of previous values to calculate acceleration
+            lastSpeed = state.velocity;
+            lastTime = time;
         } catch (Exception e) {
             DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }

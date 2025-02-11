@@ -19,15 +19,19 @@ public class WristConstants {
     public static final MotorTransform transform = new MotorTransform((2*Math.PI)/gearRatio, wristOffset);
     
     // PID constants
-    public static final double kP = 2.0;
+    public static final double kP = 3.5;
     public static final double kI = 0;
-    public static final double kD = 0.05;
+    public static final double kD = 0.5;
 
     // Feedforward constants
-    public static final double kS = Robot.isSimulation() ? 0.0 : 0.0;
-    public static final double kG = 0.1;
-    public static final double kV = 0.62;
-    public static final double kA = 0.0;
+    public static final double kS = 0.16;
+    public static final double kG = 0.56; // 0.1
+    public static final double kV = 0.25757; // 0.62
+    public static final double kA = 0.050664;
+
+    // Motion Profile constants
+    public static final double maxVelocity = Units.degreesToRadians(45);
+    public static final double maxAcceleration = Units.degreesToRadians(30);
 
     // Tolerance
     public static final double wristTolerance = Units.degreesToRadians(1);

@@ -3,6 +3,7 @@ package frc.robot;
 import java.io.File;
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -38,10 +39,13 @@ public class RobotContainer {
 	// Subsystems and their commands
 	private Vision vision;
 	private Swerve swerve;
+<<<<<<< HEAD
 	private SwerveCommands swerveCommands;
 	private SwerveSystem swerveSystem;
 	private SwerveSystemCommands swerveSystemCommands;
 
+=======
+>>>>>>> origin/F/PID
 	private Elevator elevator;
 	private ElevatorCommands elevatorCommands;
 
@@ -59,13 +63,32 @@ public class RobotContainer {
 
 	private LED led;
 
+<<<<<<< HEAD
+=======
+	// Commands for each subsystem
+	private SwerveCommands swerveCommands;
+	private ElevatorCommands elevatorCommands;
+	private ArmCommands armCommands;
+	private WristCommands wristCommands;
+	private IntakeCommands intakeCommands;
+	private HangCommand hangCommand;
+	private ArmSystemCommands armSystemCommands;
+>>>>>>> origin/F/PID
 	private MultiCommands multiCommands;
 
 	// Additional components
 	private Reef reef;
 	private ReefScoring reefScoring;
 	private CageChoice cageChoice;
+<<<<<<< HEAD
 	private AutoFactory autoFactory;
+=======
+
+	// Factory for autonomous commands
+	private AutoFactory autoFactory;
+
+	private StringLogEntry log;
+>>>>>>> origin/F/PID
 
 	/**
 	 * Constructor for RobotContainer.
@@ -174,7 +197,7 @@ public class RobotContainer {
 			.onFalse(intakeCommands.stop());
 
 		operator.R2()
-			.onTrue(intakeCommands.intakeUntilSwitched())
+			.onTrue(intakeCommands.intake())
 			.onFalse(intakeCommands.stop());
 	}
 

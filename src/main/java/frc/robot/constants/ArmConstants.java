@@ -17,13 +17,17 @@ public class ArmConstants {
     // PID constants
     public static final double kP = 2.0;
     public static final double kI = 0;
-    public static final double kD = 0.05;
+    public static final double kD = 0.5;
 
     // Feedforward constants
-    public static final double kS = Robot.isSimulation() ? 0.0 : 0.0;
-    public static final double kG = 1.67;
-    public static final double kV = 0.0;
-    public static final double kA = 0.0;
+    public static final double kS = 0.135;
+    public static final double kG = 1.83;
+    public static final double kV = 0.62;
+    public static final double kA = 0.09;
+
+    // Motion Profile constants
+    public static final double maxVelocity = Units.degreesToRadians(45);
+    public static final double maxAcceleration = Units.degreesToRadians(30);
 
     // Arm tolerance
     public static final double armTolerance = Units.degreesToRadians(1);

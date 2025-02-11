@@ -178,6 +178,15 @@ public class Arm extends SubsystemBase {
         return ArmConstants.transform.transformVel(armMotor.getAcceleration().getValueAsDouble());
     }
 
+    /**
+     * Get the current state of the trapezoidal profile.
+     * 
+     * @return The current state of the trapezoidal profile
+     */
+    public State getState() {
+        return controller.getSetpoint();
+    }
+
     public boolean atSetpoint(){
         return controller.atSetpoint();
     }

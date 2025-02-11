@@ -239,7 +239,7 @@ public class Wrist extends SubsystemBase {
             // Calculate PID control outputs
             double time = Timer.getFPGATimestamp();
             State state = controller.getSetpoint();
-            double feed = feedforward.calculate(state.position - arm.getMeasurement() + WristConstants.feedOffset, state.velocity, (state.velocity-lastSpeed)/(time-lastTime));
+            double feed = feedforward.calculate(state.position - arm.getState().position + WristConstants.feedOffset, state.velocity, (state.velocity-lastSpeed)/(time-lastTime));
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor

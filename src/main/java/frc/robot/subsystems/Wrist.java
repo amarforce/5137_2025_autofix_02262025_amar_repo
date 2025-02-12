@@ -9,6 +9,7 @@ import com.ctre.phoenix6.sim.ChassisReference;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
@@ -201,6 +202,7 @@ public class Wrist extends SubsystemBase {
      */
     public void telemetry() {
         SmartDashboard.putNumber("wrist/angle",getMeasurement());
+        SmartDashboard.putNumber("arm/degrees", Units.degreesToRadians(getMeasurement()));
         SmartDashboard.putNumber("wrist/goal",getGoal());
         SmartDashboard.putNumber("wrist/setpoint",controller.getSetpoint().position);
         SmartDashboard.putNumber("wrist/setpointVelocity",controller.getSetpoint().velocity);

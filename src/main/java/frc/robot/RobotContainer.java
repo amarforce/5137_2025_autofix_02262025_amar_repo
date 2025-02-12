@@ -88,19 +88,19 @@ public class RobotContainer {
 			initReef();
 			
 			// Initialize subsystems
-			//initVision();
-			//initSwerve();
+			initVision();
+			initSwerve();
 			initElevator();
 			initArm();
 			initWrist();
 			initIntake();
-			//initHang();
-			//initLED();
+			initHang();
+			initLED();
 			
 			// Initialize combined systems and commands
 			initSwerveSystem();
-			//initMultiCommands();
-			//initAdditionalComponents();
+			initMultiCommands();
+			initAdditionalComponents();
 
 			//arm.resetPos();
 			//wrist.resetPos();

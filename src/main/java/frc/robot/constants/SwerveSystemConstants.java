@@ -46,9 +46,9 @@ public final class SwerveSystemConstants {
     static {
         // Initialize processor state
         baseProcessor = new SwerveSystem.SwerveSystemState(
-            Units.degreesToRadians(-15),  // 75 - 90 = -15 degrees
-            1.26,
-            wristStraight,
+            Units.degreesToRadians(-95),  // 75 - 90 = -15 degrees
+            0.26,
+            wristDown,
             GeneralConstants.getProcessor()
         );
 
@@ -56,8 +56,8 @@ public final class SwerveSystemConstants {
         baseSourceStates = new SwerveSystem.SwerveSystemState[GeneralConstants.sides * 2 / 3];
         for (int i = 0; i < baseSourceStates.length; i++) {
             baseSourceStates[i] = new SwerveSystem.SwerveSystemState(
-                Units.degreesToRadians(-45),  // 45 - 90 = -45 degrees
-                0.76,                        // From ElevatorConstants.sourceGoal
+                Units.degreesToRadians(35),  // 45 - 90 = -45 degrees
+                0.22,                        // From ElevatorConstants.sourceGoal
                 wristStraight,              // From WristConstants.pos2 (straight)
                 GeneralConstants.getStations()[i]
             );

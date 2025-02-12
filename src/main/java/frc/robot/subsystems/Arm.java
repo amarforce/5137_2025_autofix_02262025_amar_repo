@@ -47,6 +47,7 @@ public class Arm extends SubsystemBase {
     private double goal = SwerveSystemConstants.getDefaultState().armPosition;
 
     // Simulation model for the arm
+    // TODO fix gravity
     private SingleJointedArmSim armSim = new SingleJointedArmSim(
         ArmConstants.motorSim, 
         ArmConstants.gearRatio, 

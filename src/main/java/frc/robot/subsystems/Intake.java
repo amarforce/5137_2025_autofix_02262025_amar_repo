@@ -6,6 +6,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.IntakeConstants;
 import frc.robot.other.RobotUtils;
@@ -68,12 +69,13 @@ public class Intake extends SubsystemBase {
      * This method is intended to be called periodically to record data.
      */
     public void telemetry(){
-        // SmartDashboard.putNumber("intake/speed",intakeMotor.get());
-        // SmartDashboard.putNumber("intake/appliedOutput",intakeMotor.getAppliedOutput());
-        // SmartDashboard.putNumber("intake/busVoltage",intakeMotor.getBusVoltage());
-        // SmartDashboard.putNumber("intake/motorTemp",intakeMotor.getMotorTemperature());
-        // SmartDashboard.putNumber("intake/outputCurrent",intakeMotor.getOutputCurrent());
-        // SmartDashboard.putBoolean("intake/isSwitched",isSwitched());
+        SmartDashboard.putNumber("intake/motor/rawAngle", intakeMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("intake/motor/output", intakeMotor.get());
+        SmartDashboard.putNumber("intake/motor/temp", intakeMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("intake/motor/fault", intakeMotor.getFaultField().asSupplier().get());
+        SmartDashboard.putNumber("intake/motor/current", intakeMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("intake/motor/voltage", intakeMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("intake/motor/supplyVoltage", intakeMotor.getSupplyVoltage().getValueAsDouble());
     }
 
     @Override

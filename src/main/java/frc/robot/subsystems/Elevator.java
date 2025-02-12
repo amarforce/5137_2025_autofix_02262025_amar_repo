@@ -198,6 +198,8 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("elevator/velocity",getVelocity());
         SmartDashboard.putNumber("elevator/positionError",controller.getPositionError());
         SmartDashboard.putNumber("elevator/velocityError",controller.getVelocityError());
+        SmartDashboard.putNumber("elevator/leftMotor/output",leftMotor.get());
+        SmartDashboard.putNumber("elevator/rightMotor/output",rightMotor.get());
         SmartDashboard.putNumber("elevator/leftMotor/rawHeight",leftMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("elevator/rightMotor/rawHeight",rightMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("elevator/leftMotor/temp",leftMotor.getDeviceTemp().getValueAsDouble());

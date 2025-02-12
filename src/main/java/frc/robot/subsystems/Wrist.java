@@ -203,8 +203,10 @@ public class Wrist extends SubsystemBase {
         SmartDashboard.putNumber("wrist/angle",getMeasurement());
         SmartDashboard.putNumber("wrist/goal",getGoal());
         SmartDashboard.putNumber("wrist/setpoint",controller.getSetpoint().position);
+        SmartDashboard.putNumber("wrist/setpointVelocity",controller.getSetpoint().velocity);
         SmartDashboard.putNumber("wrist/velocity",getVelocity());
         SmartDashboard.putNumber("wrist/error",controller.getPositionError());
+        SmartDashboard.putNumber("wrist/motor/output",wristMotor.get());
         SmartDashboard.putNumber("wrist/motor/rawAngle",wristMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("wrist/motor/temp",wristMotor.getDeviceTemp().getValueAsDouble());
         SmartDashboard.putNumber("wrist/motor/fault",wristMotor.getFaultField().asSupplier().get());

@@ -28,7 +28,7 @@ public class SwerveSystemCommands {
      */
     public Command moveToState(Supplier<SwerveSystem.SwerveSystemState> state) {
         return new SequentialCommandGroup(
-            new InstantCommand(()->swerveSystem.setState(state.get())),
+            new InstantCommand(()->swerveSystem.setTargetState(state.get())),
             waitUntilFinished()
         );
     }

@@ -3,6 +3,7 @@ package frc.robot;
 import java.io.File;
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
@@ -28,6 +29,7 @@ import frc.robot.other.RobotUtils;
 import frc.robot.subsystems.*;
 import frc.robot.commands.*;
 import frc.robot.constants.SwerveConstants;
+import frc.robot.constants.SwerveSystemConstants;
 
 @SuppressWarnings("unused")
 public class RobotContainer {
@@ -86,19 +88,23 @@ public class RobotContainer {
 			initReef();
 			
 			// Initialize subsystems
-			initVision();
-			initSwerve();
+			//initVision();
+			//initSwerve();
 			initElevator();
 			initArm();
 			initWrist();
 			initIntake();
-			initHang();
-			initLED();
+			//initHang();
+			//initLED();
 			
 			// Initialize combined systems and commands
 			initSwerveSystem();
-			initMultiCommands();
-			initAdditionalComponents();
+			//initMultiCommands();
+			//initAdditionalComponents();
+
+			//arm.resetPos();
+			//wrist.resetPos();
+			//elevator.resetPos();
 		} catch (Exception e) {
 			DataLogManager.log("Error while initializing: " + RobotUtils.getError(e));
 		}
@@ -154,6 +160,7 @@ public class RobotContainer {
 
 		// Configure arm bindings
 		arm.setDefaultCommand(armCommands.changeGoal(() -> -operator.getRightX() / 50));
+		
 	}
 
 	private void initWrist() {
@@ -203,6 +210,13 @@ public class RobotContainer {
 		operator.circle().onTrue(swerveSystemCommands.moveToLevel(2));
 		operator.square().onTrue(swerveSystemCommands.moveToLevel(1));
 		operator.cross().onTrue(swerveSystemCommands.moveToLevel(0));
+
+		// operator.povUp().onTrue(swerveSystemCommands.moveToGround(()->new Pose2d()));
+		// operator.povDown().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));
+		// operator.cross().onTrue(swerveSystemCommands.moveToBranch(()->0,()->0));
+		// operator.triangle().onTrue(swerveSystemCommands.moveToBranch(()->1,()->0));
+		// operator.square().onTrue(swerveSystemCommands.moveToBranch(()->2,()->0));
+		// operator.circle().onTrue(swerveSystemCommands.moveToBranch(()->3,()->0));
 	}
 
 	private void initMultiCommands() {

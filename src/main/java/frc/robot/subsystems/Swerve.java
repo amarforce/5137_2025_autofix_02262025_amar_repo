@@ -9,6 +9,7 @@ import frc.robot.other.SwerveFactory;
 import static edu.wpi.first.units.Units.*;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.photonvision.EstimatedRobotPose;
@@ -233,7 +234,11 @@ public class Swerve extends SubsystemBase {
     }
 
     public List<DetectedObject> getGroundCoral(){
-        return vision.getGroundCoral(SwerveConstants.coralExpirationTime);
+        if(vision!=null){
+            return vision.getGroundCoral(SwerveConstants.coralExpirationTime);
+        }else{
+            return new ArrayList<DetectedObject>();
+        }
     }
 
     public Pose2d getTargetPose(){
@@ -270,15 +275,17 @@ public class Swerve extends SubsystemBase {
     @Override
     public void periodic() {
         try{
-            List<EstimatedRobotPose> newPoses = vision.getNewPoses();
-            for (EstimatedRobotPose newPose : newPoses) {
-                swerve.addVisionMeasurement(newPose.estimatedPose.toPose2d(), newPose.timestampSeconds);
-            }
-
-            vision.processNewObjects(this.getPose());
-            field.setRobotPose(this.getPose());
-            if(Robot.isSimulation()){
-                vision.updateSim(this.getPose());
+            if(vision!=null){
+                List<EstimatedRobotPose> newPoses = vision.getNewPoses();
+                for (EstimatedRobotPose newPose : newPoses) {
+                    swerve.addVisionMeasurement(newPose.estimatedPose.toPose2d(), newPose.timestampSeconds);
+                }
+    
+                vision.processNewObjects(this.getPose());
+                field.setRobotPose(this.getPose());
+                if(Robot.isSimulation()){
+                    vision.updateSim(this.getPose());
+                }
             }
         }catch(Exception e){
             DataLogManager.log("Periodic error: "+RobotUtils.getError(e));

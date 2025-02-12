@@ -1,9 +1,14 @@
 package frc.robot.other;
 
+import java.util.HashMap;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Robot;
 import frc.robot.constants.GeneralConstants;
@@ -206,5 +211,19 @@ public class RobotUtils {
         
         // Return weighted sum using absolute rotational difference
         return translationDist + Math.abs(diff) * rotationWeight;
+    }
+
+    @SuppressWarnings("all")
+    private static HashMap<String,StructPublisher> map=new HashMap<>();
+
+    @SuppressWarnings("all")
+    public static<T> StructPublisher<T> getPublisher(String name,Struct<T> struct){
+        if(map.containsKey(name)){
+            return (StructPublisher<T>) map.get(name);
+        }else{
+            StructPublisher<T> pub=NetworkTableInstance.getDefault().getStructTopic(name, struct).publish();
+            map.put(name,pub);
+            return pub;
+        }
     }
 }

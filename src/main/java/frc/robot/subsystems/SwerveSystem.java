@@ -4,7 +4,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.ArmConstants;
@@ -22,12 +21,12 @@ public class SwerveSystem extends SubsystemBase {
      * the arm, elevator, and wrist.
      */
     public static class SwerveSystemState {
-        public final double armPosition;
-        public final double elevatorPosition;
-        public final double wristPosition;
+        public final Double armPosition;
+        public final Double elevatorPosition;
+        public final Double wristPosition;
         public final Pose2d botPosition;
 
-        public SwerveSystemState(double armPosition, double elevatorPosition, double wristPosition, Pose2d botPosition) {
+        public SwerveSystemState(Double armPosition, Double elevatorPosition, Double wristPosition, Pose2d botPosition) {
             this.armPosition = armPosition;
             this.elevatorPosition = elevatorPosition;
             this.wristPosition = wristPosition;
@@ -45,13 +44,6 @@ public class SwerveSystem extends SubsystemBase {
     private Wrist wrist;    // The wrist subsystem
     public final Swerve swerve; // The swerve subsystem
 
-    private StructPublisher<Pose2d> botPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/pose", Pose2d.struct).publish();
-    private StructPublisher<Pose2d> targetBotPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/driveState/targetPose", Pose2d.struct).publish();
-    private StructPublisher<Pose3d> firstStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/sim/elevatorFirst", Pose3d.struct).publish();
-    private StructPublisher<Pose3d> secondStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/sim/elevatorSecond", Pose3d.struct).publish();
-    private StructPublisher<Pose3d> armPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/sim/arm", Pose3d.struct).publish();
-    private StructPublisher<Pose3d> wristPosePublisher = NetworkTableInstance.getDefault().getStructTopic("SmartDashboard/sim/wrist", Pose3d.struct).publish();
-
     /**
      * Constructor for the `ArmMechanism` class.
      *
@@ -66,42 +58,65 @@ public class SwerveSystem extends SubsystemBase {
         this.swerve = swerve;
     }
 
+    private void publishData(SwerveSystemState state,String path){
+        StructPublisher<Pose2d> botPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/pose", Pose2d.struct);
+        StructPublisher<Pose3d> firstStagePosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/elevatorFirst", Pose3d.struct);
+        StructPublisher<Pose3d> secondStagePosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/elevatorSecond", Pose3d.struct);
+        StructPublisher<Pose3d> armPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/arm", Pose3d.struct);
+        StructPublisher<Pose3d> wristPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/wrist", Pose3d.struct);
+        if(state.botPosition!=null){
+            botPosePublisher.set(state.botPosition);
+        }
+        
+        if(state.elevatorPosition!=null){
+            // Calculate elevator positions
+            double elevatorHeight = elevator.getMeasurement();
+            firstStagePosePublisher.set(new Pose3d(0, 0, elevatorHeight/2, new Rotation3d()));
+            
+            // Calculate elevator end position
+            Translation3d elevatorTrans = new Translation3d(0, 0, elevatorHeight);
+            Pose3d elevatorPose = new Pose3d(elevatorTrans, new Rotation3d());
+            secondStagePosePublisher.set(elevatorPose);
+
+            if(state.armPosition!=null){
+                // Calculate arm pivot position (offset from elevator end)
+                Translation3d armPivotTrans = elevatorTrans.plus(SwerveSystemConstants.armTransOffset);
+
+                double armAngle = arm.getMeasurement();
+
+                // Publish arm pose
+                Pose3d armPose = new Pose3d(armPivotTrans, new Rotation3d(0, -armAngle, 0));
+                armPosePublisher.set(armPose);
+
+                if(state.wristPosition!=null){
+                    double armX = ArmConstants.armLength * -Math.sin(armAngle); // negative because forward is negative X
+                    double armZ = ArmConstants.armLength * Math.cos(armAngle);  // cosine for vertical component
+                    Translation3d armEndTrans = armPivotTrans.plus(new Translation3d(armX, 0, armZ));
+
+                    // Calculate and publish wrist pose
+                    double wristAngle = wrist.getAdjustedMeasurement();
+                    Pose3d wristPose = new Pose3d(armEndTrans, new Rotation3d(0, -wristAngle, 0));
+                    wristPosePublisher.set(wristPose);
+                }
+            }
+        }
+    }
+
+    public SwerveSystemState getState(){
+        return new SwerveSystemState(arm==null?null:arm.getMeasurement(), elevator==null?null:elevator.getMeasurement(), wrist==null?null:wrist.getMeasurement(), swerve==null?null:swerve.getPose());
+    }
+
+    public SwerveSystemState getTargetState(){
+        return new SwerveSystemState(arm==null?null:arm.getGoal(), elevator==null?null:elevator.getGoal(), wrist==null?null:wrist.getGoal(), swerve==null?null:swerve.getTargetPose());
+    }
     /**
      * This method is called periodically (every 20ms by default) and updates the visualization
      * of the arm, elevator, and wrist mechanisms based on their current positions.
      */
     @Override
     public void periodic() {
-        // Update robot pose visualization
-        botPosePublisher.set(swerve.getPose());
-        targetBotPosePublisher.set(swerve.getTargetPose());
-
-        // Calculate elevator positions
-        double elevatorHeight = elevator.getMeasurement();
-        firstStagePosePublisher.set(new Pose3d(0, 0, elevatorHeight/2, new Rotation3d()));
-        
-        // Calculate elevator end position
-        Translation3d elevatorTrans = new Translation3d(0, 0, elevatorHeight);
-        Pose3d elevatorPose = new Pose3d(elevatorTrans, new Rotation3d());
-        secondStagePosePublisher.set(elevatorPose);
-
-        // Calculate arm pivot position (offset from elevator end)
-        Translation3d armPivotTrans = elevatorTrans.plus(SwerveSystemConstants.armTransOffset);
-        
-        // Calculate arm end position (arm angle is now relative to vertical)
-        double armAngle = arm.getMeasurement();
-        double armX = ArmConstants.armLength * -Math.sin(armAngle); // negative because forward is negative X
-        double armZ = ArmConstants.armLength * Math.cos(armAngle);  // cosine for vertical component
-        Translation3d armEndTrans = armPivotTrans.plus(new Translation3d(armX, 0, armZ));
-        
-        // Publish arm pose
-        Pose3d armPose = new Pose3d(armPivotTrans, new Rotation3d(0, -armAngle, 0));
-        armPosePublisher.set(armPose);
-
-        // Calculate and publish wrist pose
-        double wristAngle = wrist.getAdjustedMeasurement();
-        Pose3d wristPose = new Pose3d(armEndTrans, new Rotation3d(0, -wristAngle, 0));
-        wristPosePublisher.set(wristPose);
+        publishData(getState(),"sim/real");
+        publishData(getTargetState(),"sim/target");
     }
 
     /**
@@ -118,11 +133,19 @@ public class SwerveSystem extends SubsystemBase {
      * @param state The state to set the arm system to.
      * @param targetPose The target robot pose to use if state's position is null
      */
-    public void setState(SwerveSystemState state) {
-        arm.setGoal(state.armPosition);
-        elevator.setGoal(state.elevatorPosition);
-        wrist.setGoal(state.wristPosition);
-        swerve.setTargetPose(state.botPosition);
+    public void setTargetState(SwerveSystemState state) {
+        if(arm!=null){
+            arm.setGoal(state.armPosition);
+        }
+        if(elevator!=null){
+            elevator.setGoal(state.elevatorPosition);
+        }
+        if(wrist!=null){
+            wrist.setGoal(state.wristPosition);
+        }
+        if(swerve!=null){
+            swerve.setTargetPose(state.botPosition);
+        }
     }
 
     public SwerveSystemState getClosestState(SwerveSystemState[] states){
@@ -155,6 +178,9 @@ public class SwerveSystem extends SubsystemBase {
      * @return true if all mechanisms are at their setpoints, false otherwise.
      */
     public boolean atSetpoint() {
-        return arm.atSetpoint() && elevator.atSetpoint() && wrist.atSetpoint() && swerve.atTarget();
+        return (arm==null || arm.atSetpoint()) &&
+            (elevator==null || elevator.atSetpoint()) &&
+            (wrist==null || wrist.atSetpoint()) &&
+            (swerve==null || swerve.atTarget());
     }
 }

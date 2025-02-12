@@ -8,7 +8,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.sim.ChassisReference;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
@@ -38,7 +38,7 @@ public class Arm extends SubsystemBase {
     private TalonFX armMotor = new TalonFX(ArmConstants.motorId, "rio");
     
     // PID controller for arm position control
-    private PIDController controller = new PIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kD);
+    private ProfiledPIDController controller = new ProfiledPIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kD, ArmConstants.pidConstraints);
     
     // Feedforward controller for arm dynamics
     private ArmFeedforward feedforward = new ArmFeedforward(ArmConstants.kS, ArmConstants.kG, ArmConstants.kV);
@@ -164,6 +164,8 @@ public class Arm extends SubsystemBase {
         return ArmConstants.transform.transformVel(armMotor.getAcceleration().getValueAsDouble());
     }
 
+
+
     public boolean atSetpoint() {
         return controller.atSetpoint();
     }
@@ -178,8 +180,9 @@ public class Arm extends SubsystemBase {
     public void telemetry() {
         SmartDashboard.putNumber("arm/angle", getMeasurement());
         SmartDashboard.putNumber("arm/goal", getGoal());
+        SmartDashboard.putNumber("arm/setpoint", controller.getSetpoint().position);
         SmartDashboard.putNumber("arm/velocity", getVelocity());
-        SmartDashboard.putNumber("arm/error", controller.getError());
+        SmartDashboard.putNumber("arm/error", controller.getPositionError());
         SmartDashboard.putNumber("arm/motor/rawAngle", armMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("arm/motor/temp", armMotor.getDeviceTemp().getValueAsDouble());
         SmartDashboard.putNumber("arm/motor/fault", armMotor.getFaultField().asSupplier().get());
@@ -198,7 +201,7 @@ public class Arm extends SubsystemBase {
             telemetry();
             
             // Calculate feedforward and PID control outputs
-            double feed = feedforward.calculate(goal+Math.PI/2, 0); // Offset so that 0 = horizontal
+            double feed = feedforward.calculate(controller.getSetpoint().position+ArmConstants.feedOffset, controller.getSetpoint().velocity); // Offset so that 0 = horizontal
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor

@@ -8,7 +8,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.sim.ChassisReference;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
@@ -40,7 +40,7 @@ public class Wrist extends SubsystemBase {
     private TalonFX wristMotor = new TalonFX(WristConstants.motorId, "rio");
     
     // PID controller for Wrist position control
-    private PIDController controller = new PIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD);
+    private ProfiledPIDController controller = new ProfiledPIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD,WristConstants.pidConstraints);
 
     // Feedforward controller for arm dynamics
     private ArmFeedforward feedforward = new ArmFeedforward(WristConstants.kS, WristConstants.kG, WristConstants.kV);
@@ -80,7 +80,7 @@ public class Wrist extends SubsystemBase {
                 this));
     
     // Simulation state for the motor
-    private TalonFXSimState wristMotorSim = new TalonFXSimState(wristMotor, ChassisReference.Clockwise_Positive);
+    private TalonFXSimState wristMotorSim = new TalonFXSimState(wristMotor, ChassisReference.CounterClockwise_Positive);
 
     private Arm arm;
         
@@ -92,7 +92,7 @@ public class Wrist extends SubsystemBase {
         // Configure the motor
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Brake;
-        currentConfigs.Inverted = InvertedValue.Clockwise_Positive;
+        currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
         wristMotor.getConfigurator().apply(currentConfigs);
 
         // Set the tolerance for the PID controller
@@ -104,6 +104,9 @@ public class Wrist extends SubsystemBase {
         this.arm=arm;
     }
 
+    public void resetPos(){
+        wristMotor.setPosition(0);
+    }
     /**
      * Gets the current Wrist position in radians.
      * 
@@ -146,7 +149,7 @@ public class Wrist extends SubsystemBase {
      * @return The current true goal in radians.
      */
     public double getAdjustedGoal() {
-        return arm.getGoal() + this.getGoal();
+        return this.getGoal() + arm.getGoal();
     }
 
     /**
@@ -199,8 +202,9 @@ public class Wrist extends SubsystemBase {
     public void telemetry() {
         SmartDashboard.putNumber("wrist/angle",getMeasurement());
         SmartDashboard.putNumber("wrist/goal",getGoal());
+        SmartDashboard.putNumber("wrist/setpoint",controller.getSetpoint().position);
         SmartDashboard.putNumber("wrist/velocity",getVelocity());
-        SmartDashboard.putNumber("wrist/error",controller.getError());
+        SmartDashboard.putNumber("wrist/error",controller.getPositionError());
         SmartDashboard.putNumber("wrist/motor/rawAngle",wristMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("wrist/motor/temp",wristMotor.getDeviceTemp().getValueAsDouble());
         SmartDashboard.putNumber("wrist/motor/fault",wristMotor.getFaultField().asSupplier().get());
@@ -220,7 +224,8 @@ public class Wrist extends SubsystemBase {
             telemetry();
         
             // Calculate PID control outputs
-            double feed = feedforward.calculate(getAdjustedGoal()+Math.PI/2, 0);
+            double armRotation=arm!=null?arm.getMeasurement():0;
+            double feed = feedforward.calculate(controller.getSetpoint().position+armRotation+WristConstants.feedOffset, controller.getSetpoint().velocity);
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor

@@ -102,6 +102,9 @@ public class RobotContainer {
 			initMultiCommands();
 			initAdditionalComponents();
 
+			// Configure SysId bindings for elevator
+			configureSysIdBindings(elevatorCommands);
+
 			//arm.resetPos();
 			//wrist.resetPos();
 			//elevator.resetPos();
@@ -150,8 +153,7 @@ public class RobotContainer {
 		// Configure elevator bindings
 		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -operator.getLeftY() / 50));
 
-		// Configure SysId bindings for elevator
-		configureSysIdBindings(elevatorCommands);
+		
 	}
 
 	private void initArm() {
@@ -228,7 +230,7 @@ public class RobotContainer {
 		autoFactory = new AutoFactory(multiCommands);
 	}
 
-	private void configureSysIdBindings(ElevatorCommands subsystemCommands) {
+	private void configureSysIdBindings(SysIdCommands subsystemCommands) {
 		sysIdTest.cross()
 			.onTrue(subsystemCommands.sysIdDynamic(Direction.kForward))
 			.onFalse(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));

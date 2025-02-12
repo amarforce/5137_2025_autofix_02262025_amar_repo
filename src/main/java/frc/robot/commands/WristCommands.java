@@ -11,7 +11,7 @@ import frc.robot.subsystems.Wrist;
  * The `WristCommands` class provides a set of commands for controlling the wrist subsystem.
  * These commands include running system identification routines.
  */
-public class WristCommands {
+public class WristCommands implements SysIdCommands{
     private Wrist wrist; // The wrist subsystem that these commands will control.
 
     /**

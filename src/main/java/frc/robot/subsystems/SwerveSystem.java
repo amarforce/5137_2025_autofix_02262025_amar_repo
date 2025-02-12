@@ -103,11 +103,21 @@ public class SwerveSystem extends SubsystemBase {
     }
 
     public SwerveSystemState getState(){
-        return new SwerveSystemState(arm==null?null:arm.getMeasurement(), elevator==null?null:elevator.getMeasurement(), wrist==null?null:wrist.getMeasurement(), swerve==null?null:swerve.getPose());
+        return new SwerveSystemState(
+            arm==null?null:arm.getMeasurement(), 
+            elevator==null?null:elevator.getMeasurement(), 
+            wrist==null?null:wrist.getMeasurement(), 
+            swerve==null?null:swerve.getPose()
+        );
     }
 
     public SwerveSystemState getTargetState(){
-        return new SwerveSystemState(arm==null?null:arm.getGoal(), elevator==null?null:elevator.getGoal(), wrist==null?null:wrist.getGoal(), swerve==null?null:swerve.getTargetPose());
+        return new SwerveSystemState(
+            arm==null?null:arm.getGoal(), 
+            elevator==null?null:elevator.getGoal(), 
+            wrist==null?null:wrist.getGoal(), 
+            swerve==null?null:swerve.getTargetPose()
+        );
     }
     /**
      * This method is called periodically (every 20ms by default) and updates the visualization

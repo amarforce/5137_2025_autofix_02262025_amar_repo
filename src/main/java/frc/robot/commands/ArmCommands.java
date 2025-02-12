@@ -12,7 +12,7 @@ import frc.robot.subsystems.Arm;
  * These commands are used to set or adjust the arm's goal position, move to predefined positions,
  * and perform system identification (SysId) routines.
  */
-public class ArmCommands {
+public class ArmCommands implements SysIdCommands{
 
     private Arm arm; // The arm subsystem that these commands will control.
 

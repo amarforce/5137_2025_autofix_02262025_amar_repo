@@ -11,7 +11,7 @@ import frc.robot.subsystems.Elevator;
  * A class that provides a set of commands for controlling the elevator subsystem.
  * These commands are used to set specific goals for the elevator or dynamically adjust the goal based on input.
  */
-public class ElevatorCommands {
+public class ElevatorCommands implements SysIdCommands{
     private final Elevator elevator;
 
     /**

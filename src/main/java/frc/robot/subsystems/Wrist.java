@@ -56,7 +56,7 @@ public class Wrist extends SubsystemBase {
         WristConstants.wristLength,
         WristConstants.minAngle,
         WristConstants.maxAngle,
-        true,
+        false,
         SwerveSystemConstants.getDefaultState().wristPosition
     );
 

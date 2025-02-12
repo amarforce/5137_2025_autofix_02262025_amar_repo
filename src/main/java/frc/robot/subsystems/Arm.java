@@ -54,7 +54,7 @@ public class Arm extends SubsystemBase {
         ArmConstants.armLength, 
         ArmConstants.minAngle, 
         ArmConstants.maxAngle, 
-        true, 
+        false, 
         SwerveSystemConstants.getDefaultState().armPosition
     );
 

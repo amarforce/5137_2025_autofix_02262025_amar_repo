@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 /**
@@ -36,28 +37,28 @@ public class MultiCommands {
     public Command getCoralFromSource() {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToSource(),
-            intakeCommands.intakeUntilSwitched()
+            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.simIntake("coral"))
         );
     }
 
     public Command getCoralFromGround(Supplier<Pose2d> pose) {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToGround(pose),
-            intakeCommands.intakeUntilSwitched()
+            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.simIntake("coral"))
         );
     }
 
     public Command placeCoral(Supplier<Integer> level,Supplier<Integer> branch) {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToBranch(level,branch),
-            intakeCommands.outtake()
+            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.simOuttake())
         );
     }
 
     public Command getAlgae(Supplier<Integer> side) {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToAlgae(side), 
-            intakeCommands.intakeUntilSwitched(),
+            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.simIntake("algae")),
             swerveCommands.driveBack()
         );
     }
@@ -65,7 +66,7 @@ public class MultiCommands {
     public Command placeAlgae() {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToProcessor(),
-            intakeCommands.outtake()
+            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.simOuttake())
         );
     }
 }

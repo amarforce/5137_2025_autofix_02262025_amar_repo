@@ -37,7 +37,9 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 /**
@@ -188,6 +190,7 @@ public class Swerve extends SubsystemBase {
 
     private void startAuto(Command auto){
         cancelAuto();
+        auto=new ParallelRaceGroup(auto,new WaitCommand(SwerveConstants.moveTimeout));
         auto.schedule();
         currentAuto=auto;
     }

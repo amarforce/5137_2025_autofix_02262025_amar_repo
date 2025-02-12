@@ -38,7 +38,7 @@ public class GeneralConstants {
 
     static {
         // Initialize processor
-        baseProcessor = new Pose2d(new Translation2d(6.25, 0.65), new Rotation2d(3*Math.PI/2));
+        baseProcessor = new Pose2d(new Translation2d(6.25, 1), new Rotation2d(3*Math.PI/2));
 
         // Initialize cages
         Pose2d leftCage = new Pose2d(new Translation2d(8.5, 7.25), new Rotation2d(3*Math.PI/2));
@@ -65,10 +65,9 @@ public class GeneralConstants {
         baseBranchReef = new Pose2d[sides*2];
         
         for(int i = 0; i < sides; i++) {
-            Rotation2d forward = new Rotation2d(2*i*Math.PI/sides);
-            Rotation2d angle = forward.rotateBy(Rotation2d.k180deg);
-            Translation2d outer = reefCenter.plus(new Translation2d(d1, angle));
-            Rotation2d sidewaysAngle = angle.rotateBy(Rotation2d.kCW_90deg);
+            Rotation2d forward = new Rotation2d(2*i*Math.PI/sides).rotateBy(Rotation2d.k180deg);
+            Translation2d outer = reefCenter.plus(new Translation2d(d1, forward));
+            Rotation2d sidewaysAngle = forward.rotateBy(Rotation2d.kCW_90deg);
             Translation2d algae = outer.plus(new Translation2d(dShift, sidewaysAngle));
             baseCenterReef[i] = new Pose2d(algae, forward);
             Translation2d left = algae.plus(new Translation2d(d2, sidewaysAngle));

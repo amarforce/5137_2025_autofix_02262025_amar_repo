@@ -1,6 +1,6 @@
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.constants.HangConstants;
@@ -23,25 +23,25 @@ public class HangCommand extends SequentialCommandGroup {
         // Add a sequence of commands to be executed in order
         addCommands(
             // Deactivate the clamp mechanism
-            Commands.runOnce(() -> hangSubsystem.clampDeactivate()),
+            new InstantCommand(() -> hangSubsystem.clampDeactivate()),
             
             // Wait for the specified deactivation time
             new WaitCommand(HangConstants.clampDeactivationTime),
             
             // Extend the climb mechanism
-            Commands.runOnce(() -> hangSubsystem.climbExtend()),
+            new InstantCommand(() -> hangSubsystem.climbExtend()),
             
             // Wait for the specified extension time
             new WaitCommand(HangConstants.climbExtensionTime),
             
             // Activate the clamp mechanism
-            Commands.runOnce(() -> hangSubsystem.clampActivate()),
+            new InstantCommand(() -> hangSubsystem.clampActivate()),
             
             // Wait for the specified activation time
             new WaitCommand(HangConstants.clampActivationTime),
             
             // Retract the climb mechanism
-            Commands.runOnce(() -> hangSubsystem.climbRetract())
+            new InstantCommand(() -> hangSubsystem.climbRetract())
         );
     }
 }

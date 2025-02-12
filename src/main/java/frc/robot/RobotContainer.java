@@ -205,8 +205,8 @@ public class RobotContainer {
 		swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
 
 		// Configure swerve system bindings
-		driver.triangle().onTrue(swerveSystemCommands.moveToSource());
-		driver.circle().onTrue(swerveSystemCommands.moveToProcessor());
+		//driver.triangle().onTrue(swerveSystemCommands.moveToSource());
+		//driver.circle().onTrue(swerveSystemCommands.moveToProcessor());
 
 		operator.triangle().onTrue(swerveSystemCommands.moveToLevel(3));
 		operator.circle().onTrue(swerveSystemCommands.moveToLevel(2));
@@ -223,6 +223,8 @@ public class RobotContainer {
 
 	private void initMultiCommands() {
 		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommand);
+		driver.triangle().onTrue(multiCommands.getCoralFromSource());
+		driver.square().onTrue(multiCommands.placeCoral(()->0,()->0));
 	}
 
 	private void initAdditionalComponents() {

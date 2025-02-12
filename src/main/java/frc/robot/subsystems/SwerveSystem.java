@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -42,7 +43,10 @@ public class SwerveSystem extends SubsystemBase {
     private Arm arm;        // The arm subsystem
     private Elevator elevator; // The elevator subsystem
     private Wrist wrist;    // The wrist subsystem
-    public final Swerve swerve; // The swerve subsystem
+    private Swerve swerve; // The swerve subsystem
+
+    private String currentObject;
+    private double gamepieceShift;
 
     /**
      * Constructor for the `ArmMechanism` class.
@@ -56,47 +60,56 @@ public class SwerveSystem extends SubsystemBase {
         this.elevator = elevator;
         this.wrist = wrist;
         this.swerve = swerve;
+        currentObject="none";
     }
 
     private void publishData(SwerveSystemState state,String path){
-        StructPublisher<Pose2d> botPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/pose", Pose2d.struct);
+        StructPublisher<Pose3d> botPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/pose", Pose3d.struct);
         StructPublisher<Pose3d> firstStagePosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/elevatorFirst", Pose3d.struct);
         StructPublisher<Pose3d> secondStagePosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/elevatorSecond", Pose3d.struct);
         StructPublisher<Pose3d> armPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/arm", Pose3d.struct);
         StructPublisher<Pose3d> wristPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/wrist", Pose3d.struct);
+        StructPublisher<Pose3d> coralPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/coral", Pose3d.struct);
+        StructPublisher<Pose3d> algaePosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/algae", Pose3d.struct);
         if(state.botPosition!=null){
-            botPosePublisher.set(state.botPosition);
-        }
-        
-        if(state.elevatorPosition!=null){
-            // Calculate elevator positions
-            double elevatorHeight = state.elevatorPosition;
-            firstStagePosePublisher.set(new Pose3d(0, 0, elevatorHeight/2, new Rotation3d()));
-            
-            // Calculate elevator end position
-            Translation3d elevatorTrans = new Translation3d(0, 0, elevatorHeight);
-            Pose3d elevatorPose = new Pose3d(elevatorTrans, new Rotation3d());
-            secondStagePosePublisher.set(elevatorPose);
+            Pose3d botPose=new Pose3d(state.botPosition);
+            botPosePublisher.set(botPose);
+            if(state.elevatorPosition!=null){
+                // Calculate elevator positions
+                double elevatorHeight = state.elevatorPosition;
+                Pose3d firstStagePose=botPose.plus(new Transform3d(0, 0, elevatorHeight/2, new Rotation3d()));
+                firstStagePosePublisher.set(firstStagePose.relativeTo(botPose));
+                
+                // Calculate elevator end position
+                Pose3d elevatorPose = botPose.plus(new Transform3d(0, 0, elevatorHeight, new Rotation3d()));
+                secondStagePosePublisher.set(elevatorPose.relativeTo(botPose));
+    
+                if(state.armPosition!=null){
+                    // Calculate arm pivot position (offset from elevator end)
+                    double armAngle = state.armPosition;
+                    Pose3d armPose = elevatorPose.plus(new Transform3d(SwerveSystemConstants.armTransOffset,new Rotation3d(0,-armAngle,0)));
+    
+                    // Publish arm pose
+                    armPosePublisher.set(armPose.relativeTo(botPose));
+    
+                    if(state.wristPosition!=null){
+                        // Calculate and publish wrist pose
+                        double wristAngle = state.wristPosition;
+                        Pose3d wristPose = armPose.plus(new Transform3d(0, 0, ArmConstants.armLength, new Rotation3d(0,-wristAngle,0)));
+                        wristPosePublisher.set(wristPose.relativeTo(botPose));
+    
+                        if(currentObject=="coral"){
+                            coralPosePublisher.set(wristPose.plus(new Transform3d(SwerveSystemConstants.coralTransOffset.plus(new Translation3d(-gamepieceShift, 0, 0)), new Rotation3d())));
+                        }else{
+                            coralPosePublisher.set(new Pose3d(0, 0, Double.MAX_VALUE, new Rotation3d()));
+                        }
 
-            if(state.armPosition!=null){
-                // Calculate arm pivot position (offset from elevator end)
-                Translation3d armPivotTrans = elevatorTrans.plus(SwerveSystemConstants.armTransOffset);
-
-                double armAngle = state.armPosition;
-
-                // Publish arm pose
-                Pose3d armPose = new Pose3d(armPivotTrans, new Rotation3d(0, -armAngle, 0));
-                armPosePublisher.set(armPose);
-
-                if(state.wristPosition!=null){
-                    double armX = ArmConstants.armLength * -Math.sin(armAngle); // negative because forward is negative X
-                    double armZ = ArmConstants.armLength * Math.cos(armAngle);  // cosine for vertical component
-                    Translation3d armEndTrans = armPivotTrans.plus(new Translation3d(armX, 0, armZ));
-
-                    // Calculate and publish wrist pose
-                    double wristAngle = state.wristPosition+state.armPosition;
-                    Pose3d wristPose = new Pose3d(armEndTrans, new Rotation3d(0, -wristAngle, 0));
-                    wristPosePublisher.set(wristPose);
+                        if(currentObject=="algae"){
+                            algaePosePublisher.set(wristPose.plus(new Transform3d(SwerveSystemConstants.algaeTransOffset.plus(new Translation3d(-gamepieceShift, 0, 0)), new Rotation3d())));
+                        }else{
+                            algaePosePublisher.set(new Pose3d(0, 0, Double.MAX_VALUE, new Rotation3d()));
+                        }
+                    }
                 }
             }
         }
@@ -118,6 +131,22 @@ public class SwerveSystem extends SubsystemBase {
             wrist==null?null:wrist.getGoal(), 
             swerve==null?null:swerve.getTargetPose()
         );
+    }
+
+    public String getCurrentObject(){
+        return currentObject;
+    }
+
+    public void setCurrentObject(String object){
+        currentObject=object;
+    }
+
+    public double getGamepieceShift(){
+        return gamepieceShift;
+    }
+
+    public void setGamepieceShift(double shift){
+        gamepieceShift=shift;
     }
     /**
      * This method is called periodically (every 20ms by default) and updates the visualization

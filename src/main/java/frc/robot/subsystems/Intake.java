@@ -20,9 +20,6 @@ public class Intake extends SubsystemBase {
     // Motor controller for the intake mechanism
     private TalonFX intakeMotor;
 
-    // Limit switch to detect the position of the intake
-    //sprivate DigitalInput limitSwitch;
-
     /**
      * Constructs an Intake subsystem.
      */
@@ -30,8 +27,6 @@ public class Intake extends SubsystemBase {
         // Initialize the motor controller with the ID and type from constants
         intakeMotor = new TalonFX(IntakeConstants.motorId, "rio");
 
-        // Initialize the limit switch with the channel from constants
-        //limitSwitch = new DigitalInput(IntakeConstants.switchChannel);
         var currentConfigs = new MotorOutputConfigs();
         currentConfigs.NeutralMode = NeutralModeValue.Coast;
         currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -52,16 +47,6 @@ public class Intake extends SubsystemBase {
      */
     public void stop() {
         intakeMotor.stopMotor();
-    }
-
-    /**
-     * Checks if the limit switch is triggered.
-     *
-     * @return True if the limit switch is triggered, false otherwise.
-     */
-    public boolean isSwitched() {
-        //return limitSwitch.get();
-        return false;
     }
 
     /**

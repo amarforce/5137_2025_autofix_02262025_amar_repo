@@ -39,7 +39,7 @@ public class WristConstants {
     public static final double wristTolerance = Units.degreesToRadians(1);
 
     // Simulation constants
-    public static final double momentOfInertia = 0.0155;
+    public static final double momentOfInertia = 0.155;
     public static final double wristLength = 0.1524;
     public static final DCMotor motorSim = DCMotor.getKrakenX60(1);
 }

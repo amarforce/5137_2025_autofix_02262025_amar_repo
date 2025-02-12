@@ -70,7 +70,7 @@ public class SwerveSystem extends SubsystemBase {
         
         if(state.elevatorPosition!=null){
             // Calculate elevator positions
-            double elevatorHeight = elevator.getMeasurement();
+            double elevatorHeight = state.elevatorPosition;
             firstStagePosePublisher.set(new Pose3d(0, 0, elevatorHeight/2, new Rotation3d()));
             
             // Calculate elevator end position
@@ -82,7 +82,7 @@ public class SwerveSystem extends SubsystemBase {
                 // Calculate arm pivot position (offset from elevator end)
                 Translation3d armPivotTrans = elevatorTrans.plus(SwerveSystemConstants.armTransOffset);
 
-                double armAngle = arm.getMeasurement();
+                double armAngle = state.armPosition;
 
                 // Publish arm pose
                 Pose3d armPose = new Pose3d(armPivotTrans, new Rotation3d(0, -armAngle, 0));
@@ -94,7 +94,7 @@ public class SwerveSystem extends SubsystemBase {
                     Translation3d armEndTrans = armPivotTrans.plus(new Translation3d(armX, 0, armZ));
 
                     // Calculate and publish wrist pose
-                    double wristAngle = wrist.getAdjustedMeasurement();
+                    double wristAngle = state.wristPosition+state.armPosition;
                     Pose3d wristPose = new Pose3d(armEndTrans, new Rotation3d(0, -wristAngle, 0));
                     wristPosePublisher.set(wristPose);
                 }

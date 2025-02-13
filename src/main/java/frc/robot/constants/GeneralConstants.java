@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.elastic.Reef;
 import frc.robot.other.RobotUtils;
 
 public class GeneralConstants {
@@ -15,8 +16,8 @@ public class GeneralConstants {
     public static final double simPeriod = 0.02;
 
     private static final double d1 = 1.3;
-    private static final double d2 = 0.16;
-    private static final double dShift = -0.13;
+    private static final double d2 = 0.165;
+    private static final double dShift = -0.21;
 
     private static final double branchd1 = 0.75;
     private static final double branchd2 = 0.16;
@@ -27,6 +28,10 @@ public class GeneralConstants {
     private static final double l4d1 = 0.2;
     private static final double l4height = 1.6;
 
+    private static final double algaed1 = 0.66;
+    private static final double algaeLowHeight = 0.88;
+    private static final double algaeHighHeight = 1.28;
+
     // Base positions (without alliance inversion)
     private static final Pose2d baseProcessor;
     private static final Pose2d[] baseCages;
@@ -35,6 +40,7 @@ public class GeneralConstants {
     private static final Pose2d[] baseCenterReef;
     private static final Pose2d[] baseBranchReef;
     private static final Translation3d[][] baseCoralPositions;
+    private static final Translation3d[] baseAlgaePositions;
 
     static {
         // Initialize processor
@@ -47,10 +53,10 @@ public class GeneralConstants {
         baseCages = new Pose2d[]{leftCage, centerCage, rightCage};
 
         // Initialize stations
-        Pose2d stationRR = new Pose2d(new Translation2d(1.55, 0.75), new Rotation2d(Units.degreesToRadians(54)));
-        Pose2d stationRL = new Pose2d(new Translation2d(0.725, 1.375), new Rotation2d(Units.degreesToRadians(54)));
-        Pose2d stationLR = new Pose2d(new Translation2d(0.725, 6.675), new Rotation2d(Units.degreesToRadians(306)));
-        Pose2d stationLL = new Pose2d(new Translation2d(1.55, 7.3), new Rotation2d(Units.degreesToRadians(306)));
+        Pose2d stationRR = new Pose2d(new Translation2d(1.8, 1), new Rotation2d(Units.degreesToRadians(234)));
+        Pose2d stationRL = new Pose2d(new Translation2d(0.975, 1.625), new Rotation2d(Units.degreesToRadians(234)));
+        Pose2d stationLR = new Pose2d(new Translation2d(0.975, 6.555), new Rotation2d(Units.degreesToRadians(126)));
+        Pose2d stationLL = new Pose2d(new Translation2d(1.8, 7.05), new Rotation2d(Units.degreesToRadians(126)));
         baseStations = new Pose2d[]{stationRR, stationRL, stationLR, stationLL};
 
         // Initialize pickups
@@ -86,6 +92,17 @@ public class GeneralConstants {
             baseCoralPositions[i][1] = new Translation3d(side.plus(new Translation2d(l3d1, angle))).plus(new Translation3d(0, 0, l3height));
             baseCoralPositions[i][2] = new Translation3d(side.plus(new Translation2d(l4d1, angle))).plus(new Translation3d(0, 0, l4height));
         }
+
+        baseAlgaePositions = new Translation3d[sides*2];
+        for(int i=0;i<sides; i++){
+            Rotation2d angle = new Rotation2d(2*i*Math.PI/sides);
+            Translation2d center = reefCenter.plus(new Translation2d(algaed1, angle));
+            baseAlgaePositions[i]=new Translation3d(center).plus(new Translation3d(0, 0, Reef.isAlgaeLow(i)?algaeLowHeight:algaeHighHeight));
+        }
+
+        for(int i=sides;i<2*sides;i++){
+            baseAlgaePositions[i]=RobotUtils.invertTrans3d(baseAlgaePositions[i-sides]);
+        }
     }
 
     public static Pose2d getProcessor() {
@@ -114,5 +131,9 @@ public class GeneralConstants {
 
     public static Translation3d[][] getCoralPositions() {
         return RobotUtils.invertToAlliance(baseCoralPositions);
+    }
+
+    public static Translation3d[] getAlgaePositions() {
+        return baseAlgaePositions;
     }
 }

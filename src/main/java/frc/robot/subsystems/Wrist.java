@@ -202,7 +202,7 @@ public class Wrist extends SubsystemBase {
      */
     public void telemetry() {
         SmartDashboard.putNumber("wrist/angle",getMeasurement());
-        SmartDashboard.putNumber("arm/degrees", Units.degreesToRadians(getMeasurement()));
+        SmartDashboard.putNumber("wrist/degrees", Units.radiansToDegrees(getMeasurement()));
         SmartDashboard.putNumber("wrist/goal",getGoal());
         SmartDashboard.putNumber("wrist/setpoint",controller.getSetpoint().position);
         SmartDashboard.putNumber("wrist/setpointVelocity",controller.getSetpoint().velocity);

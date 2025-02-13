@@ -180,7 +180,7 @@ public class Arm extends SubsystemBase {
      */
     public void telemetry() {
         SmartDashboard.putNumber("arm/angle", getMeasurement());
-        SmartDashboard.putNumber("arm/degrees", Units.degreesToRadians(getMeasurement()));
+        SmartDashboard.putNumber("arm/degrees", Units.radiansToDegrees(getMeasurement()));
         SmartDashboard.putNumber("arm/goal", getGoal());
         SmartDashboard.putNumber("arm/setpoint", controller.getSetpoint().position);
         SmartDashboard.putNumber("arm/setpointVelocity",controller.getSetpoint().velocity);

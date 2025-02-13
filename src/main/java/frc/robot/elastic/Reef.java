@@ -41,7 +41,7 @@ public class Reef implements NTSendable{
     }
 
     public static boolean isAlgaeLow(int side) {
-        return side%2 == 1;
+        return side%2 == 0;
     }
 
     public boolean isCoralBlocked(int level,int branch){

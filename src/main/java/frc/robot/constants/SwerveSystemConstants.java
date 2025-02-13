@@ -66,9 +66,9 @@ public final class SwerveSystemConstants {
         var stations = GeneralConstants.getStations();
         for (int i = 0; i < states.length; i++) {
             states[i] = new SwerveSystem.SwerveSystemState(
-                Units.degreesToRadians(35),  // 45 - 90 = -45 degrees
-                0.22,                        // From ElevatorConstants.sourceGoal
-                wristStraight,              // From WristConstants.pos2 (straight)
+                Units.degreesToRadians(-25.1),  // 45 - 90 = -45 degrees
+                0.1,                        // From ElevatorConstants.sourceGoal
+                Units.degreesToRadians(-113.6),              // From WristConstants.pos2 (straight)
                 stations[i]
             );
         }
@@ -94,15 +94,21 @@ public final class SwerveSystemConstants {
         SwerveSystem.SwerveSystemState[][] states = new SwerveSystem.SwerveSystemState[4][GeneralConstants.sides*2];
         double[] armAngles = {
             Units.degreesToRadians(45),   // L1 (135 - 90)
-            Units.degreesToRadians(45),   // L2 (135 - 90)
-            Units.degreesToRadians(45),   // L3 (135 - 90)
-            Units.degreesToRadians(30)    // L4 (120 - 90)
+            Units.degreesToRadians(35),   // L2 (135 - 90)
+            Units.degreesToRadians(35),   // L3 (135 - 90)
+            Units.degreesToRadians(35)    // L4 (120 - 90)
         };
         double[] elevatorHeights = {
             0.06,  // L1
-            0.26,  // L2
-            0.56,  // L3
-            1.26   // L4
+            0.05,  // L2
+            0.37,  // L3
+            1.21   // L4
+        };
+        double[] wristAngles = {
+            Units.degreesToRadians(0),   // L1 (135 - 90)
+            Units.degreesToRadians(0),   // L2 (135 - 90)
+            Units.degreesToRadians(0),   // L3 (135 - 90)
+            Units.degreesToRadians(24.2)    // L4 (120 - 90)
         };
 
         var branchReef = GeneralConstants.getBranchReef();
@@ -111,7 +117,7 @@ public final class SwerveSystemConstants {
                 states[level][pos] = new SwerveSystem.SwerveSystemState(
                     armAngles[level],
                     elevatorHeights[level],
-                    wristStraight,
+                    wristAngles[level],
                     branchReef[pos]
                 );
             }

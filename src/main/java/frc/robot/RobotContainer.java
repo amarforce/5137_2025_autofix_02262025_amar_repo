@@ -170,8 +170,8 @@ public class RobotContainer {
 		wristCommands = new WristCommands(wrist);
 
 		// Configure wrist bindings
-		operator.L1().onTrue(wristCommands.changeGoal(() -> Math.toRadians(-5)));
-		operator.R1().onTrue(wristCommands.changeGoal(() -> Math.toRadians(5)));
+		operator.triangle().whileTrue(wristCommands.changeGoal(()->0.01));
+		operator.square().whileTrue(wristCommands.changeGoal(()->-0.01));
 	}
 
 	private void initIntake() {
@@ -208,10 +208,10 @@ public class RobotContainer {
 		//driver.triangle().onTrue(swerveSystemCommands.moveToSource());
 		//driver.circle().onTrue(swerveSystemCommands.moveToProcessor());
 
-		operator.triangle().onTrue(swerveSystemCommands.moveToLevel(3));
-		operator.circle().onTrue(swerveSystemCommands.moveToLevel(2));
-		operator.square().onTrue(swerveSystemCommands.moveToLevel(1));
-		operator.cross().onTrue(swerveSystemCommands.moveToLevel(0));
+		// operator.triangle().onTrue(swerveSystemCommands.moveToLevel(3));
+		// operator.circle().onTrue(swerveSystemCommands.moveToLevel(2));
+		// operator.square().onTrue(swerveSystemCommands.moveToLevel(1));
+		// operator.cross().onTrue(swerveSystemCommands.moveToLevel(0));
 
 		// operator.povUp().onTrue(swerveSystemCommands.moveToGround(()->new Pose2d()));
 		// operator.povDown().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));
@@ -223,8 +223,10 @@ public class RobotContainer {
 
 	private void initMultiCommands() {
 		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommand);
-		driver.triangle().onTrue(multiCommands.getCoralFromSource());
-		driver.square().onTrue(multiCommands.placeCoral(()->0,()->0));
+		driver.triangle().onTrue(multiCommands.getCoralFromSource()); // e
+		driver.square().onTrue(multiCommands.placeCoral(()->1,()->0)); // x
+		driver.circle().onTrue(multiCommands.placeCoral(()->2,()->0)); // t
+		driver.cross().onTrue(multiCommands.placeCoral(()->3,()->0)); // p
 	}
 
 	private void initAdditionalComponents() {

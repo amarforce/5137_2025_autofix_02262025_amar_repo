@@ -5,9 +5,12 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.ArmConstants;
+import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.SwerveSystemConstants;
 import frc.robot.other.RobotUtils;
 
@@ -47,6 +50,8 @@ public class SwerveSystem extends SubsystemBase {
 
     private String currentObject;
     private double gamepieceShift;
+
+    private StructArrayPublisher<Pose3d> algaePublisher=NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/sim/allAlgae",Pose3d.struct).publish();
 
     /**
      * Constructor for the `ArmMechanism` class.
@@ -148,6 +153,15 @@ public class SwerveSystem extends SubsystemBase {
     public void setGamepieceShift(double shift){
         gamepieceShift=shift;
     }
+
+    public void putAlgae(){
+        Translation3d[] pos=GeneralConstants.getAlgaePositions();
+        Pose3d[] poses=new Pose3d[pos.length];
+        for(int i=0;i<poses.length;i++){
+            poses[i]=new Pose3d(pos[i], new Rotation3d());
+        }
+        algaePublisher.set(poses);
+    }
     /**
      * This method is called periodically (every 20ms by default) and updates the visualization
      * of the arm, elevator, and wrist mechanisms based on their current positions.
@@ -156,6 +170,7 @@ public class SwerveSystem extends SubsystemBase {
     public void periodic() {
         publishData(getState(),"sim/real");
         publishData(getTargetState(),"sim/target");
+        putAlgae();
     }
 
     /**

@@ -4,27 +4,27 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Robot;
-import frc.robot.other.MotorTransform;
 
 public class WristConstants {
     // Motor ID
     public static final int motorId = Robot.isSimulation() ? 23 : 3;
+    public static final double gearRatio = 12.0;
+
+    // Encoder ID
+    public static final int encoderId = 0;
+    public static final double encoderRatio = 1.0;
+    public static final double encoderOffset = 0.0;
 
     // Limits
     public static final double minAngle = Units.degreesToRadians(-115);
     public static final double maxAngle = Units.degreesToRadians(90);
 
-    // Encoder transform
-    public static final double wristOffset = Units.degreesToRadians(0);
-    public static final double gearRatio = 12.0;
-    public static final MotorTransform transform = new MotorTransform((2*Math.PI)/gearRatio, wristOffset);
-
     public static final double feedOffset = Units.degreesToRadians(90);
     
     // PID constants
-    public static final double kP = 3.5;
+    public static final double kP = 0.1;
     public static final double kI = 0;
-    public static final double kD = 0.5;
+    public static final double kD = 0.01;
 
     // Feedforward constants
     public static final double kS = 0.16;

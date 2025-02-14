@@ -1,18 +1,12 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.sim.TalonFXSimState;
-import com.ctre.phoenix6.sim.ChassisReference;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
@@ -23,6 +17,8 @@ import frc.robot.constants.ArmConstants;
 import frc.robot.constants.SwerveSystemConstants;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.other.RobotUtils;
+import frc.robot.other.RolloverEncoder;
+import frc.robot.other.TalonFX2;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -36,7 +32,8 @@ import static edu.wpi.first.units.Units.Volts;
 public class Arm extends SubsystemBase {
     
     // Motor controller for the arm
-    private TalonFX armMotor = new TalonFX(ArmConstants.motorId, "rio");
+    private TalonFX2 armMotor = new TalonFX2(ArmConstants.motorId,(2*Math.PI)/ArmConstants.gearRatio,0,InvertedValue.CounterClockwise_Positive,"rio");
+    private RolloverEncoder armEncoder = new RolloverEncoder(ArmConstants.encoderId, (2*Math.PI)/ArmConstants.encoderRatio, ArmConstants.encoderOffset);
     
     // PID controller for arm position control
     private ProfiledPIDController controller = new ProfiledPIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kD, ArmConstants.pidConstraints);
@@ -77,29 +74,16 @@ public class Arm extends SubsystemBase {
                         .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
                 },
                 this));
-    
-    // Simulation state for the motor
-    private TalonFXSimState armMotorSim = new TalonFXSimState(armMotor, ChassisReference.CounterClockwise_Positive);
-    
+        
     /**
      * Constructor for the Arm subsystem.
      */
     public Arm() {
-        // Configure the motor
-        var currentConfigs = new MotorOutputConfigs();
-        currentConfigs.NeutralMode = NeutralModeValue.Brake;
-        currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
-        armMotor.getConfigurator().apply(currentConfigs);
-
         // Set the tolerance for the PID controller
         controller.setTolerance(ArmConstants.armTolerance);
         
         // Display the PID controller on SmartDashboard for tuning
         SmartDashboard.putData("arm/controller", controller);
-    }
-
-    public void resetPos(){
-        armMotor.setPosition(0.0);
     }
 
     /**
@@ -108,7 +92,7 @@ public class Arm extends SubsystemBase {
      * @return The current arm position in radians.
      */
     public double getMeasurement() {
-        return ArmConstants.transform.transformPos(armMotor.getPosition().getValueAsDouble());
+        return armEncoder.get();
     }
     
     /**
@@ -153,7 +137,7 @@ public class Arm extends SubsystemBase {
      * @return The current arm velocity in radians per second.
      */
     public double getVelocity() {
-        return ArmConstants.transform.transformVel(armMotor.getVelocity().getValueAsDouble());
+        return armMotor.getVel();
     }
 
     /**
@@ -162,10 +146,8 @@ public class Arm extends SubsystemBase {
      * @return The current arm acceleration in radians per second^2.
      */
     public double getAcceleration() {
-        return ArmConstants.transform.transformVel(armMotor.getAcceleration().getValueAsDouble());
+        return armMotor.getAcc();
     }
-
-
 
     public boolean atSetpoint() {
         return controller.atSetpoint();
@@ -210,6 +192,8 @@ public class Arm extends SubsystemBase {
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
+
+            armEncoder.periodic();
         } catch (Exception e) {
             DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }
@@ -221,17 +205,19 @@ public class Arm extends SubsystemBase {
     @Override
     public void simulationPeriodic() {
         // Update the motor simulation state with the current battery voltage
-        armMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+        armMotor.refreshSupplyVoltage();
         
-        // Get the current motor input voltage and update the arm simulation
-        double armInput = armMotorSim.getMotorVoltage();
+        // Get the current motor input voltage and update the Wrist simulation
+        double armInput = armMotor.getSimVoltage();
         armSim.setInputVoltage(armInput);
         armSim.update(GeneralConstants.simPeriod);
         
-        // Update the motor simulation state with the new arm position and velocity
-        armMotorSim.setRawRotorPosition(ArmConstants.transform.transformPosInv(armSim.getAngleRads()));
-        armMotorSim.setRotorVelocity(ArmConstants.transform.transformVelInv(armSim.getVelocityRadPerSec()));
-        
+        // Update the motor simulation state with the new Wrist position and velocity
+        armMotor.setPos(armSim.getAngleRads());
+        armMotor.setVel(armSim.getVelocityRadPerSec());
+
+        armEncoder.set(armSim.getAngleRads());
+
         // Update the RoboRIO simulation state with the new battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(armSim.getCurrentDrawAmps()));
     }

@@ -3,6 +3,7 @@ package frc.robot;
 import java.io.File;
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.datalog.DataLog;
@@ -103,7 +104,7 @@ public class RobotContainer {
 			initAdditionalComponents();
 
 			// Configure SysId bindings for elevator
-			configureSysIdBindings(elevatorCommands);
+			//configureSysIdBindings(elevatorCommands);
 
 			//arm.resetPos();
 			//wrist.resetPos();
@@ -151,7 +152,7 @@ public class RobotContainer {
 		elevatorCommands = new ElevatorCommands(elevator);
 
 		// Configure elevator bindings
-		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -operator.getLeftY() / 50));
+		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getLeftY(),0.1) / 50));
 
 		
 	}

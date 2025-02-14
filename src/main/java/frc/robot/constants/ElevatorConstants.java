@@ -2,12 +2,16 @@ package frc.robot.constants;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.Robot;
-import frc.robot.other.MotorTransform;
 
 public class ElevatorConstants {
     // Motor IDs
     public static final int leftMotorId = Robot.isSimulation()?20:0;
     public static final int rightMotorId = Robot.isSimulation()?21:1;
+
+    // Encoder ID
+    public static final int encoderId = 2;
+    public static final double encoderRatio = 0.5;
+    public static final double encoderOffset = 0;
 
     // PID constants
     public static final double kP = 60;
@@ -34,9 +38,4 @@ public class ElevatorConstants {
     // Motion Profile constants
     public static final double maxVelocity = 1; // meters/sec
     public static final double maxAcceleration = 2; // meters/sec^2
-
-    // Encoder transform
-    public static final double elevatorOffset = 0;
-    public static final double metersPerRotation = drumRadius*2*Math.PI/gearRatio;
-    public static final MotorTransform transform = new MotorTransform(metersPerRotation, elevatorOffset);
 }

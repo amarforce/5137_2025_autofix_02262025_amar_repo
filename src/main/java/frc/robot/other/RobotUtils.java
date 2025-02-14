@@ -226,4 +226,20 @@ public class RobotUtils {
             return pub;
         }
     }
+
+    public static double mod(double a,double b){
+        double result = a % b;
+        if (result < 0) {
+            result += b;
+        }
+        return result;
+    }
+
+    public static int mod(int a,int b){
+        int result = a % b;
+        if (result < 0) {
+            result += b;
+        }
+        return result;
+    }
 }

@@ -1,18 +1,12 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.sim.TalonFXSimState;
-import com.ctre.phoenix6.sim.ChassisReference;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
@@ -21,6 +15,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.WristConstants;
 import frc.robot.other.RobotUtils;
+import frc.robot.other.RolloverEncoder;
+import frc.robot.other.TalonFX2;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.SwerveSystemConstants;
 
@@ -38,8 +34,9 @@ import static edu.wpi.first.units.Units.Volts;
 public class Wrist extends SubsystemBase {
     
     // Motor controller for the Wrist
-    private TalonFX wristMotor = new TalonFX(WristConstants.motorId, "rio");
-    
+    private TalonFX2 wristMotor = new TalonFX2(WristConstants.motorId,(2*Math.PI)/WristConstants.gearRatio,0,InvertedValue.CounterClockwise_Positive,"rio");
+    private RolloverEncoder wristEncoder = new RolloverEncoder(WristConstants.encoderId, (2*Math.PI)/WristConstants.encoderRatio, WristConstants.encoderOffset);
+
     // PID controller for Wrist position control
     private ProfiledPIDController controller = new ProfiledPIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD,WristConstants.pidConstraints);
 
@@ -79,9 +76,6 @@ public class Wrist extends SubsystemBase {
                         .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
                 },
                 this));
-    
-    // Simulation state for the motor
-    private TalonFXSimState wristMotorSim = new TalonFXSimState(wristMotor, ChassisReference.CounterClockwise_Positive);
 
     private Arm arm;
         
@@ -90,12 +84,6 @@ public class Wrist extends SubsystemBase {
      * @param arm The arm subsystem that this wrist is attached to
      */
     public Wrist(Arm arm) {
-        // Configure the motor
-        var currentConfigs = new MotorOutputConfigs();
-        currentConfigs.NeutralMode = NeutralModeValue.Brake;
-        currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
-        wristMotor.getConfigurator().apply(currentConfigs);
-
         // Set the tolerance for the PID controller
         controller.setTolerance(WristConstants.wristTolerance);
         
@@ -104,17 +92,13 @@ public class Wrist extends SubsystemBase {
 
         this.arm=arm;
     }
-
-    public void resetPos(){
-        wristMotor.setPosition(0);
-    }
     /**
      * Gets the current Wrist position in radians.
      * 
      * @return The current position of the wrist in radians.
      */
     public double getMeasurement() {
-        return WristConstants.transform.transformPos(wristMotor.getPosition().getValueAsDouble());
+        return wristEncoder.get();
     }
 
     /**
@@ -168,7 +152,7 @@ public class Wrist extends SubsystemBase {
      * @return The current velocity of the wrist in radians per second.
      */
     public double getVelocity() {
-        return WristConstants.transform.transformVel(wristMotor.getVelocity().getValueAsDouble());
+        return wristMotor.getVel();
     }
 
     /**
@@ -186,7 +170,7 @@ public class Wrist extends SubsystemBase {
      * @return The current acceleration of the wrist in radians per second^2.
      */
     public double getAcceleration() {
-        return WristConstants.transform.transformVel(wristMotor.getAcceleration().getValueAsDouble());
+        return wristMotor.getAcc();
     }
 
     public boolean atSetpoint() {
@@ -235,6 +219,8 @@ public class Wrist extends SubsystemBase {
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
 
+            wristEncoder.periodic();
+
         } catch (Exception e) {
             DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }
@@ -247,17 +233,19 @@ public class Wrist extends SubsystemBase {
     @Override
     public void simulationPeriodic() {
         // Update the motor simulation state with the current battery voltage
-        wristMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+        wristMotor.refreshSupplyVoltage();
         
         // Get the current motor input voltage and update the Wrist simulation
-        double wristInput = wristMotorSim.getMotorVoltage();
+        double wristInput = wristMotor.getSimVoltage();
         wristSim.setInputVoltage(wristInput);
         wristSim.update(GeneralConstants.simPeriod);
         
         // Update the motor simulation state with the new Wrist position and velocity
-        wristMotorSim.setRawRotorPosition(WristConstants.transform.transformPosInv(wristSim.getAngleRads()));
-        wristMotorSim.setRotorVelocity(WristConstants.transform.transformVelInv(wristSim.getVelocityRadPerSec()));
-        
+        wristMotor.setPos(wristSim.getAngleRads());
+        wristMotor.setVel(wristSim.getVelocityRadPerSec());
+
+        wristEncoder.set(wristSim.getAngleRads());
+
         // Update the RoboRIO simulation state with the new battery voltage
         RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(wristSim.getCurrentDrawAmps()));
     }

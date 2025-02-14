@@ -63,7 +63,7 @@ public class Swerve extends SubsystemBase {
     private SwerveRequest.SwerveDriveBrake lock; // Request to lock the swerve modules in place
 
     // Target pose
-    private Pose2d targetPose;
+    private Pose2d targetPose=new Pose2d();
 
     
 

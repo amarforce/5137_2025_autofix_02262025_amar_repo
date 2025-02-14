@@ -24,7 +24,7 @@ public class ArmConstants {
     public static final double kD = 0.5;
 
     // Feedforward constants
-    public static final double kS = 0.135;
+    public static final double kS = Robot.isSimulation()?0.0:0.135;
     public static final double kG = Robot.isSimulation()?0.0:1.5;
     public static final double kV = 0.62;
     public static final double kA = 0.09;

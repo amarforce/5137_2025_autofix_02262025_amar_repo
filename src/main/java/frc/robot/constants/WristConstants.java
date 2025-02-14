@@ -27,7 +27,7 @@ public class WristConstants {
     public static final double kD = 0.01;
 
     // Feedforward constants
-    public static final double kS = 0.16;
+    public static final double kS = Robot.isSimulation()?0.0:0.16;
     public static final double kG = Robot.isSimulation()?0.0:0.56;
     public static final double kV = 0.25757;
     public static final double kA = 0.050664;

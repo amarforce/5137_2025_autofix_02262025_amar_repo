@@ -8,6 +8,7 @@ import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class TalonFX2 extends TalonFX{
     private double mul;
@@ -55,5 +56,20 @@ public class TalonFX2 extends TalonFX{
 
     public double getSimVoltage(){
         return sim.getMotorVoltage();
+    }
+
+    public void log(String path){
+        SmartDashboard.putNumber(path+"/output",get());
+        SmartDashboard.putNumber(path+"/rawMeasurement", getPosition().getValueAsDouble());
+        SmartDashboard.putNumber(path+"/measurement", getPos());
+        SmartDashboard.putNumber(path+"/rawVelocity", getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber(path+"/velocity", getVel());
+        SmartDashboard.putNumber(path+"/rawAcceleration", getAcceleration().getValueAsDouble());
+        SmartDashboard.putNumber(path+"/acceleration", getAcc());
+        SmartDashboard.putNumber(path+"/temp", getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber(path+"/fault", getFaultField().asSupplier().get());
+        SmartDashboard.putNumber(path+"/current", getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber(path+"/voltage", getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber(path+"/supplyVoltage", getSupplyVoltage().getValueAsDouble());
     }
 }

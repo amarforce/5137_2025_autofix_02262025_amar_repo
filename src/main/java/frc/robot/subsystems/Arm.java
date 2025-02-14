@@ -168,13 +168,8 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("arm/setpointVelocity",controller.getSetpoint().velocity);
         SmartDashboard.putNumber("arm/velocity", getVelocity());
         SmartDashboard.putNumber("arm/error", controller.getPositionError());
-        SmartDashboard.putNumber("arm/motor/output",armMotor.get());
-        SmartDashboard.putNumber("arm/motor/rawAngle", armMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("arm/motor/temp", armMotor.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("arm/motor/fault", armMotor.getFaultField().asSupplier().get());
-        SmartDashboard.putNumber("arm/motor/current", armMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("arm/motor/voltage", armMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("arm/motor/supplyVoltage", armMotor.getSupplyVoltage().getValueAsDouble());
+        armMotor.log("arm/motor");
+        armEncoder.log("arm/encoder");
     }
 
     /**

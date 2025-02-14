@@ -2,6 +2,7 @@ package frc.robot.other;
 
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.simulation.DutyCycleEncoderSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class RolloverEncoder extends DutyCycleEncoder{
     private double last=-1;
@@ -37,5 +38,11 @@ public class RolloverEncoder extends DutyCycleEncoder{
         double encoderVal=RobotUtils.mod(val,fullRange);
         sim.set(encoderVal);
         shift=val-encoderVal;
+    }
+
+    public void log(String path){
+        SmartDashboard.putBoolean(path+"/connected", isConnected());
+        SmartDashboard.putNumber(path+"/rawPosition", super.get());
+        SmartDashboard.putNumber(path+"/position", get());
     }
 }

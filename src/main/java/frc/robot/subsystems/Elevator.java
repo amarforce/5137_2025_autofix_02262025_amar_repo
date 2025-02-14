@@ -177,22 +177,10 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("elevator/height",getMeasurement());
         SmartDashboard.putNumber("elevator/goal",getGoal());
         SmartDashboard.putNumber("elevator/velocity",getVelocity());
-        SmartDashboard.putNumber("elevator/positionError",controller.getError());
-        SmartDashboard.putNumber("elevator/velocityError",controller.getErrorDerivative());
-        SmartDashboard.putNumber("elevator/leftMotor/output",leftMotor.get());
-        SmartDashboard.putNumber("elevator/rightMotor/output",rightMotor.get());
-        SmartDashboard.putNumber("elevator/leftMotor/rawHeight",leftMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotor/rawHeight",rightMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/leftMotor/temp",leftMotor.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotor/temp",rightMotor.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/leftMotor/fault",leftMotor.getFaultField().asSupplier().get());
-        SmartDashboard.putNumber("elevator/rightMotor/fault",rightMotor.getFaultField().asSupplier().get());
-        SmartDashboard.putNumber("elevator/leftMotor/current",leftMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotor/current",rightMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/leftMotor/voltage",leftMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotor/voltage",rightMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/leftMotor/supplyVoltage",leftMotor.getSupplyVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/rightMotor/supplyVoltage",rightMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/error",controller.getError());
+        leftMotor.log("elevator/leftMotor");
+        rightMotor.log("elevator/rightMotor");
+        elevatorEncoder.log("elevator/encoder");
     }
 
     /**

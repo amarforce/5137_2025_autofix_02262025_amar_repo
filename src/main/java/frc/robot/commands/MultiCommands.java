@@ -17,14 +17,14 @@ public class MultiCommands {
     private IntakeCommands intakeCommands;
     private SwerveCommands swerveCommands;
     @SuppressWarnings("unused")
-    private HangCommand hangCommand;
+    private HangCommands hangCommand;
 
 
     /**
      * Constructor for MultiCommands.
      */
     public MultiCommands(SwerveSystemCommands swerveSystemCommands, SwerveCommands swerveCommands, IntakeCommands intakeCommands,
-                         HangCommand hangCommand) {
+                         HangCommands hangCommand) {
         this.swerveSystemCommands = swerveSystemCommands;
         this.swerveCommands = swerveCommands;
         this.intakeCommands = intakeCommands;

@@ -59,7 +59,7 @@ public class RobotContainer {
 	private IntakeCommands intakeCommands;
 
 	private Hang hang;
-	private HangCommand hangCommand;
+	private HangCommands hangCommands;
 
 	private LED led;
 
@@ -89,19 +89,19 @@ public class RobotContainer {
 			initReef();
 			
 			// Initialize subsystems
-			initVision();
-			initSwerve();
-			initElevator();
-			initArm();
-			initWrist();
-			initIntake();
+			//initVision();
+			//initSwerve();
+			//initElevator();
+			//initArm();
+			//initWrist();
+			//initIntake();
 			initHang();
-			initLED();
+			//initLED();
 			
 			// Initialize combined systems and commands
-			initSwerveSystem();
-			initMultiCommands();
-			initAdditionalComponents();
+			//initSwerveSystem();
+			//initMultiCommands();
+			//initAdditionalComponents();
 
 			// Configure SysId bindings for elevator
 			//configureSysIdBindings(elevatorCommands);
@@ -191,10 +191,9 @@ public class RobotContainer {
 
 	private void initHang() {
 		hang = new Hang();
-		hangCommand = new HangCommand(hang);
+		hangCommands = new HangCommands(hang);
 
-		// Configure hang bindings
-		operator.touchpad().onTrue(hangCommand);
+		hang.setDefaultCommand(hangCommands.setSpeed(()->MathUtil.applyDeadband(operator.getLeftX(),0.1)/10));
 	}
 
 	private void initLED() {
@@ -223,7 +222,7 @@ public class RobotContainer {
 	}
 
 	private void initMultiCommands() {
-		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommand);
+		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommands);
 		driver.triangle().onTrue(multiCommands.getCoralFromSource()); // e
 		driver.square().onTrue(multiCommands.placeCoral(()->1,()->0)); // x
 		driver.circle().onTrue(multiCommands.placeCoral(()->2,()->0)); // t

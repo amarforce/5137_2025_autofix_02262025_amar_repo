@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.elastic.*;
+import frc.robot.gamepieces.Gamepieces;
 import frc.robot.other.AutoFactory;
 import frc.robot.other.CageChoice;
 import frc.robot.other.RobotUtils;
@@ -70,6 +71,7 @@ public class RobotContainer {
 	private ReefScoring reefScoring;
 	private CageChoice cageChoice;
 	private AutoFactory autoFactory;
+	private Gamepieces gamepieces;
 
 	/**
 	 * Constructor for RobotContainer.
@@ -87,13 +89,14 @@ public class RobotContainer {
 			driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 			
 			initReef();
+			initGamepieces();
 			
 			// Initialize subsystems
 			//initVision();
 			//initSwerve();
-			//initElevator();
+			initElevator();
 			//initArm();
-			initWrist();
+			//initWrist();
 			//initIntake();
 			//initHang();
 			//initLED();
@@ -125,6 +128,10 @@ public class RobotContainer {
 		reefScoring = new ReefScoring(reef);
 		SmartDashboard.putData("reef", reef);
 		SmartDashboard.putData("reefScoring", reefScoring);
+	}
+
+	private void initGamepieces() {
+		gamepieces=new Gamepieces();
 	}
 
 	private void initVision() {
@@ -202,7 +209,7 @@ public class RobotContainer {
 	}
 
 	private void initSwerveSystem() {
-		swerveSystem = new SwerveSystem(arm, elevator, wrist, swerve);
+		swerveSystem = new SwerveSystem(arm, elevator, wrist, swerve, gamepieces);
 		swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
 
 		// Configure swerve system bindings
@@ -225,9 +232,9 @@ public class RobotContainer {
 	private void initMultiCommands() {
 		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommands);
 		driver.triangle().onTrue(multiCommands.getCoralFromSource()); // e
-		driver.square().onTrue(multiCommands.placeCoral(()->1,()->0)); // x
+		driver.square().onTrue(multiCommands.getAlgae(()->0)); // x
 		driver.circle().onTrue(multiCommands.placeCoral(()->2,()->0)); // t
-		driver.cross().onTrue(multiCommands.placeCoral(()->3,()->0)); // p
+		driver.cross().onTrue(multiCommands.placeAlgae()); // p
 	}
 
 	private void initAdditionalComponents() {

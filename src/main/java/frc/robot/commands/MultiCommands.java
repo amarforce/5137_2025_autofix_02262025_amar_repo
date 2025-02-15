@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 /**
  * The MultiCommands class is responsible for creating complex commands that involve multiple subsystems.
@@ -17,18 +18,17 @@ public class MultiCommands {
     private IntakeCommands intakeCommands;
     private SwerveCommands swerveCommands;
     @SuppressWarnings("unused")
-    private HangCommands hangCommand;
+    private HangCommands hangCommands;
 
 
     /**
      * Constructor for MultiCommands.
      */
-    public MultiCommands(SwerveSystemCommands swerveSystemCommands, SwerveCommands swerveCommands, IntakeCommands intakeCommands,
-                         HangCommands hangCommand) {
+    public MultiCommands(SwerveSystemCommands swerveSystemCommands, SwerveCommands swerveCommands, IntakeCommands intakeCommands, HangCommands hangCommands) {
         this.swerveSystemCommands = swerveSystemCommands;
         this.swerveCommands = swerveCommands;
         this.intakeCommands = intakeCommands;
-        this.hangCommand = hangCommand;
+        this.hangCommands = hangCommands;
     }
 
     /**
@@ -37,36 +37,37 @@ public class MultiCommands {
     public Command getCoralFromSource() {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToSource(),
-            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.simIntake("coral"))
+            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.coralIntake())
         );
     }
 
     public Command getCoralFromGround(Supplier<Pose2d> pose) {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToGround(pose),
-            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.simIntake("coral"))
+            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.coralIntake())
         );
     }
 
     public Command placeCoral(Supplier<Integer> level,Supplier<Integer> branch) {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToBranch(level,branch),
-            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.simOuttake())
+            new WaitCommand(0.5),
+            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.outtakeCoral())
         );
     }
 
     public Command getAlgae(Supplier<Integer> side) {
         return new SequentialCommandGroup(
-            swerveSystemCommands.moveToAlgae(side), 
-            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.simIntake("algae")),
-            swerveCommands.driveBack()
+            swerveSystemCommands.moveToAlgae(side),
+            new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.algaeIntake())
+            //,swerveCommands.driveBack()
         );
     }
 
     public Command placeAlgae() {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToProcessor(),
-            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.simOuttake())
+            new ParallelCommandGroup(intakeCommands.outtake(),swerveSystemCommands.outtakeAlgae())
         );
     }
 }

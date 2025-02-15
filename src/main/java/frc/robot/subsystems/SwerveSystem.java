@@ -4,14 +4,13 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.ArmConstants;
-import frc.robot.constants.GeneralConstants;
+import frc.robot.constants.GamepieceConstants;
 import frc.robot.constants.SwerveSystemConstants;
+import frc.robot.gamepieces.Gamepiece;
+import frc.robot.gamepieces.Gamepieces;
 import frc.robot.other.RobotUtils;
 
 /**
@@ -48,10 +47,9 @@ public class SwerveSystem extends SubsystemBase {
     private Wrist wrist;    // The wrist subsystem
     private Swerve swerve; // The swerve subsystem
 
-    private String currentObject;
-    private double gamepieceShift;
-
-    private StructArrayPublisher<Pose3d> algaePublisher=NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/sim/allAlgae",Pose3d.struct).publish();
+    private Pose3d currentWristPose;
+    private Gamepieces gamepieces;
+    private Gamepiece currentPiece;
 
     /**
      * Constructor for the `ArmMechanism` class.
@@ -60,22 +58,20 @@ public class SwerveSystem extends SubsystemBase {
      * @param elevator The elevator subsystem.
      * @param wrist    The wrist subsystem.
      */
-    public SwerveSystem(Arm arm, Elevator elevator, Wrist wrist, Swerve swerve) {
+    public SwerveSystem(Arm arm, Elevator elevator, Wrist wrist, Swerve swerve, Gamepieces gamepieces) {
         this.arm = arm;
         this.elevator = elevator;
         this.wrist = wrist;
         this.swerve = swerve;
-        currentObject="none";
+        this.gamepieces = gamepieces;
     }
 
-    private void publishData(SwerveSystemState state,String path){
+    private void publishData(SwerveSystemState state,String path,boolean realBot){
         StructPublisher<Pose3d> botPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/pose", Pose3d.struct);
         StructPublisher<Pose3d> firstStagePosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/elevatorFirst", Pose3d.struct);
         StructPublisher<Pose3d> secondStagePosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/elevatorSecond", Pose3d.struct);
         StructPublisher<Pose3d> armPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/arm", Pose3d.struct);
         StructPublisher<Pose3d> wristPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/wrist", Pose3d.struct);
-        StructPublisher<Pose3d> coralPosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/coral", Pose3d.struct);
-        StructPublisher<Pose3d> algaePosePublisher = RobotUtils.getPublisher("SmartDashboard/"+path+"/algae", Pose3d.struct);
         if(state.botPosition!=null){
             Pose3d botPose=new Pose3d(state.botPosition);
             botPosePublisher.set(botPose);
@@ -102,17 +98,8 @@ public class SwerveSystem extends SubsystemBase {
                         double wristAngle = state.wristPosition;
                         Pose3d wristPose = armPose.plus(new Transform3d(0, 0, ArmConstants.armLength, new Rotation3d(0,-wristAngle,0)));
                         wristPosePublisher.set(wristPose.relativeTo(botPose));
-    
-                        if(currentObject=="coral"){
-                            coralPosePublisher.set(wristPose.plus(new Transform3d(SwerveSystemConstants.coralTransOffset.plus(new Translation3d(-gamepieceShift, 0, 0)), new Rotation3d())));
-                        }else{
-                            coralPosePublisher.set(new Pose3d(0, 0, Double.MAX_VALUE, new Rotation3d()));
-                        }
-
-                        if(currentObject=="algae"){
-                            algaePosePublisher.set(wristPose.plus(new Transform3d(SwerveSystemConstants.algaeTransOffset.plus(new Translation3d(-gamepieceShift, 0, 0)), new Rotation3d())));
-                        }else{
-                            algaePosePublisher.set(new Pose3d(0, 0, Double.MAX_VALUE, new Rotation3d()));
+                        if(realBot){
+                            currentWristPose = wristPose;
                         }
                     }
                 }
@@ -138,29 +125,35 @@ public class SwerveSystem extends SubsystemBase {
         );
     }
 
-    public String getCurrentObject(){
-        return currentObject;
+    public Pose3d getCurrentWristPose(){
+        return currentWristPose;
     }
 
-    public void setCurrentObject(String object){
-        currentObject=object;
-    }
-
-    public double getGamepieceShift(){
-        return gamepieceShift;
-    }
-
-    public void setGamepieceShift(double shift){
-        gamepieceShift=shift;
-    }
-
-    public void putAlgae(){
-        Translation3d[] pos=GeneralConstants.getAlgaePositions();
-        Pose3d[] poses=new Pose3d[pos.length];
-        for(int i=0;i<poses.length;i++){
-            poses[i]=new Pose3d(pos[i], new Rotation3d());
+    public void coralIntake(){
+        if(gamepieces!=null){
+            currentPiece=gamepieces.getClosestCoral(getCurrentWristPose());
         }
-        algaePublisher.set(poses);
+    }
+
+    public void algaeIntake(){
+        if(gamepieces!=null){
+            System.out.println("x");
+            currentPiece=gamepieces.getClosestAlgae(getCurrentWristPose());
+        }
+    }
+
+    public void outtakeCoral(){
+        if(currentPiece!=null){
+            currentPiece.setGoalOnBot(currentWristPose.plus(new Transform3d(-GamepieceConstants.coralDrop, 0, 0, new Rotation3d())));
+            currentPiece=null;
+        }
+    }
+
+    public void outtakeAlgae(){
+        if(currentPiece!=null){
+            currentPiece.setGoalOnBot(currentWristPose.plus(new Transform3d(-GamepieceConstants.algaeDrop, 0, 0, new Rotation3d())));
+            currentPiece=null;
+        }
     }
     /**
      * This method is called periodically (every 20ms by default) and updates the visualization
@@ -168,9 +161,11 @@ public class SwerveSystem extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        publishData(getState(),"sim/real");
-        publishData(getTargetState(),"sim/target");
-        putAlgae();
+        publishData(getState(),"sim/real",true);
+        publishData(getTargetState(),"sim/target",false);
+        if(currentPiece!=null){
+            currentPiece.setGoalOnBot(currentWristPose);
+        }
     }
 
     /**

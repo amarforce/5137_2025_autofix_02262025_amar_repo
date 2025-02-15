@@ -4,7 +4,6 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -77,32 +76,19 @@ public class SwerveSystemCommands {
         );
     }
 
-    public Command simIntake(String objectName){
-        return new FunctionalCommand(
-            ()->{
-                swerveSystem.setCurrentObject(objectName);
-                swerveSystem.setGamepieceShift(SwerveSystemConstants.intakeDistance);
-            }, 
-            ()->{
-                swerveSystem.setGamepieceShift(swerveSystem.getGamepieceShift()-SwerveSystemConstants.intakeStep);
-            }, 
-            (e)->{}, 
-            ()->{
-                return swerveSystem.getGamepieceShift()<=0;
-            });
+    public Command coralIntake(){
+        return new InstantCommand(()->swerveSystem.coralIntake());
     }
 
-    public Command simOuttake(){
-        return new FunctionalCommand(
-            ()->{}, 
-            ()->{
-                swerveSystem.setGamepieceShift(swerveSystem.getGamepieceShift()+SwerveSystemConstants.intakeStep);
-            }, 
-            (e)->{
-                swerveSystem.setCurrentObject("none");
-            }, 
-            ()->{
-                return swerveSystem.getGamepieceShift()>=SwerveSystemConstants.intakeDistance;
-            });
+    public Command algaeIntake(){
+        return new InstantCommand(()->swerveSystem.algaeIntake());
+    }
+
+    public Command outtakeCoral(){
+        return new InstantCommand(()->swerveSystem.outtakeCoral());
+    }
+
+    public Command outtakeAlgae(){
+        return new InstantCommand(()->swerveSystem.outtakeAlgae());
     }
 }

@@ -18,7 +18,7 @@ public class TalonFX2 extends TalonFX{
     public TalonFX2(int port,double mul,double offset,InvertedValue value,String canBus){
         super(port,canBus);
         var currentConfigs = new MotorOutputConfigs();
-        currentConfigs.NeutralMode = NeutralModeValue.Brake;
+        //currentConfigs.NeutralMode = NeutralModeValue.Brake;
         currentConfigs.Inverted = value;
         this.getConfigurator().apply(currentConfigs);
         this.mul=mul;

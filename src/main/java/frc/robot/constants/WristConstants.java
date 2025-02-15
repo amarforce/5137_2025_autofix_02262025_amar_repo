@@ -22,9 +22,9 @@ public class WristConstants {
     public static final double feedOffset = Units.degreesToRadians(90);
     
     // PID constants
-    public static final double kP = 0.3;
+    public static final double kP = 3;
     public static final double kI = 0;
-    public static final double kD = 0.03;
+    public static final double kD = 0.3;
 
     // Feedforward constants
     public static final double kS = Robot.isSimulation()?0.0:0.16;
@@ -33,7 +33,7 @@ public class WristConstants {
     public static final double kA = 0.050664;
 
     // Motion Profile constants
-    public static final Constraints pidConstraints=new Constraints(Units.degreesToRadians(45),Units.degreesToRadians(45));
+    public static final Constraints pidConstraints=new Constraints(Units.degreesToRadians(360),Units.degreesToRadians(360));
 
     // Tolerance
     public static final double wristTolerance = Units.degreesToRadians(1);

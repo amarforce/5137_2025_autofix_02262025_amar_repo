@@ -11,12 +11,12 @@ public class ElevatorConstants {
     // Encoder ID
     public static final int encoderId = 2;
     public static final double encoderRatio = 0.5;
-    public static final double encoderOffset = 0;
+    public static final double encoderOffset = -0.272;
 
     // PID constants
     public static final double kP = 60;
     public static final double kI = 0;
-    public static final double kD = 1;
+    public static final double kD = 0;
 
     // Feedforward constants
     public static final double kS = Robot.isSimulation() ? 0.0 : 0.0;
@@ -32,7 +32,7 @@ public class ElevatorConstants {
     public static final double carriageMass = 13.0; // in kg
     public static final double drumRadius = 0.0254; // in meters
     public static final double minHeight = 0.1; // in meters
-    public static final double maxHeight = 1.4; // in meters
+    public static final double maxHeight = 1.3; // in meters // actually 1.4
     public static final DCMotor motorSim = DCMotor.getFalcon500(2);
 
     // Motion Profile constants

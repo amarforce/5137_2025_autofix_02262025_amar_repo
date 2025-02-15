@@ -37,10 +37,6 @@ public final class SwerveSystemConstants {
     // Offset for the arm pivot in AdvantageScope simulation
     public static final Translation3d armTransOffset = new Translation3d(0.11,-0.18,0.26);
 
-    public static final Translation3d coralTransOffset = new Translation3d(-0.26, -0.025, 0.185);
-
-    public static final Translation3d algaeTransOffset = new Translation3d(-0.39, -0.025, 0.185);
-
     public static final double intakeDistance = 1;
     public static final double intakeStep = 0.02;
 
@@ -81,8 +77,8 @@ public final class SwerveSystemConstants {
         for (int i = 0; i < states.length; i++) {
             boolean isLow = Reef.isAlgaeLow(i);
             states[i] = new SwerveSystem.SwerveSystemState(
-                Units.degreesToRadians(isLow ? -60 : 30),  // 30 - 90 = -60, 120 - 90 = 30
-                0.35,                                       // From ElevatorConstants.algaeGoal
+                Units.degreesToRadians(30),  // 30 - 90 = -60, 120 - 90 = 30
+                0.43,                                       // From ElevatorConstants.algaeGoal
                 wristStraight,                             // From WristConstants.pos2 (straight)
                 centerReef[i]
             );
@@ -100,8 +96,8 @@ public final class SwerveSystemConstants {
         };
         double[] elevatorHeights = {
             0.06,  // L1
-            0.05,  // L2
-            0.37,  // L3
+            0.0803,  // L2
+            0.41,  // L3
             1.21   // L4
         };
         double[] wristAngles = {

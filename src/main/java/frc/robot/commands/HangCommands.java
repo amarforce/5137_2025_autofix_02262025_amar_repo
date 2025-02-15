@@ -4,7 +4,6 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.Hang;
 
 /**
@@ -13,7 +12,7 @@ import frc.robot.subsystems.Hang;
  * of actions: deactivating the clamp, extending the climb mechanism, activating the clamp,
  * and then retracting the climb mechanism.
  */
-public class HangCommands extends SequentialCommandGroup {
+public class HangCommands {
 
     private Hang hang;
     /**
@@ -26,6 +25,6 @@ public class HangCommands extends SequentialCommandGroup {
     }
 
     public Command setSpeed(DoubleSupplier speed){
-        return new InstantCommand(()->hang.setSpeed(speed.getAsDouble()));
+        return new InstantCommand(()->hang.setSpeed(speed.getAsDouble()),hang);
     }
 }

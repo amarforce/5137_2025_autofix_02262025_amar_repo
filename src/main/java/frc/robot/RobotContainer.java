@@ -93,9 +93,9 @@ public class RobotContainer {
 			//initSwerve();
 			//initElevator();
 			//initArm();
-			//initWrist();
+			initWrist();
 			//initIntake();
-			initHang();
+			//initHang();
 			//initLED();
 			
 			// Initialize combined systems and commands
@@ -139,7 +139,7 @@ public class RobotContainer {
 		swerve.setDefaultCommand(swerveCommands.drive(
 			() -> -driver.getLeftY(), 
 			() -> -driver.getLeftX(), 
-			() -> driver.getRightX(), 
+			() -> driver.getRightX(),
 			() -> true)
 		);
 
@@ -192,8 +192,9 @@ public class RobotContainer {
 	private void initHang() {
 		hang = new Hang();
 		hangCommands = new HangCommands(hang);
-
-		hang.setDefaultCommand(hangCommands.setSpeed(()->MathUtil.applyDeadband(operator.getLeftX(),0.1)/10));
+		hang.setDefaultCommand(hangCommands.setSpeed(()->{
+			return MathUtil.applyDeadband(operator.getLeftX(),0.1)/10;
+		}));
 	}
 
 	private void initLED() {

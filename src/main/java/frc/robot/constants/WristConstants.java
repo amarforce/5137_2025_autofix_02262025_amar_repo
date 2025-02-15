@@ -22,9 +22,9 @@ public class WristConstants {
     public static final double feedOffset = Units.degreesToRadians(90);
     
     // PID constants
-    public static final double kP = 0.1;
+    public static final double kP = 0.3;
     public static final double kI = 0;
-    public static final double kD = 0.01;
+    public static final double kD = 0.03;
 
     // Feedforward constants
     public static final double kS = Robot.isSimulation()?0.0:0.16;

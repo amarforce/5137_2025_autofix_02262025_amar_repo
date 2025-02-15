@@ -8,18 +8,20 @@ public class RolloverEncoder extends DutyCycleEncoder{
     private double last=-1;
     private double shift=0;
     private double fullRange;
+    private int invertedVal;
     private DutyCycleEncoderSim sim;
 
     // fullRange = meters/rotation
-    public RolloverEncoder(int channel,double fullRange,double offset){
-        super(channel,fullRange,RobotUtils.mod(-offset,fullRange));
+    public RolloverEncoder(int channel,double fullRange,double offset,boolean inverted){
+        super(channel,fullRange,RobotUtils.mod((inverted?1:-1)*offset,fullRange));
+        invertedVal=inverted?-1:1;
         this.fullRange=fullRange;
         sim=new DutyCycleEncoderSim(this);
     }
 
     @Override
     public double get(){
-        return super.get()+shift;
+        return invertedVal*(super.get()+shift);
     }
 
     public void periodic(){
@@ -36,8 +38,8 @@ public class RolloverEncoder extends DutyCycleEncoder{
 
     public void set(double val){
         double encoderVal=RobotUtils.mod(val,fullRange);
-        sim.set(encoderVal);
-        shift=val-encoderVal;
+        sim.set(invertedVal*encoderVal);
+        shift=invertedVal*(val-encoderVal);
     }
 
     public void log(String path){

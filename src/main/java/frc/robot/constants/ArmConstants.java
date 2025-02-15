@@ -19,9 +19,9 @@ public class ArmConstants {
     public static final double feedOffset = Units.degreesToRadians(90);
     
     // PID constants
-    public static final double kP = 10.0;
+    public static final double kP = 1.0;
     public static final double kI = 0;
-    public static final double kD = 0.5;
+    public static final double kD = 0.1;
 
     // Feedforward constants
     public static final double kS = Robot.isSimulation()?0.0:0.135;

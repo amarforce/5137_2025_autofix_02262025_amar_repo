@@ -33,7 +33,7 @@ public class Arm extends SubsystemBase {
     
     // Motor controller for the arm
     private TalonFX2 armMotor = new TalonFX2(ArmConstants.motorId,(2*Math.PI)/ArmConstants.gearRatio,0,InvertedValue.CounterClockwise_Positive,"rio");
-    private RolloverEncoder armEncoder = new RolloverEncoder(ArmConstants.encoderId, (2*Math.PI)/ArmConstants.encoderRatio, ArmConstants.encoderOffset);
+    private RolloverEncoder armEncoder = new RolloverEncoder(ArmConstants.encoderId, (2*Math.PI)/ArmConstants.encoderRatio, ArmConstants.encoderOffset,false);
     
     // PID controller for arm position control
     private ProfiledPIDController controller = new ProfiledPIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kD, ArmConstants.pidConstraints);

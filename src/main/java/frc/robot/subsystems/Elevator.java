@@ -36,7 +36,7 @@ public class Elevator extends SubsystemBase {
     private TalonFX2 leftMotor = new TalonFX2(ElevatorConstants.leftMotorId,ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.gearRatio,0,InvertedValue.CounterClockwise_Positive,"rio");
     private TalonFX2 rightMotor = new TalonFX2(ElevatorConstants.rightMotorId,ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.gearRatio,0,InvertedValue.Clockwise_Positive,"rio");
 
-    private RolloverEncoder elevatorEncoder = new RolloverEncoder(ElevatorConstants.encoderId, ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.encoderRatio, ElevatorConstants.encoderOffset);
+    private RolloverEncoder elevatorEncoder = new RolloverEncoder(ElevatorConstants.encoderId, ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.encoderRatio, ElevatorConstants.encoderOffset,false);
 
     // PID controller and feedforward controller for elevator control
     private PIDController controller = new PIDController(ElevatorConstants.kP, ElevatorConstants.kI, ElevatorConstants.kD);

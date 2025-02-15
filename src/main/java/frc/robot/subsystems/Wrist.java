@@ -35,7 +35,7 @@ public class Wrist extends SubsystemBase {
     
     // Motor controller for the Wrist
     private TalonFX2 wristMotor = new TalonFX2(WristConstants.motorId,(2*Math.PI)/WristConstants.gearRatio,0,InvertedValue.CounterClockwise_Positive,"rio");
-    private RolloverEncoder wristEncoder = new RolloverEncoder(WristConstants.encoderId, (2*Math.PI)/WristConstants.encoderRatio, WristConstants.encoderOffset);
+    private RolloverEncoder wristEncoder = new RolloverEncoder(WristConstants.encoderId, (2*Math.PI)/WristConstants.encoderRatio, WristConstants.encoderOffset,true);
 
     // PID controller for Wrist position control
     private ProfiledPIDController controller = new ProfiledPIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD,WristConstants.pidConstraints);

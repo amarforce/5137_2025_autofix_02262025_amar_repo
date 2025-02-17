@@ -13,7 +13,7 @@ public class WristConstants {
     // Encoder ID
     public static final int encoderId = 0;
     public static final double encoderRatio = 1.0;
-    public static final double encoderOffset = 0.0;
+    public static final double encoderOffset = 4.17;
 
     // Limits
     public static final double minAngle = Units.degreesToRadians(-115);
@@ -24,7 +24,7 @@ public class WristConstants {
     // PID constants
     public static final double kP = 3;
     public static final double kI = 0;
-    public static final double kD = 0.3;
+    public static final double kD = 0.2;
 
     // Feedforward constants
     public static final double kS = Robot.isSimulation()?0.0:0.16;

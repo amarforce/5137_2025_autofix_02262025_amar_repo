@@ -11,7 +11,7 @@ public class ElevatorConstants {
     // Encoder ID
     public static final int encoderId = 2;
     public static final double encoderRatio = 0.5;
-    public static final double encoderOffset = -0.272;
+    public static final double encoderOffset = -0.273;
 
     // PID constants
     public static final double kP = 60;
@@ -31,7 +31,7 @@ public class ElevatorConstants {
     public static final double gearRatio = 30.0; // gear ratio
     public static final double carriageMass = 13.0; // in kg
     public static final double drumRadius = 0.0254; // in meters
-    public static final double minHeight = 0.1; // in meters
+    public static final double minHeight = 0; // in meters
     public static final double maxHeight = 1.3; // in meters // actually 1.4
     public static final DCMotor motorSim = DCMotor.getFalcon500(2);
 

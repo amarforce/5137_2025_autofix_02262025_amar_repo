@@ -95,14 +95,14 @@ public class RobotContainer {
 			//initVision();
 			//initSwerve();
 			initElevator();
-			//initArm();
-			//initWrist();
+			initArm();
+			initWrist();
 			//initIntake();
 			//initHang();
 			//initLED();
 			
 			// Initialize combined systems and commands
-			//initSwerveSystem();
+			initSwerveSystem();
 			//initMultiCommands();
 			//initAdditionalComponents();
 
@@ -178,8 +178,8 @@ public class RobotContainer {
 		wristCommands = new WristCommands(wrist);
 
 		// Configure wrist bindings
-		operator.triangle().whileTrue(wristCommands.changeGoal(()->0.01));
-		operator.square().whileTrue(wristCommands.changeGoal(()->-0.01));
+		operator.L1().whileTrue(wristCommands.changeGoal(()->0.1));
+		operator.R1().whileTrue(wristCommands.changeGoal(()->-0.1));
 	}
 
 	private void initIntake() {
@@ -216,10 +216,13 @@ public class RobotContainer {
 		//driver.triangle().onTrue(swerveSystemCommands.moveToSource());
 		//driver.circle().onTrue(swerveSystemCommands.moveToProcessor());
 
-		// operator.triangle().onTrue(swerveSystemCommands.moveToLevel(3));
-		// operator.circle().onTrue(swerveSystemCommands.moveToLevel(2));
-		// operator.square().onTrue(swerveSystemCommands.moveToLevel(1));
-		// operator.cross().onTrue(swerveSystemCommands.moveToLevel(0));
+		operator.triangle().onTrue(swerveSystemCommands.moveToLevel(3));
+		operator.circle().onTrue(swerveSystemCommands.moveToLevel(2));
+		operator.square().onTrue(swerveSystemCommands.moveToLevel(1));
+		operator.cross().onTrue(swerveSystemCommands.moveToLevel(0));
+
+		driver.L1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getGroundIntake()));
+		driver.R1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));
 
 		// operator.povUp().onTrue(swerveSystemCommands.moveToGround(()->new Pose2d()));
 		// operator.povDown().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));
@@ -235,6 +238,7 @@ public class RobotContainer {
 		driver.square().onTrue(multiCommands.getAlgae(()->0)); // x
 		driver.circle().onTrue(multiCommands.placeCoral(()->2,()->0)); // t
 		driver.cross().onTrue(multiCommands.placeAlgae()); // p
+		
 	}
 
 	private void initAdditionalComponents() {

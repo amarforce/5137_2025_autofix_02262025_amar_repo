@@ -5,8 +5,6 @@ import frc.robot.constants.HangConstants;
 import frc.robot.other.RobotUtils;
 import frc.robot.other.TalonFX2;
 
-import com.ctre.phoenix6.signals.InvertedValue;
-
 import edu.wpi.first.wpilibj.DataLogManager;
 
 /**
@@ -16,7 +14,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
  */
 public class Hang extends SubsystemBase {
     
-    private TalonFX2 hangMotor=new TalonFX2(HangConstants.motorId,1,0,InvertedValue.Clockwise_Positive,"rio");
+    private TalonFX2 hangMotor=new TalonFX2(HangConstants.motorId,1,0,true,"rio");
 
     /**
      * Constructs a new Hang subsystem.

@@ -13,15 +13,15 @@ public class ArmConstants {
 
     // Encoder ID
     public static final int encoderId = 1;
-    public static final double encoderRatio = 3;
-    public static final double encoderOffset = 0.0;
+    public static final double encoderRatio = 28/9.;
+    public static final double encoderOffset = 0.67;
 
     public static final double feedOffset = Units.degreesToRadians(90);
     
     // PID constants
-    public static final double kP = 1.0;
+    public static final double kP = 10.0;
     public static final double kI = 0;
-    public static final double kD = 0.1;
+    public static final double kD = 0.5;
 
     // Feedforward constants
     public static final double kS = Robot.isSimulation()?0.0:0.135;
@@ -30,7 +30,7 @@ public class ArmConstants {
     public static final double kA = 0.09;
 
     // Motion Profile constants
-    public static final Constraints pidConstraints= new Constraints(Units.degreesToRadians(360),Units.degreesToRadians(360));
+    public static final Constraints pidConstraints= new Constraints(Units.degreesToRadians(360),Units.degreesToRadians(180));
 
     // Arm tolerance
     public static final double armTolerance = Units.degreesToRadians(1);

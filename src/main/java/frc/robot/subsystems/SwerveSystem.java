@@ -203,7 +203,8 @@ public class SwerveSystem extends SubsystemBase {
         }
 
         // Get current robot pose
-        Pose2d currentPose = swerve.getPose();
+
+        Pose2d currentPose = swerve==null?new Pose2d():swerve.getPose();
         
         // Find the closest state based on robot position
         SwerveSystemState closestState = states[0];

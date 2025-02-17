@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.signals.InvertedValue;
-
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.util.Units;
@@ -32,8 +30,8 @@ import static edu.wpi.first.units.Units.Volts;
 public class Arm extends SubsystemBase {
     
     // Motor controller for the arm
-    private TalonFX2 armMotor = new TalonFX2(ArmConstants.motorId,(2*Math.PI)/ArmConstants.gearRatio,0,InvertedValue.CounterClockwise_Positive,"rio");
-    private RolloverEncoder armEncoder = new RolloverEncoder(ArmConstants.encoderId, (2*Math.PI)/ArmConstants.encoderRatio, ArmConstants.encoderOffset,false);
+    private TalonFX2 armMotor = new TalonFX2(ArmConstants.motorId,(2*Math.PI)/ArmConstants.gearRatio,0,false,"rio");
+    private RolloverEncoder armEncoder = new RolloverEncoder(ArmConstants.encoderId, (2*Math.PI)/ArmConstants.encoderRatio, ArmConstants.encoderOffset,true);
     
     // PID controller for arm position control
     private ProfiledPIDController controller = new ProfiledPIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kD, ArmConstants.pidConstraints);
@@ -48,11 +46,11 @@ public class Arm extends SubsystemBase {
     private SingleJointedArmSim armSim = new SingleJointedArmSim(
         ArmConstants.motorSim, 
         ArmConstants.gearRatio, 
-        ArmConstants.momentOfInertia, 
-        ArmConstants.armLength, 
-        ArmConstants.minAngle, 
-        ArmConstants.maxAngle, 
-        false, 
+        ArmConstants.momentOfInertia,
+        ArmConstants.armLength,
+        ArmConstants.minAngle,
+        ArmConstants.maxAngle,
+        false,
         SwerveSystemConstants.getDefaultState().armPosition
     );
 
@@ -178,6 +176,8 @@ public class Arm extends SubsystemBase {
     @Override
     public void periodic() {
         try {
+            armEncoder.periodic();
+
             // Update telemetry
             telemetry();
             
@@ -187,8 +187,6 @@ public class Arm extends SubsystemBase {
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
-
-            armEncoder.periodic();
         } catch (Exception e) {
             DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }

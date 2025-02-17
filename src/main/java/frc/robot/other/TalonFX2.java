@@ -15,15 +15,15 @@ public class TalonFX2 extends TalonFX{
     private double offset;
     private TalonFXSimState sim;
 
-    public TalonFX2(int port,double mul,double offset,InvertedValue value,String canBus){
+    public TalonFX2(int port,double mul,double offset,boolean inverted,String canBus){
         super(port,canBus);
         var currentConfigs = new MotorOutputConfigs();
-        //currentConfigs.NeutralMode = NeutralModeValue.Brake;
-        currentConfigs.Inverted = value;
+        currentConfigs.NeutralMode = NeutralModeValue.Brake;
+        currentConfigs.Inverted = inverted?InvertedValue.Clockwise_Positive:InvertedValue.CounterClockwise_Positive;
         this.getConfigurator().apply(currentConfigs);
         this.mul=mul;
         this.offset=offset;
-        sim=new TalonFXSimState(this,value==InvertedValue.Clockwise_Positive?ChassisReference.Clockwise_Positive:ChassisReference.CounterClockwise_Positive);
+        sim=new TalonFXSimState(this,inverted?ChassisReference.Clockwise_Positive:ChassisReference.CounterClockwise_Positive);
     }
 
     public double getPos(){

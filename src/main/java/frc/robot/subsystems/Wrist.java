@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.signals.InvertedValue;
-
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.util.Units;
@@ -34,7 +32,7 @@ import static edu.wpi.first.units.Units.Volts;
 public class Wrist extends SubsystemBase {
     
     // Motor controller for the Wrist
-    private TalonFX2 wristMotor = new TalonFX2(WristConstants.motorId,(2*Math.PI)/WristConstants.gearRatio,0,InvertedValue.CounterClockwise_Positive,"rio");
+    private TalonFX2 wristMotor = new TalonFX2(WristConstants.motorId,(2*Math.PI)/WristConstants.gearRatio,0,false,"rio");
     private RolloverEncoder wristEncoder = new RolloverEncoder(WristConstants.encoderId, (2*Math.PI)/WristConstants.encoderRatio, WristConstants.encoderOffset,true);
 
     // PID controller for Wrist position control
@@ -203,19 +201,23 @@ public class Wrist extends SubsystemBase {
     @Override
     public void periodic() {
         try {
+            wristEncoder.periodic();
+
             // Update telemetry
             telemetry();
         
             // Calculate PID control outputs
             double armRotation=arm!=null?arm.getMeasurement():0;
+            double wristRotation=getMeasurement();
+            double modifiedGoal=goal;
+            if(armRotation<-Math.PI/4 && armRotation>Units.degreesToRadians(-110) && modifiedGoal>WristConstants.minAngle){
+                modifiedGoal=WristConstants.minAngle;
+            }
             double feed = feedforward.calculate(controller.getSetpoint().position+armRotation+WristConstants.feedOffset, controller.getSetpoint().velocity);
-            double voltage = controller.calculate(getMeasurement(), goal) + feed;
-            
+            double voltage = controller.calculate(wristRotation, modifiedGoal) + feed;
+
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
-
-            wristEncoder.periodic();
-
         } catch (Exception e) {
             DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }

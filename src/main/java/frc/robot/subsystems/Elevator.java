@@ -4,8 +4,6 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
-import com.ctre.phoenix6.signals.InvertedValue;
-
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
@@ -33,8 +31,8 @@ import frc.robot.constants.SwerveSystemConstants;
 public class Elevator extends SubsystemBase {
 
     // Define the motors for the elevator
-    private TalonFX2 leftMotor = new TalonFX2(ElevatorConstants.leftMotorId,ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.gearRatio,0,InvertedValue.CounterClockwise_Positive,"rio");
-    private TalonFX2 rightMotor = new TalonFX2(ElevatorConstants.rightMotorId,ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.gearRatio,0,InvertedValue.Clockwise_Positive,"rio");
+    private TalonFX2 leftMotor = new TalonFX2(ElevatorConstants.leftMotorId,ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.gearRatio,0,false,"rio");
+    private TalonFX2 rightMotor = new TalonFX2(ElevatorConstants.rightMotorId,ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.gearRatio,0,true,"rio");
 
     private RolloverEncoder elevatorEncoder = new RolloverEncoder(ElevatorConstants.encoderId, ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.encoderRatio, ElevatorConstants.encoderOffset,false);
 
@@ -190,6 +188,8 @@ public class Elevator extends SubsystemBase {
     @Override
     public void periodic() {
         try{
+            elevatorEncoder.periodic();
+
             telemetry();
 
             double feed = feedforward.calculate(0);
@@ -197,8 +197,6 @@ public class Elevator extends SubsystemBase {
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
-
-            elevatorEncoder.periodic();
         }catch(Exception e){
             DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
         }

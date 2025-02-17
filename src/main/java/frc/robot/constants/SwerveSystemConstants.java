@@ -22,8 +22,8 @@ public final class SwerveSystemConstants {
     // Basic states without specific robot positions
     private static final SwerveSystem.SwerveSystemState baseGroundIntake = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(-120),  // From ArmConstants.groundIntakeGoal
-        0.26,                       // From ElevatorConstants.groundIntakeGoal
-        wristDown,                  // From WristConstants.pos1 (down)
+        0.5,                       // From ElevatorConstants.groundIntakeGoal
+        Units.degreesToRadians(-45),                  // From WristConstants.pos1 (down)
         null                        // Robot position determined at runtime
     );
 

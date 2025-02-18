@@ -23,6 +23,8 @@ import frc.robot.motorSystem.ElevatorMechanismSim;
 
 import java.util.List;
 
+import com.ctre.phoenix6.controls.Follower;
+
 /**
  * The Elevator subsystem controls a two-motor elevator mechanism.
  * It provides position control through a combination of PID and feedforward control.
@@ -88,7 +90,7 @@ public class Elevator extends SubsystemBase {
             ElevatorConstants.drumRadius * 2 * Math.PI / ElevatorConstants.encoderRatio,
             ElevatorConstants.encoderOffset
         );
-        
+
         // Create motor system with both motors
         motorSystem = new MotorSystem(List.of(leftMotor, rightMotor), elevatorEncoder);
         

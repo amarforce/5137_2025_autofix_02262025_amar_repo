@@ -29,7 +29,7 @@ public final class SwerveSystemConstants {
 
     private static final SwerveSystem.SwerveSystemState baseDefaultState = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(0),  // From ArmConstants.defaultGoal (vertical)
-        0.1,                         // From ElevatorConstants.defaultGoal
+        0.05,                         // From ElevatorConstants.defaultGoal
         wristStraight,                   // From WristConstants.pos1 (down)
         null                         // Robot position determined at runtime
     );

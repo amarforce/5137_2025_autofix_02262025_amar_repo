@@ -20,6 +20,10 @@ public class MotorSystem {
         this.encoder=encoder;
     }
 
+    public List<EnhancedTalonFX> getMotors() {
+        return motors;
+    }
+
     public void set(double vel){
         motors.forEach(m->m.set(vel));
     }

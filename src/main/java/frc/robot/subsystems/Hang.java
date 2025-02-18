@@ -2,9 +2,8 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.HangConstants;
+import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.other.RobotUtils;
-import frc.robot.other.TalonFX2;
-
 import edu.wpi.first.wpilibj.DataLogManager;
 
 /**
@@ -14,23 +13,29 @@ import edu.wpi.first.wpilibj.DataLogManager;
  */
 public class Hang extends SubsystemBase {
     
-    private TalonFX2 hangMotor=new TalonFX2(HangConstants.motorId,1,0,true,"rio");
+    private EnhancedTalonFX hangMotor;
 
     /**
      * Constructs a new Hang subsystem.
      */
     public Hang() {
-        
+        hangMotor = new EnhancedTalonFX(
+            HangConstants.motorId,
+            "rio",
+            1,
+            true,
+            true
+        );
     }
     
     public void setSpeed(double speed){
         hangMotor.set(speed);
     }
 
-    /**
-     * Logs relevant data from the Hang subsystem.
-     * This method is currently a placeholder and should be implemented to log specific data.
-     */
+    public void stop(){
+        hangMotor.stopMotor();
+    }
+
     private void telemetry(){
         hangMotor.log("hang/motor");
     }

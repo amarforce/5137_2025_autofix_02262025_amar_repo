@@ -5,16 +5,16 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.simulation.BatterySim;
-import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.WristConstants;
+import frc.robot.motorSystem.EnhancedTalonFX;
+import frc.robot.motorSystem.EnhancedEncoder;
+import frc.robot.motorSystem.MotorSystem;
+import frc.robot.motorSystem.ArmMechanismSim;
 import frc.robot.other.RobotUtils;
-import frc.robot.other.RolloverEncoder;
-import frc.robot.other.TalonFX2;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.constants.SwerveSystemConstants;
 
@@ -24,101 +24,169 @@ import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-/**k
- * The Wrist subsystem controls the wrist joint of the robot arm.
- * It uses a PID controller to manage the position of the wrist and includes
- * simulation support for testing and tuning.
+import java.util.List;
+
+/**
+ * The Wrist subsystem controls the end effector of the robot arm.
+ * It provides position control through a combination of PID and feedforward control,
+ * taking into account its position relative to the main arm.
+ * 
+ * Features:
+ * - Position control using ProfiledPIDController for smooth motion
+ * - Gravity compensation and feedforward control for accurate positioning
+ * - Coordination with main arm position for proper gravity compensation
+ * - Simulation support using SingleJointedArmSim
+ * - System identification capabilities for tuning
+ * - Telemetry output for debugging and monitoring
+ * 
+ * The wrist's position is measured in radians, where:
+ * - 0 radians = aligned with the arm
+ * - Positive angles = downward from arm
+ * - Negative angles = upward from arm
+ * 
+ * Note: The wrist's effective gravity vector changes based on the main arm's position,
+ * which is accounted for in the feedforward calculations.
  */
 public class Wrist extends SubsystemBase {
     
-    // Motor controller for the Wrist
-    private TalonFX2 wristMotor = new TalonFX2(WristConstants.motorId,(2*Math.PI)/WristConstants.gearRatio,0,false,"rio");
-    private RolloverEncoder wristEncoder = new RolloverEncoder(WristConstants.encoderId, (2*Math.PI)/WristConstants.encoderRatio, WristConstants.encoderOffset,true);
-
-    // PID controller for Wrist position control
-    private ProfiledPIDController controller = new ProfiledPIDController(WristConstants.kP, WristConstants.kI, WristConstants.kD,WristConstants.pidConstraints);
-
-    // Feedforward controller for arm dynamics
-    private ArmFeedforward feedforward = new ArmFeedforward(WristConstants.kS, WristConstants.kG, WristConstants.kV);
+    /** Motor system that handles both the motor and encoder */
+    private final MotorSystem motorSystem;
     
-    // Goal position for the Wrist in radians
-    private double goal = SwerveSystemConstants.getDefaultState().wristPosition;
+    /** PID controller for wrist position control */
+    private final ProfiledPIDController controller;
+    
+    /** Feedforward controller for gravity compensation and dynamics */
+    private final ArmFeedforward feedforward;
+    
+    /** Desired goal position (may be different from the true goal) */
+    private double desiredGoal;
 
-    // Simulation model for the Wrist
-    private SingleJointedArmSim wristSim = new SingleJointedArmSim(
-        WristConstants.motorSim,
-        WristConstants.gearRatio,
-        WristConstants.momentOfInertia,
-        WristConstants.wristLength,
-        WristConstants.minAngle,
-        WristConstants.maxAngle,
-        false,
-        SwerveSystemConstants.getDefaultState().wristPosition
-    );
+    /** Current goal position for the wrist in radians */
+    private double goal;
 
-    // SysId routine for system identification
-    private final SysIdRoutine sysIdRoutine = 
-        new SysIdRoutine(
+    /** Simulation model for the wrist's physics */
+    private final SingleJointedArmSim wristSim;
+
+    /** Adapter to make SingleJointedArmSim compatible with MotorSystem */
+    private final ArmMechanismSim mechanismSim;
+
+    /** System identification routine for parameter tuning */
+    private final SysIdRoutine sysIdRoutine;
+
+    /** Reference to the main arm this wrist is attached to */
+    private final Arm arm;
+        
+    /**
+     * Constructor for the Wrist subsystem.
+     * Initializes all control systems, motors, encoders, and simulation components.
+     * 
+     * @param arm The arm subsystem that this wrist is attached to. Used for
+     *            coordinating positions and gravity compensation.
+     */
+    public Wrist(Arm arm) {
+        this.arm = arm;
+
+        // Create motor and encoder
+        EnhancedTalonFX wristMotor = new EnhancedTalonFX(
+            WristConstants.motorId,
+            "rio",
+            (2*Math.PI)/WristConstants.gearRatio,
+            false,
+            false
+        );
+        EnhancedEncoder wristEncoder = new EnhancedEncoder(
+            WristConstants.encoderId,
+            (2*Math.PI)/WristConstants.encoderRatio,
+            WristConstants.encoderOffset
+        );
+        
+        // Create motor system
+        motorSystem = new MotorSystem(List.of(wristMotor), wristEncoder);
+        
+        // Initialize PID controller
+        controller = new ProfiledPIDController(
+            WristConstants.kP,
+            WristConstants.kI,
+            WristConstants.kD,
+            WristConstants.pidConstraints
+        );
+        controller.setTolerance(WristConstants.wristTolerance);
+        
+        // Initialize feedforward controller
+        feedforward = new ArmFeedforward(
+            WristConstants.kS,
+            WristConstants.kG,
+            WristConstants.kV
+        );
+        
+        // Set initial goal position
+        desiredGoal = SwerveSystemConstants.getDefaultState().wristPosition;
+
+        // Initialize simulation components
+        wristSim = new SingleJointedArmSim(
+            WristConstants.motorSim,
+            WristConstants.gearRatio,
+            WristConstants.momentOfInertia,
+            WristConstants.wristLength,
+            WristConstants.minAngle,
+            WristConstants.maxAngle,
+            false,
+            SwerveSystemConstants.getDefaultState().wristPosition
+        );
+        mechanismSim = new ArmMechanismSim(wristSim);
+
+        // Initialize system identification routine
+        sysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
-                Volts.of(0.2).div(Seconds.of(1.0)),        // Use default ramp rate (1 V/s)
-                Volts.of(1), // Reduce dynamic step voltage to 4 V to prevent brownout
-                null        // Use default timeout (10 s)
+                Volts.of(0.2).div(Seconds.of(1.0)),  // Slower ramp rate for wrist
+                Volts.of(1),                         // Lower voltage to prevent oscillation
+                null                                 // Use default timeout
             ),
             new SysIdRoutine.Mechanism(
                 this::setVoltage,
                 log -> {
                     log.motor("wrist")
                         .voltage(getVolts())
-                        .angularPosition(Radians.of(getMeasurement()+Math.PI/2))
+                        .angularPosition(Radians.of(getMeasurement()+WristConstants.feedOffset))
                         .angularVelocity(RadiansPerSecond.of(getVelocity()))
                         .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
                 },
-                this));
-
-    private Arm arm;
-        
-    /**
-     * Constructor for the Wrist subsystem.
-     * @param arm The arm subsystem that this wrist is attached to
-     */
-    public Wrist(Arm arm) {
-        // Set the tolerance for the PID controller
-        controller.setTolerance(WristConstants.wristTolerance);
-        
-        // Display the PID controller on SmartDashboard for tuning
-        SmartDashboard.putData("wrist/controller", controller);
-
-        this.arm=arm;
+                this
+            )
+        );
     }
+
     /**
-     * Gets the current Wrist position in radians.
+     * Get the current wrist position in radians.
      * 
-     * @return The current position of the wrist in radians.
+     * @return The current wrist position in radians, where 0 is aligned with the arm,
+     *         positive is down, and negative is up.
      */
     public double getMeasurement() {
-        return wristEncoder.get();
-    }
-
-    /**
-     * Gets the true Wrist position in radians to use with feedforward.
-     * 
-     * @return The current true position of the wrist in radians.
-     */
-    public double getAdjustedMeasurement() {
-        return this.getMeasurement() + arm.getMeasurement();
+        return motorSystem.getMeasurement();
     }
     
     /**
-     * Sets the goal position for the Wrist, clamping it within the allowed range.
+     * Set the goal position for the wrist, clamping it within the allowed range.
      * 
-     * @param newGoal The desired goal position in radians.
+     * @param newGoal The desired goal position in radians. Will be clamped between
+     *                WristConstants.minAngle and WristConstants.maxAngle.
      */
     public void setGoal(double newGoal) {
-        goal = RobotUtils.clamp(newGoal, WristConstants.minAngle, WristConstants.maxAngle);
+        desiredGoal = RobotUtils.clamp(newGoal, WristConstants.minAngle, WristConstants.maxAngle);
     }
 
     /**
-     * Gets the current goal position.
+     * Get the current goal position.
+     * 
+     * @return The current goal position in radians.
+     */
+    public double getDesiredGoal() {
+        return desiredGoal;
+    }
+
+    /**
+     * Get the current goal position.
      * 
      * @return The current goal position in radians.
      */
@@ -127,94 +195,126 @@ public class Wrist extends SubsystemBase {
     }
 
     /**
-     * Gets the true goal in radians to use with feedforward.
-     * 
-     * @return The current true goal in radians.
-     */
-    public double getAdjustedGoal() {
-        return this.getGoal() + arm.getGoal();
-    }
-
-    /**
-     * Sets the voltage applied to the Wrist motor.
+     * Set the voltage applied to the wrist motor.
      * 
      * @param v The voltage to apply to the motor.
      */
     public void setVoltage(Voltage v) {
-        wristMotor.setVoltage(v.magnitude());
+        motorSystem.setVoltage(v);
     }
 
     /**
-     * Gets the current Wrist velocity in radians per second.
+     * Get the current wrist velocity in radians per second.
      * 
-     * @return The current velocity of the wrist in radians per second.
+     * @return The current angular velocity in radians per second.
      */
     public double getVelocity() {
-        return wristMotor.getVel();
+        return motorSystem.getVelocity();
     }
 
     /**
-     * Gets the current voltage applied to the arm motor.
+     * Get the current voltage applied to the wrist motor.
      * 
-     * @return The voltage applied to the motors.
+     * @return The voltage currently being applied to the motor.
      */
     public Voltage getVolts() {
-        return wristMotor.getMotorVoltage().getValue();
+        return motorSystem.getVolts();
     }
 
     /**
-     * Gets the current Wrist acceleration in radians per second^2.
+     * Get the current wrist acceleration in radians per second squared.
      * 
-     * @return The current acceleration of the wrist in radians per second^2.
+     * @return The current angular acceleration in radians per second squared.
      */
     public double getAcceleration() {
-        return wristMotor.getAcc();
+        return motorSystem.getAcceleration();
     }
 
+    /**
+     * Check if the wrist is at its target position.
+     * 
+     * @return true if the wrist is within the tolerance of its goal position,
+     *         false otherwise.
+     */
     public boolean atSetpoint() {
         return controller.atSetpoint();
     }
 
+    /**
+     * Get the system identification routine for tuning.
+     * 
+     * @return The SysId routine configured for this wrist.
+     */
     public SysIdRoutine getRoutine() {
         return sysIdRoutine;
     }
 
     /**
-     * Displays telemetry data on SmartDashboard.
+     * Determines if the arm's path will intersect the danger zone.
+     * 
+     * @param currentArmAngle Current angle of the arm in radians
+     * @param goalArmAngle Goal angle of the arm in radians
+     * @return true if the path intersects the danger zone
+     */
+    private boolean willArmPathIntersectDangerZone(double currentArmAngle, double goalArmAngle) {
+        return (currentArmAngle >= WristConstants.armDangerMin && goalArmAngle <= WristConstants.armDangerMax) ||
+            (goalArmAngle >= WristConstants.armDangerMin && currentArmAngle <= WristConstants.armDangerMax);
+    }
+
+    /**
+     * Determines the safe wrist position based on arm's current and goal positions.
+     * Retracts wrist if arm is moving through danger zone.
+     */
+    private double getSafeGoal(double armAngle, double armGoal) {
+        if (willArmPathIntersectDangerZone(armAngle, armGoal)) {
+            return WristConstants.minAngle;
+        }
+        return desiredGoal;
+    }
+
+    /**
+     * Display telemetry data on SmartDashboard.
+     * Outputs current position, goal, velocity, and error information
+     * for debugging and monitoring.
      */
     public void telemetry() {
-        SmartDashboard.putNumber("wrist/angle",getMeasurement());
+        SmartDashboard.putNumber("wrist/angle", getMeasurement());
         SmartDashboard.putNumber("wrist/degrees", Units.radiansToDegrees(getMeasurement()));
-        SmartDashboard.putNumber("wrist/goal",getGoal());
-        SmartDashboard.putNumber("wrist/setpoint",controller.getSetpoint().position);
-        SmartDashboard.putNumber("wrist/setpointVelocity",controller.getSetpoint().velocity);
-        SmartDashboard.putNumber("wrist/velocity",getVelocity());
-        SmartDashboard.putNumber("wrist/error",controller.getPositionError());
-        wristMotor.log("wrist/motor");
-        wristEncoder.log("wrist/encoder");
+        SmartDashboard.putNumber("wrist/goal", getGoal());
+        SmartDashboard.putNumber("wrist/setpoint", controller.getSetpoint().position);
+        SmartDashboard.putNumber("wrist/setpointVelocity", controller.getSetpoint().velocity);
+        SmartDashboard.putNumber("wrist/velocity", getVelocity());
+        SmartDashboard.putNumber("wrist/error", controller.getPositionError());
+        SmartDashboard.putData("wrist/controller", controller);
+        motorSystem.log("wrist");
     }
 
     /**
      * Periodic method called every loop iteration.
-     * Updates telemetry and calculates PID control outputs.
+     * Updates the wrist's position using PID and feedforward control,
+     * taking into account the main arm's position for proper gravity compensation.
      */
     @Override
     public void periodic() {
         try {
-            wristEncoder.periodic();
+            motorSystem.periodic();
 
             // Update telemetry
             telemetry();
         
-            // Calculate PID control outputs
-            double armRotation=arm!=null?arm.getMeasurement():0;
-            double wristRotation=getMeasurement();
-            double modifiedGoal=goal;
-            if(armRotation<-Math.PI/4 && armRotation>Units.degreesToRadians(-110) && modifiedGoal>WristConstants.minAngle){
-                modifiedGoal=WristConstants.minAngle;
-            }
-            double feed = feedforward.calculate(controller.getSetpoint().position+armRotation+WristConstants.feedOffset, controller.getSetpoint().velocity);
-            double voltage = controller.calculate(wristRotation, modifiedGoal) + feed;
+            // Calculate PID control outputs with arm position compensation
+            double armRotation = arm != null ? arm.getMeasurement() : 0;
+            double wristRotation = getMeasurement();
+            
+            // Update goal based on arm's current position and goal
+            goal = getSafeGoal(armRotation, arm.getGoal());
+            
+            // Calculate feedforward with combined arm and wrist angles
+            double feed = feedforward.calculate(
+                controller.getSetpoint().position + armRotation + WristConstants.feedOffset,
+                controller.getSetpoint().velocity
+            );
+            double voltage = controller.calculate(wristRotation, goal) + feed;
 
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));
@@ -225,25 +325,10 @@ public class Wrist extends SubsystemBase {
 
     /**
      * Simulation periodic method called every loop iteration in simulation.
-     * Updates the motor simulation state and the Wrist simulation.
+     * Updates the simulated wrist physics using the MotorSystem and ArmMechanismSim.
      */
     @Override
     public void simulationPeriodic() {
-        // Update the motor simulation state with the current battery voltage
-        wristMotor.refreshSupplyVoltage();
-        
-        // Get the current motor input voltage and update the Wrist simulation
-        double wristInput = wristMotor.getSimVoltage();
-        wristSim.setInputVoltage(wristInput);
-        wristSim.update(GeneralConstants.simPeriod);
-        
-        // Update the motor simulation state with the new Wrist position and velocity
-        wristMotor.setPos(wristSim.getAngleRads());
-        wristMotor.setVel(wristSim.getVelocityRadPerSec());
-
-        wristEncoder.set(wristSim.getAngleRads());
-
-        // Update the RoboRIO simulation state with the new battery voltage
-        RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(wristSim.getCurrentDrawAmps()));
+        motorSystem.simulationPeriodic(mechanismSim, GeneralConstants.simPeriod);
     }
 }

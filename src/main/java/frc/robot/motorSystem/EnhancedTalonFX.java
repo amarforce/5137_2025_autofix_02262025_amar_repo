@@ -1,4 +1,4 @@
-package frc.robot.other;
+package frc.robot.motorSystem;
 
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -10,24 +10,18 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public class TalonFX2 extends TalonFX{
+public class EnhancedTalonFX extends TalonFX{
     private double mul;
-    private double offset;
     private TalonFXSimState sim;
 
-    public TalonFX2(int port,double mul,double offset,boolean inverted,String canBus){
+    public EnhancedTalonFX(int port,String canBus,double mul,boolean inverted,boolean brake){
         super(port,canBus);
         var currentConfigs = new MotorOutputConfigs();
-        currentConfigs.NeutralMode = NeutralModeValue.Brake;
+        currentConfigs.NeutralMode = brake?NeutralModeValue.Brake:NeutralModeValue.Coast;
         currentConfigs.Inverted = inverted?InvertedValue.Clockwise_Positive:InvertedValue.CounterClockwise_Positive;
         this.getConfigurator().apply(currentConfigs);
         this.mul=mul;
-        this.offset=offset;
         sim=new TalonFXSimState(this,inverted?ChassisReference.Clockwise_Positive:ChassisReference.CounterClockwise_Positive);
-    }
-
-    public double getPos(){
-        return super.getPosition().getValueAsDouble()*mul+offset;
     }
 
     public double getVel(){
@@ -38,15 +32,11 @@ public class TalonFX2 extends TalonFX{
         return super.getAcceleration().getValueAsDouble()*mul;
     }
 
-    public void setPos(double pos){
-        sim.setRawRotorPosition((pos-offset)/mul);
-    }
-
-    public void setVel(double vel){
+    public void setSimVel(double vel){
         sim.setRotorVelocity(vel/mul);
     }
 
-    public void setAcc(double acc){
+    public void setSimAcc(double acc){
         sim.setRotorAcceleration(acc/mul);
     }
 
@@ -60,8 +50,6 @@ public class TalonFX2 extends TalonFX{
 
     public void log(String path){
         SmartDashboard.putNumber(path+"/output",get());
-        SmartDashboard.putNumber(path+"/rawMeasurement", getPosition().getValueAsDouble());
-        SmartDashboard.putNumber(path+"/measurement", getPos());
         SmartDashboard.putNumber(path+"/rawVelocity", getVelocity().getValueAsDouble());
         SmartDashboard.putNumber(path+"/velocity", getVel());
         SmartDashboard.putNumber(path+"/rawAcceleration", getAcceleration().getValueAsDouble());

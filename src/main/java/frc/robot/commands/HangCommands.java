@@ -27,4 +27,8 @@ public class HangCommands {
     public Command setSpeed(DoubleSupplier speed){
         return new InstantCommand(()->hang.setSpeed(speed.getAsDouble()),hang);
     }
+
+    public Command stop(){
+        return new InstantCommand(()->hang.stop(),hang);
+    }
 }

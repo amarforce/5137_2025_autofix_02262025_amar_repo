@@ -8,89 +8,144 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.other.RobotUtils;
-import frc.robot.other.RolloverEncoder;
-import frc.robot.other.TalonFX2;
 import frc.robot.constants.SwerveSystemConstants;
+import frc.robot.motorSystem.EnhancedEncoder;
+import frc.robot.motorSystem.EnhancedTalonFX;
+import frc.robot.motorSystem.MotorSystem;
+import frc.robot.motorSystem.ElevatorMechanismSim;
 
+import java.util.List;
 
 /**
- * The Elevator subsystem controls the elevator mechanism of the robot.
- * It uses two TalonFX motors for movement, a PID controller for position control,
- * and a feedforward controller for compensating for gravity and friction.
- * The subsystem also supports simulation for testing and tuning.
+ * The Elevator subsystem controls a two-motor elevator mechanism.
+ * It provides position control through a combination of PID and feedforward control.
+ * 
+ * Features:
+ * - Position control using PIDController
+ * - Gravity compensation and feedforward control for accurate positioning
+ * - Dual-motor synchronization for smooth motion
+ * - Simulation support using ElevatorSim
+ * - System identification capabilities for tuning
+ * - Telemetry output for debugging and monitoring
+ * 
+ * The elevator's position is measured in meters, where:
+ * - 0 meters = fully retracted
+ * - Positive values = extension upward
+ * - Maximum height defined by ElevatorConstants.maxHeight
  */
 public class Elevator extends SubsystemBase {
 
-    // Define the motors for the elevator
-    private TalonFX2 leftMotor = new TalonFX2(ElevatorConstants.leftMotorId,ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.gearRatio,0,false,"rio");
-    private TalonFX2 rightMotor = new TalonFX2(ElevatorConstants.rightMotorId,ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.gearRatio,0,true,"rio");
+    /** Motor system that handles both motors and encoder */
+    private final MotorSystem motorSystem;
+    
+    /** PID controller for elevator position control */
+    private final PIDController controller;
+    
+    /** Feedforward controller for gravity compensation and dynamics */
+    private final ElevatorFeedforward feedforward;
+    
+    /** Current goal position for the elevator in meters */
+    private double goal;
 
-    private RolloverEncoder elevatorEncoder = new RolloverEncoder(ElevatorConstants.encoderId, ElevatorConstants.drumRadius*2*Math.PI/ElevatorConstants.encoderRatio, ElevatorConstants.encoderOffset,false);
+    /** Simulation model for the elevator's physics */
+    private final ElevatorSim elevatorSim;
 
-    // PID controller and feedforward controller for elevator control
-    private PIDController controller = new PIDController(ElevatorConstants.kP, ElevatorConstants.kI, ElevatorConstants.kD);
-    private ElevatorFeedforward feedforward = new ElevatorFeedforward(ElevatorConstants.kS, ElevatorConstants.kG, ElevatorConstants.kV, ElevatorConstants.kA);
+    /** Adapter to make ElevatorSim compatible with MotorSystem */
+    private final ElevatorMechanismSim mechanismSim;
 
-    // Simulation objects for the elevator
-    private ElevatorSim elevatorSim = new ElevatorSim(
-        ElevatorConstants.motorSim,
-        ElevatorConstants.gearRatio,
-        ElevatorConstants.carriageMass,
-        ElevatorConstants.drumRadius,
-        ElevatorConstants.minHeight,
-        ElevatorConstants.maxHeight,
-        true,
-        SwerveSystemConstants.getDefaultState().elevatorPosition
-    );
+    /** System identification routine for parameter tuning */
+    private final SysIdRoutine sysIdRoutine;
 
-    // Goal position for the elevator
-    private double goal = SwerveSystemConstants.getDefaultState().elevatorPosition;
+    /**
+     * Constructor for the Elevator subsystem.
+     * Initializes all control systems, motors, encoders, and simulation components.
+     */
+    public Elevator() {
+        // Create motors and encoder
+        EnhancedTalonFX leftMotor = new EnhancedTalonFX(
+            ElevatorConstants.leftMotorId,
+            "rio",
+            ElevatorConstants.drumRadius * 2 * Math.PI / ElevatorConstants.gearRatio,
+            false,
+            false
+        );
+        EnhancedTalonFX rightMotor = new EnhancedTalonFX(
+            ElevatorConstants.rightMotorId,
+            "rio",
+            ElevatorConstants.drumRadius * 2 * Math.PI / ElevatorConstants.gearRatio,
+            true,
+            false
+        );
+        EnhancedEncoder elevatorEncoder = new EnhancedEncoder(
+            ElevatorConstants.encoderId,
+            ElevatorConstants.drumRadius * 2 * Math.PI / ElevatorConstants.encoderRatio,
+            ElevatorConstants.encoderOffset
+        );
+        
+        // Create motor system with both motors
+        motorSystem = new MotorSystem(List.of(leftMotor, rightMotor), elevatorEncoder);
+        
+        // Initialize PID controller
+        controller = new PIDController(
+            ElevatorConstants.kP,
+            ElevatorConstants.kI,
+            ElevatorConstants.kD
+        );
+        controller.setTolerance(ElevatorConstants.elevatorTolerance);
+        
+        // Initialize feedforward controller
+        feedforward = new ElevatorFeedforward(
+            ElevatorConstants.kS,
+            ElevatorConstants.kG,
+            ElevatorConstants.kV,
+            ElevatorConstants.kA
+        );
+        
+        // Set initial goal position
+        goal = SwerveSystemConstants.getDefaultState().elevatorPosition;
 
-    // SysId routine for system identification
-    private final SysIdRoutine sysIdRoutine = 
-        new SysIdRoutine(
-            // Empty config defaults to 1 volt/second ramp rate and 7 volt step voltage.
+        // Initialize simulation components
+        elevatorSim = new ElevatorSim(
+            ElevatorConstants.motorSim,
+            ElevatorConstants.gearRatio,
+            ElevatorConstants.carriageMass,
+            ElevatorConstants.drumRadius,
+            ElevatorConstants.minHeight,
+            ElevatorConstants.maxHeight,
+            true,
+            SwerveSystemConstants.getDefaultState().elevatorPosition
+        );
+        mechanismSim = new ElevatorMechanismSim(elevatorSim);
+
+        // Initialize system identification routine
+        sysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
-                null,        // Use default ramp rate (1 V/s)
+                null,         // Use default ramp rate (1 V/s)
                 Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-                null        // Use default timeout (10 s)
+                null         // Use default timeout (10 s)
             ),
             new SysIdRoutine.Mechanism(
-                // Tell SysId how to plumb the driving voltage to the motor(s).
                 this::setVoltage,
-                // Tell SysId how to record a frame of data for each motor on the mechanism being characterized.
                 log -> {
-                    // Record a frame for the elevator motor.
                     log.motor("elevator")
                         .voltage(getVolts())
                         .linearPosition(Meters.of(getMeasurement()))
                         .linearVelocity(MetersPerSecond.of(getVelocity()));
                 },
-                // Tell SysId to make generated commands require this subsystem, suffix test state in WPILog with this subsystem's name ("elevator")
-                this));
-
-    /**
-     * Constructor for the Elevator subsystem.
-     */
-    public Elevator() {
-        // Set the tolerance for the PID controller
-        controller.setTolerance(ElevatorConstants.elevatorTolerance);
-
-        // Add the PID controller to SmartDashboard for tuning
-        SmartDashboard.putData("elevator/controller", controller);
+                this
+            )
+        );
     }
 
     /**
-     * Gets the current goal position of the elevator.
+     * Get the current goal position of the elevator.
      * 
      * @return The current goal position in meters.
      */
@@ -99,133 +154,123 @@ public class Elevator extends SubsystemBase {
     }
 
     /**
-     * Sets the goal position for the elevator.
-     * The goal is clamped between the minimum and maximum height limits.
+     * Set the goal position for the elevator.
      * 
-     * @param newGoal The new goal position in meters.
+     * @param newGoal The desired goal position in meters. Will be clamped between
+     *                ElevatorConstants.minHeight and ElevatorConstants.maxHeight.
      */
     public void setGoal(double newGoal) {
-        goal = RobotUtils.clamp(newGoal,ElevatorConstants.minHeight,ElevatorConstants.maxHeight);
+        goal = RobotUtils.clamp(newGoal, ElevatorConstants.minHeight, ElevatorConstants.maxHeight);
     }
 
     /**
-     * Gets the current position of the elevator.
+     * Get the current elevator position.
      * 
-     * @return The current position in meters.
+     * @return The current position in meters, where 0 is fully retracted
+     *         and positive values indicate upward extension.
      */
     public double getMeasurement() {
-        return elevatorEncoder.get();
+        return motorSystem.getMeasurement();
     }
 
     /**
-     * Gets the current velocity of the elevator.
+     * Get the current elevator velocity.
      * 
      * @return The current velocity in meters per second.
      */
     public double getVelocity() {
-        return (leftMotor.getVel()+rightMotor.getVel())/2;
+        return motorSystem.getVelocity();
     }
 
     /**
-     * Gets the current acceleration of the elevator.
+     * Get the current elevator acceleration.
      * 
-     * @return The current acceleration in meters per second^2.
+     * @return The current acceleration in meters per second squared.
      */
     public double getAcceleration() {
-        return (leftMotor.getAcc()+rightMotor.getAcc())/2;
+        return motorSystem.getAcceleration();
     }
 
     /**
-     * Checks if the elevator is at the setpoint.
+     * Check if the elevator is at its target position.
      * 
-     * @return True if the elevator is at the setpoint, false otherwise.
+     * @return true if the elevator is within the tolerance of its goal position,
+     *         false otherwise.
      */
     public boolean atSetpoint() {
         return controller.atSetpoint();
     }
 
     /**
-     * Gets the current voltage applied to the elevator motors.
+     * Get the current voltage applied to the elevator motors.
      * 
-     * @return The average voltage applied to the motors.
+     * @return The average voltage currently being applied to the motors.
      */
     public Voltage getVolts() {
-        return (leftMotor.getMotorVoltage().getValue().plus(rightMotor.getMotorVoltage().getValue())).div(2.0);
+        return motorSystem.getVolts();
     }
 
     /**
-     * Sets the voltage to the elevator motors.
+     * Set the voltage to apply to the elevator motors.
      * 
-     * @param v The voltage to apply to the motors.
+     * @param v The voltage to apply to both motors.
      */
     public void setVoltage(Voltage v) {
-        leftMotor.setVoltage(v.magnitude());
-        rightMotor.setVoltage(v.magnitude());
+        motorSystem.setVoltage(v);
     }
 
-    public SysIdRoutine getRoutine(){
+    /**
+     * Get the system identification routine for tuning.
+     * 
+     * @return The SysId routine configured for this elevator.
+     */
+    public SysIdRoutine getRoutine() {
         return sysIdRoutine;
     }
 
     /**
-     * Updates telemetry data on SmartDashboard.
-     * This includes the elevator height, velocity, and input.
+     * Display telemetry data on SmartDashboard.
+     * Outputs current position, goal, velocity, and error information
+     * for debugging and monitoring.
      */
     private void telemetry() {
-        SmartDashboard.putNumber("elevator/height",getMeasurement());
-        SmartDashboard.putNumber("elevator/goal",getGoal());
-        SmartDashboard.putNumber("elevator/velocity",getVelocity());
-        SmartDashboard.putNumber("elevator/error",controller.getError());
-        leftMotor.log("elevator/leftMotor");
-        rightMotor.log("elevator/rightMotor");
-        elevatorEncoder.log("elevator/encoder");
+        SmartDashboard.putNumber("elevator/height", getMeasurement());
+        SmartDashboard.putNumber("elevator/goal", getGoal());
+        SmartDashboard.putNumber("elevator/velocity", getVelocity());
+        SmartDashboard.putNumber("elevator/error", controller.getError());
+        SmartDashboard.putData("elevator/controller", controller);
+        motorSystem.log("elevator");
     }
 
     /**
-     * Periodic method called every robot loop.
-     * Updates the elevator control and telemetry.
+     * Periodic method called every loop iteration.
+     * Updates the elevator's position using PID and feedforward control.
      */
     @Override
     public void periodic() {
-        try{
-            elevatorEncoder.periodic();
+        try {
+            motorSystem.periodic();
 
+            // Update telemetry
             telemetry();
 
-            double feed = feedforward.calculate(0);
+            // Calculate feedforward and PID control outputs
+            double feed = feedforward.calculate(0); // Constant gravity compensation
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
-            // Apply the calculated voltage to the motor
+            // Apply the calculated voltage to the motors
             setVoltage(Volts.of(voltage));
-        }catch(Exception e){
-            DataLogManager.log("Periodic error: "+RobotUtils.getError(e));
+        } catch (Exception e) {
+            DataLogManager.log("Periodic error: " + RobotUtils.getError(e));
         }
     }
 
     /**
-     * Simulation periodic method called every simulation loop.
-     * Updates the motor simulation states and the RoboRIO simulation.
+     * Simulation periodic method called every loop iteration in simulation.
+     * Updates the simulated elevator physics using the MotorSystem and ElevatorMechanismSim.
      */
     @Override
     public void simulationPeriodic() {
-        // Update the motor simulation state with the current battery voltage
-        leftMotor.refreshSupplyVoltage();
-        rightMotor.refreshSupplyVoltage();
-        
-        // Get the current motor input voltage and update the Wrist simulation
-        double elevatorInput = (leftMotor.getSimVoltage()+rightMotor.getSimVoltage())/2;
-        elevatorSim.setInputVoltage(elevatorInput);
-        elevatorSim.update(GeneralConstants.simPeriod);
-        
-        // Update the motor simulation state with the new Wrist position and velocity
-        leftMotor.setPos(elevatorSim.getPositionMeters());
-        rightMotor.setPos(elevatorSim.getPositionMeters());
-        leftMotor.setVel(elevatorSim.getVelocityMetersPerSecond());
-        rightMotor.setVel(elevatorSim.getVelocityMetersPerSecond());
-
-        elevatorEncoder.set(elevatorSim.getPositionMeters());
-
-        // Update the RoboRIO simulation state with the new battery voltage
-        RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps()));
+        motorSystem.simulationPeriodic(mechanismSim, GeneralConstants.simPeriod);
     }
 }

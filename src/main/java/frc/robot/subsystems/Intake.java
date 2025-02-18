@@ -1,14 +1,9 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.IntakeConstants;
+import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.other.RobotUtils;
 
 /**
@@ -17,54 +12,35 @@ import frc.robot.other.RobotUtils;
  * to detect when the intake is in a specific position.
  */
 public class Intake extends SubsystemBase {
-    // Motor controller for the intake mechanism
-    private TalonFX intakeMotor;
+    private EnhancedTalonFX intakeMotor;
 
     /**
-     * Constructs an Intake subsystem.
+     * Constructs a new Hang subsystem.
      */
     public Intake() {
-        // Initialize the motor controller with the ID and type from constants
-        intakeMotor = new TalonFX(IntakeConstants.motorId, "rio");
-
-        var currentConfigs = new MotorOutputConfigs();
-        currentConfigs.NeutralMode = NeutralModeValue.Coast;
-        currentConfigs.Inverted = InvertedValue.CounterClockwise_Positive;
-        intakeMotor.getConfigurator().apply(currentConfigs);
+        intakeMotor = new EnhancedTalonFX(
+            IntakeConstants.motorId,
+            "rio",
+            1,
+            true,
+            false
+        );
     }
-
-    /**
-     * Sets the speed of the intake motor.
-     *
-     * @param speed The speed to set the motor to, in the range [-1.0, 1.0].
-     */
-    public void setSpeed(double speed) {
+    
+    public void setSpeed(double speed){
         intakeMotor.set(speed);
     }
 
-    /**
-     * Stops the intake motor.
-     */
-    public void stop() {
+    public void stop(){
         intakeMotor.stopMotor();
     }
 
-    /**
-     * Logs relevant data from the Intake subsystem.
-     * This method is intended to be called periodically to record data.
-     */
-    public void telemetry(){
-        SmartDashboard.putNumber("intake/motor/rawAngle", intakeMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("intake/motor/output", intakeMotor.get());
-        SmartDashboard.putNumber("intake/motor/temp", intakeMotor.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("intake/motor/fault", intakeMotor.getFaultField().asSupplier().get());
-        SmartDashboard.putNumber("intake/motor/current", intakeMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("intake/motor/voltage", intakeMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("intake/motor/supplyVoltage", intakeMotor.getSupplyVoltage().getValueAsDouble());
+    private void telemetry(){
+        intakeMotor.log("intake/motor");
     }
 
     @Override
-    public void periodic(){
+    public void periodic() {
         try{
             telemetry();
         }catch(Exception e){

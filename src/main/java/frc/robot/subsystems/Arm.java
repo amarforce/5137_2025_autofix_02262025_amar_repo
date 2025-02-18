@@ -5,58 +5,121 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.simulation.BatterySim;
-import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.ArmConstants;
 import frc.robot.constants.SwerveSystemConstants;
+import frc.robot.motorSystem.EnhancedTalonFX;
+import frc.robot.motorSystem.EnhancedEncoder;
+import frc.robot.motorSystem.MotorSystem;
+import frc.robot.motorSystem.ArmMechanismSim;
 import frc.robot.constants.GeneralConstants;
 import frc.robot.other.RobotUtils;
-import frc.robot.other.RolloverEncoder;
-import frc.robot.other.TalonFX2;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.List;
+
 /**
- * The Arm subsystem controls the robotic arm using a TalonFX motor controller.
- * It includes PID control, feedforward control, and simulation capabilities.
+ * The Arm subsystem controls a single-jointed robotic arm using a TalonFX motor controller.
+ * It provides position control through a combination of PID and feedforward control.
+ * 
+ * Features:
+ * - Position control using ProfiledPIDController for smooth motion
+ * - Gravity compensation and feedforward control for accurate positioning
+ * - Simulation support using SingleJointedArmSim
+ * - System identification capabilities for tuning
+ * - Telemetry output for debugging and monitoring
+ * 
+ * The arm's position is measured in radians, where:
+ * - 0 radians = vertical position
+ * - Positive angles = forward from vertical
+ * - Negative angles = backward from vertical
  */
 public class Arm extends SubsystemBase {
     
-    // Motor controller for the arm
-    private TalonFX2 armMotor = new TalonFX2(ArmConstants.motorId,(2*Math.PI)/ArmConstants.gearRatio,0,false,"rio");
-    private RolloverEncoder armEncoder = new RolloverEncoder(ArmConstants.encoderId, (2*Math.PI)/ArmConstants.encoderRatio, ArmConstants.encoderOffset,true);
+    /** Motor system that handles both the motor and encoder */
+    private final MotorSystem motorSystem;
     
-    // PID controller for arm position control
-    private ProfiledPIDController controller = new ProfiledPIDController(ArmConstants.kP, ArmConstants.kI, ArmConstants.kD, ArmConstants.pidConstraints);
+    /** PID controller for arm position control */
+    private final ProfiledPIDController controller;
     
-    // Feedforward controller for arm dynamics
-    private ArmFeedforward feedforward = new ArmFeedforward(ArmConstants.kS, ArmConstants.kG, ArmConstants.kV);
+    /** Feedforward controller for gravity compensation and dynamics */
+    private final ArmFeedforward feedforward;
     
-    // Goal position for the arm in radians
-    private double goal = SwerveSystemConstants.getDefaultState().armPosition;
+    /** Current goal position for the arm in radians */
+    private double goal;
 
-    // Simulation model for the arm
-    private SingleJointedArmSim armSim = new SingleJointedArmSim(
-        ArmConstants.motorSim, 
-        ArmConstants.gearRatio, 
-        ArmConstants.momentOfInertia,
-        ArmConstants.armLength,
-        ArmConstants.minAngle,
-        ArmConstants.maxAngle,
-        false,
-        SwerveSystemConstants.getDefaultState().armPosition
-    );
+    /** Simulation model for the arm's physics */
+    private final SingleJointedArmSim armSim;
 
-    // SysId routine for system identification
-    private final SysIdRoutine sysIdRoutine = 
-        new SysIdRoutine(
+    /** Adapter to make SingleJointedArmSim compatible with MotorSystem */
+    private final ArmMechanismSim mechanismSim;
+
+    /** System identification routine for parameter tuning */
+    private final SysIdRoutine sysIdRoutine;
+        
+    /**
+     * Constructor for the Arm subsystem.
+     * Initializes all control systems, motors, encoders, and simulation components.
+     */
+    public Arm() {
+        // Create motor and encoder
+        EnhancedTalonFX armMotor = new EnhancedTalonFX(
+            ArmConstants.motorId, 
+            "rio", 
+            (2*Math.PI)/ArmConstants.gearRatio, 
+            false, 
+            false
+        );
+        EnhancedEncoder armEncoder = new EnhancedEncoder(
+            ArmConstants.encoderId, 
+            (2*Math.PI)/ArmConstants.encoderRatio, 
+            ArmConstants.encoderOffset
+        );
+        
+        // Create motor system
+        motorSystem = new MotorSystem(List.of(armMotor), armEncoder);
+        
+        // Initialize PID controller
+        controller = new ProfiledPIDController(
+            ArmConstants.kP, 
+            ArmConstants.kI, 
+            ArmConstants.kD, 
+            ArmConstants.pidConstraints
+        );
+        controller.setTolerance(ArmConstants.armTolerance);
+        
+        // Initialize feedforward controller
+        feedforward = new ArmFeedforward(
+            ArmConstants.kS, 
+            ArmConstants.kG, 
+            ArmConstants.kV
+        );
+        
+        // Set initial goal position
+        goal = SwerveSystemConstants.getDefaultState().armPosition;
+
+        // Initialize simulation components
+        armSim = new SingleJointedArmSim(
+            ArmConstants.motorSim, 
+            ArmConstants.gearRatio, 
+            ArmConstants.momentOfInertia,
+            ArmConstants.armLength,
+            ArmConstants.minAngle,
+            ArmConstants.maxAngle,
+            false,
+            SwerveSystemConstants.getDefaultState().armPosition
+        );
+        mechanismSim = new ArmMechanismSim(armSim);
+
+        // Initialize system identification routine
+        sysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
                 null,        // Use default ramp rate (1 V/s)
                 Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
@@ -67,36 +130,30 @@ public class Arm extends SubsystemBase {
                 log -> {
                     log.motor("arm")
                         .voltage(getVolts())
-                        .angularPosition(Radians.of(getMeasurement()+Math.PI/2))
+                        .angularPosition(Radians.of(getMeasurement()+ArmConstants.feedOffset)) // Offset so that 0 = horizontal
                         .angularVelocity(RadiansPerSecond.of(getVelocity()))
                         .angularAcceleration(RadiansPerSecondPerSecond.of(getAcceleration()));
                 },
-                this));
-        
-    /**
-     * Constructor for the Arm subsystem.
-     */
-    public Arm() {
-        // Set the tolerance for the PID controller
-        controller.setTolerance(ArmConstants.armTolerance);
-        
-        // Display the PID controller on SmartDashboard for tuning
-        SmartDashboard.putData("arm/controller", controller);
+                this
+            )
+        );
     }
 
     /**
      * Get the current arm position in radians.
      * 
-     * @return The current arm position in radians.
+     * @return The current arm position in radians, where 0 is vertical,
+     *         positive values are forward, and negative values are backward.
      */
     public double getMeasurement() {
-        return armEncoder.get();
+        return motorSystem.getMeasurement();
     }
     
     /**
      * Set the goal position for the arm, clamping it within the allowed range.
      * 
-     * @param newGoal The desired goal position in radians.
+     * @param newGoal The desired goal position in radians. Will be clamped between
+     *                ArmConstants.minAngle and ArmConstants.maxAngle.
      */
     public void setGoal(double newGoal) {
         goal = RobotUtils.clamp(newGoal, ArmConstants.minAngle, ArmConstants.maxAngle);
@@ -114,49 +171,62 @@ public class Arm extends SubsystemBase {
     /**
      * Set the voltage applied to the arm motor.
      * 
-     * @param v The voltage to apply.
+     * @param v The voltage to apply to the motor.
      */
     public void setVoltage(Voltage v) {
-        armMotor.setVoltage(v.magnitude());
+        motorSystem.setVoltage(v);
     }
 
     /**
      * Gets the current voltage applied to the arm motor.
      * 
-     * @return The voltage applied to the motors.
+     * @return The voltage currently being applied to the motor.
      */
     public Voltage getVolts() {
-        return armMotor.getMotorVoltage().getValue();
+        return motorSystem.getVolts();
     }
 
     /**
      * Get the current arm velocity in radians per second.
      * 
-     * @return The current arm velocity in radians per second.
+     * @return The current angular velocity in radians per second.
      */
     public double getVelocity() {
-        return armMotor.getVel();
+        return motorSystem.getVelocity();
     }
 
     /**
-     * Get the current arm acceleration in radians per second^2.
+     * Get the current arm acceleration in radians per second squared.
      * 
-     * @return The current arm acceleration in radians per second^2.
+     * @return The current angular acceleration in radians per second squared.
      */
     public double getAcceleration() {
-        return armMotor.getAcc();
+        return motorSystem.getAcceleration();
     }
 
+    /**
+     * Check if the arm is at its target position.
+     * 
+     * @return true if the arm is within the tolerance of its goal position,
+     *         false otherwise.
+     */
     public boolean atSetpoint() {
         return controller.atSetpoint();
     }
 
+    /**
+     * Get the system identification routine for tuning.
+     * 
+     * @return The SysId routine configured for this arm.
+     */
     public SysIdRoutine getRoutine() {
         return sysIdRoutine;
     }
 
     /**
      * Display telemetry data on SmartDashboard.
+     * Outputs current position, goal, velocity, and error information
+     * for debugging and monitoring.
      */
     public void telemetry() {
         SmartDashboard.putNumber("arm/angle", getMeasurement());
@@ -166,23 +236,27 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("arm/setpointVelocity",controller.getSetpoint().velocity);
         SmartDashboard.putNumber("arm/velocity", getVelocity());
         SmartDashboard.putNumber("arm/error", controller.getPositionError());
-        armMotor.log("arm/motor");
-        armEncoder.log("arm/encoder");
+        SmartDashboard.putData("arm/controller", controller);
+        motorSystem.log("arm");
     }
 
     /**
      * Periodic method called every loop iteration.
+     * Updates the arm's position using PID and feedforward control.
      */
     @Override
     public void periodic() {
         try {
-            armEncoder.periodic();
+            motorSystem.periodic();
 
             // Update telemetry
             telemetry();
             
             // Calculate feedforward and PID control outputs
-            double feed = feedforward.calculate(controller.getSetpoint().position+ArmConstants.feedOffset, controller.getSetpoint().velocity); // Offset so that 0 = horizontal
+            double feed = feedforward.calculate(
+                controller.getSetpoint().position + ArmConstants.feedOffset, // Offset so that 0 = horizontal
+                controller.getSetpoint().velocity
+            );
             double voltage = controller.calculate(getMeasurement(), goal) + feed;
             
             // Apply the calculated voltage to the motor
@@ -194,24 +268,10 @@ public class Arm extends SubsystemBase {
 
     /**
      * Simulation periodic method called every loop iteration in simulation.
+     * Updates the simulated arm physics using the MotorSystem and ArmMechanismSim.
      */
     @Override
     public void simulationPeriodic() {
-        // Update the motor simulation state with the current battery voltage
-        armMotor.refreshSupplyVoltage();
-        
-        // Get the current motor input voltage and update the Wrist simulation
-        double armInput = armMotor.getSimVoltage();
-        armSim.setInputVoltage(armInput);
-        armSim.update(GeneralConstants.simPeriod);
-        
-        // Update the motor simulation state with the new Wrist position and velocity
-        armMotor.setPos(armSim.getAngleRads());
-        armMotor.setVel(armSim.getVelocityRadPerSec());
-
-        armEncoder.set(armSim.getAngleRads());
-
-        // Update the RoboRIO simulation state with the new battery voltage
-        RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(armSim.getCurrentDrawAmps()));
+        motorSystem.simulationPeriodic(mechanismSim, GeneralConstants.simPeriod);
     }
 }

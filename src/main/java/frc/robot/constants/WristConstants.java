@@ -12,7 +12,7 @@ public class WristConstants {
 
     // Encoder ID
     public static final int encoderId = 0;
-    public static final double encoderRatio = 1.0;
+    public static final double encoderRatio = -1.0;  // Negate multiplier since encoder was inverted before
     public static final double encoderOffset = 4.17;
 
     // Limits

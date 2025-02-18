@@ -74,14 +74,14 @@ public class Elevator extends SubsystemBase {
             "rio",
             ElevatorConstants.drumRadius * 2 * Math.PI / ElevatorConstants.gearRatio,
             false,
-            false
+            true  // Use brake mode for better position holding
         );
         EnhancedTalonFX rightMotor = new EnhancedTalonFX(
             ElevatorConstants.rightMotorId,
             "rio",
             ElevatorConstants.drumRadius * 2 * Math.PI / ElevatorConstants.gearRatio,
             true,
-            false
+            true  // Use brake mode for better position holding
         );
         EnhancedEncoder elevatorEncoder = new EnhancedEncoder(
             ElevatorConstants.encoderId,

@@ -38,7 +38,6 @@ public final class SwerveSystemConstants {
     public static final Translation3d armTransOffset = new Translation3d(0.11,-0.18,0.26);
 
     public static final double intakeDistance = 1;
-    public static final double intakeStep = 0.02;
 
     public static SwerveSystem.SwerveSystemState getGroundIntake() {
         return baseGroundIntake;
@@ -53,41 +52,39 @@ public final class SwerveSystemConstants {
             Units.degreesToRadians(-95),  // 75 - 90 = -15 degrees
             0.4,
             wristDown,
-            GeneralConstants.getProcessor()
+            RobotPositions.processor.alliancePos()
         );
     }
 
     public static SwerveSystem.SwerveSystemState[] getSourceStates() {
-        SwerveSystem.SwerveSystemState[] states = new SwerveSystem.SwerveSystemState[GeneralConstants.getStations().length];
-        var stations = GeneralConstants.getStations();
+        SwerveSystem.SwerveSystemState[] states = new SwerveSystem.SwerveSystemState[RobotPositions.stations.length];
         for (int i = 0; i < states.length; i++) {
             states[i] = new SwerveSystem.SwerveSystemState(
                 Units.degreesToRadians(-25.1),  // 45 - 90 = -45 degrees
                 0.1,                        // From ElevatorConstants.sourceGoal
                 Units.degreesToRadians(-113.6),              // From WristConstants.pos2 (straight)
-                stations[i]
+                RobotPositions.stations[i].alliancePos()
             );
         }
         return states;
     }
 
     public static SwerveSystem.SwerveSystemState[] getAlgaeStates() {
-        SwerveSystem.SwerveSystemState[] states = new SwerveSystem.SwerveSystemState[GeneralConstants.sides];
-        var centerReef = GeneralConstants.getCenterReef();
+        SwerveSystem.SwerveSystemState[] states = new SwerveSystem.SwerveSystemState[FieldGeometry.reefSides];
         for (int i = 0; i < states.length; i++) {
             boolean isLow = Reef.isAlgaeLow(i);
             states[i] = new SwerveSystem.SwerveSystemState(
                 Units.degreesToRadians(30),  // 30 - 90 = -60, 120 - 90 = 30
                 0.43,                                       // From ElevatorConstants.algaeGoal
                 wristStraight,                             // From WristConstants.pos2 (straight)
-                centerReef[i]
+                RobotPositions.centerReef[i].alliancePos()
             );
         }
         return states;
     }
 
     public static SwerveSystem.SwerveSystemState[][] getScoringStates() {
-        SwerveSystem.SwerveSystemState[][] states = new SwerveSystem.SwerveSystemState[4][GeneralConstants.sides*2];
+        SwerveSystem.SwerveSystemState[][] states = new SwerveSystem.SwerveSystemState[4][FieldGeometry.reefSides*2];
         double[] armAngles = {
             Units.degreesToRadians(45),   // L1 (135 - 90)
             Units.degreesToRadians(35),   // L2 (135 - 90)
@@ -107,14 +104,13 @@ public final class SwerveSystemConstants {
             Units.degreesToRadians(24.2)    // L4 (120 - 90)
         };
 
-        var branchReef = GeneralConstants.getBranchReef();
         for (int level = 0; level < states.length; level++) {
             for (int pos = 0; pos < states[level].length; pos++) {
                 states[level][pos] = new SwerveSystem.SwerveSystemState(
                     armAngles[level],
                     elevatorHeights[level],
                     wristAngles[level],
-                    branchReef[pos]
+                    RobotPositions.branchReef[pos].alliancePos()
                 );
             }
         }

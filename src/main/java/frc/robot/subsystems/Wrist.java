@@ -92,7 +92,7 @@ public class Wrist extends SubsystemBase {
             "rio",
             (2*Math.PI)/WristConstants.gearRatio,
             false,
-            false
+            true  // Use brake mode for better position holding
         );
         EnhancedEncoder wristEncoder = new EnhancedEncoder(
             WristConstants.encoderId,

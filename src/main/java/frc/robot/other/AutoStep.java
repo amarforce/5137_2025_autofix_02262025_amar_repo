@@ -7,7 +7,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.MultiCommands;
-import frc.robot.constants.GeneralConstants;
+import frc.robot.constants.FieldGeometry;
+import frc.robot.constants.RobotPositions;
 
 /**
  * The `AutoStep` class is responsible for creating and managing three {@link SendableChooser}s
@@ -66,20 +67,20 @@ public class AutoStep {
         // Initialize the branch chooser with default and additional options
         branchChooser = new SendableChooser<Integer>();
         branchChooser.setDefaultOption("A", 0);
-        for (int i = 1; i < GeneralConstants.sides * 2; i++) {
+        for (int i = 1; i < FieldGeometry.reefSides * 2; i++) {
             branchChooser.addOption(Character.toString('A' + i), i);
         }
         SmartDashboard.putData("branchChoices/" + id, branchChooser);
 
         // Initialize the pickup chooser with default and additional options
         pickupChooser = new SendableChooser<Pose2d>();
-        pickupChooser.setDefaultOption("RightStation Right", GeneralConstants.getStations()[0]);
-        pickupChooser.addOption("RightStation Left", GeneralConstants.getStations()[1]);
-        pickupChooser.addOption("LeftStation Right", GeneralConstants.getStations()[2]);
-        pickupChooser.addOption("LeftStation Left", GeneralConstants.getStations()[3]);
-        pickupChooser.addOption("Left Ground", GeneralConstants.getPickups()[0]);
-        pickupChooser.addOption("Center Ground", GeneralConstants.getPickups()[1]);
-        pickupChooser.addOption("Right Ground", GeneralConstants.getPickups()[2]);
+        pickupChooser.setDefaultOption("RightStation Right", RobotPositions.stations[0].alliancePos());
+        pickupChooser.addOption("RightStation Left", RobotPositions.stations[1].alliancePos());
+        pickupChooser.addOption("LeftStation Right", RobotPositions.stations[2].alliancePos());
+        pickupChooser.addOption("LeftStation Left", RobotPositions.stations[3].alliancePos());
+        pickupChooser.addOption("Left Ground", RobotPositions.pickups[0].alliancePos());
+        pickupChooser.addOption("Center Ground", RobotPositions.pickups[1].alliancePos());
+        pickupChooser.addOption("Right Ground", RobotPositions.pickups[2].alliancePos());
         SmartDashboard.putData("pickupChoices/" + id, pickupChooser);
     }
 
@@ -90,7 +91,7 @@ public class AutoStep {
         // Initialize the reef chooser with default and additional options for algae poses
         branchChooser = new SendableChooser<Integer>();
         branchChooser.setDefaultOption("AB", 0);
-        for (int i = 1; i < GeneralConstants.sides; i++) {
+        for (int i = 1; i < FieldGeometry.reefSides; i++) {
             branchChooser.addOption(Character.toString('A' + (2 * i)) + Character.toString('A' + (2 * i + 1)), i);
         }
         SmartDashboard.putData("branchChoices/" + id, branchChooser);

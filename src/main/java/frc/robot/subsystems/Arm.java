@@ -75,7 +75,7 @@ public class Arm extends SubsystemBase {
             "rio", 
             (2*Math.PI)/ArmConstants.gearRatio, 
             false, 
-            false
+            true  // Use brake mode for better position holding
         );
         EnhancedEncoder armEncoder = new EnhancedEncoder(
             ArmConstants.encoderId, 

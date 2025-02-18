@@ -10,7 +10,7 @@ public class ElevatorConstants {
 
     // Encoder ID
     public static final int encoderId = 2;
-    public static final double encoderRatio = 0.5;
+    public static final double encoderRatio = -0.5;  // Negate multiplier since encoder was inverted before
     public static final double encoderOffset = -0.273;
 
     // PID constants
@@ -28,7 +28,7 @@ public class ElevatorConstants {
     public static final double elevatorTolerance = 0.01;
 
     // Simulation constants
-    public static final double gearRatio = 30.0; // gear ratio
+    public static final double gearRatio = 15.0/2.0; // gear ratio (15:1 reduction, 2 stages)
     public static final double carriageMass = 13.0; // in kg
     public static final double drumRadius = 0.0254; // in meters
     public static final double minHeight = 0; // in meters

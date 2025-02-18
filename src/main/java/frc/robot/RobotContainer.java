@@ -88,23 +88,23 @@ public class RobotContainer {
 			// Configure emergency stop - this should always be available
 			driver.touchpad().onTrue(new InstantCommand(() -> CommandScheduler.getInstance().cancelAll()));
 			
-			//initReef();
-			//initGamepieces();
+			initReef();
+			initGamepieces();
 			
 			// Initialize subsystems
-			//initVision();
+			initVision();
 			initSwerve();
-			//initElevator();
-			//initArm();
-			//initWrist();
-			//initIntake();
+			initElevator();
+			initArm();
+			initWrist();
+			initIntake();
 			initHang();
-			//initLED();
+			initLED();
 			
 			// Initialize combined systems and commands
-			//initSwerveSystem();
-			//initMultiCommands();
-			//initAdditionalComponents();
+			initSwerveSystem();
+			initMultiCommands();
+			initAdditionalComponents();
 
 			// Configure SysId bindings for elevator
 			//configureSysIdBindings(elevatorCommands);

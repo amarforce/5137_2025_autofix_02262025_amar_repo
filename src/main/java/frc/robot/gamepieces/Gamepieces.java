@@ -4,14 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.FieldGeometry;
 import frc.robot.constants.GamepieceConstants;
-import frc.robot.constants.GeneralConstants;
 
 public class Gamepieces extends SubsystemBase{
     private StructArrayPublisher<Pose3d> algaePublisher=NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/sim/algae",Pose3d.struct).publish();
@@ -19,27 +17,19 @@ public class Gamepieces extends SubsystemBase{
     private List<Gamepiece> coral;
     private List<Gamepiece> algae;
     public Gamepieces(){
-        Translation3d[] pos=GeneralConstants.getAlgaePositions();
-        algae=new ArrayList<>();
-        for(Translation3d t:pos){
-            algae.add(new Gamepiece(GamepieceConstants.algae,new Pose3d(t, new Rotation3d())));
+        // Initialize algae
+        algae = new ArrayList<>();
+        for (FieldGeometry.FieldPosition pos : FieldGeometry.algaePositions) {
+            algae.add(new Gamepiece(GamepieceConstants.algae, pos.bluePos()));
+            algae.add(new Gamepiece(GamepieceConstants.algae, pos.redPos()));
         }
-        coral=new ArrayList<>();
-        Pose3d start=new Pose3d(0.65, 0.65, 1.12, new Rotation3d(0,Math.PI/4,0.9));
-        for(int i=-10;i<10;i++){
-            coral.add(new Gamepiece(GamepieceConstants.coral, start.transformBy(new Transform3d(0, i/10., 0, new Rotation3d()))));
-        }
-        Pose3d start2=new Pose3d(0.65, GeneralConstants.fieldWidth-0.65, 1.12, new Rotation3d(0,Math.PI/4,-0.9));
-        for(int i=-10;i<10;i++){
-            coral.add(new Gamepiece(GamepieceConstants.coral, start2.transformBy(new Transform3d(0, i/10., 0, new Rotation3d()))));
-        }
-        Pose3d start3=new Pose3d(GeneralConstants.fieldLength-0.65, 0.65, 1.12, new Rotation3d(0,Math.PI/4,Math.PI-0.9));
-        for(int i=-10;i<10;i++){
-            coral.add(new Gamepiece(GamepieceConstants.coral, start3.transformBy(new Transform3d(0, i/10., 0, new Rotation3d()))));
-        }
-        Pose3d start4=new Pose3d(GeneralConstants.fieldLength-0.65, GeneralConstants.fieldWidth-0.65, 1.12, new Rotation3d(0,Math.PI/4,0.9-Math.PI));
-        for(int i=-10;i<10;i++){
-            coral.add(new Gamepiece(GamepieceConstants.coral, start4.transformBy(new Transform3d(0, i/10., 0, new Rotation3d()))));
+
+        // Initialize source corals
+        coral = new ArrayList<>();
+        // Add blue alliance corals
+        for (FieldGeometry.FieldPosition pos : FieldGeometry.sourceCoralPositions) {
+            coral.add(new Gamepiece(GamepieceConstants.coral, pos.bluePos()));
+            coral.add(new Gamepiece(GamepieceConstants.coral, pos.redPos()));
         }
     }
 

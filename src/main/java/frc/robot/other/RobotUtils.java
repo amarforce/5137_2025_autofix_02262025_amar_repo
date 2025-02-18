@@ -3,15 +3,16 @@ package frc.robot.other;
 import java.util.HashMap;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Robot;
-import frc.robot.constants.GeneralConstants;
+import frc.robot.constants.FieldGeometry;
 
 /**
  * Utility class for robot-related operations, such as alliance-specific transformations,
@@ -41,8 +42,8 @@ public class RobotUtils {
      */
     public static Pose2d invertPose(Pose2d pose) {
         return new Pose2d(
-            GeneralConstants.fieldLength - pose.getX(),
-            GeneralConstants.fieldWidth - pose.getY(),
+            FieldGeometry.fieldLength - pose.getX(),
+            FieldGeometry.fieldWidth - pose.getY(),
             pose.getRotation().rotateBy(Rotation2d.k180deg)
         );
     }
@@ -62,22 +63,6 @@ public class RobotUtils {
         }
     }
 
-    public static Pose2d[] invertToAlliance(Pose2d[] poses) {
-        Pose2d[] newPoses=new Pose2d[poses.length];
-        for(int i=0;i<poses.length;i++){
-            newPoses[i]=invertToAlliance(poses[i]);
-        }
-        return newPoses;
-    }
-
-    public static Pose2d[][] invertToAlliance(Pose2d[][] poses) {
-        Pose2d[][] newPoses=new Pose2d[poses.length][];
-        for(int i=0;i<poses.length;i++){
-            newPoses[i]=invertToAlliance(poses[i]);
-        }
-        return newPoses;
-    }
-
     /**
      * Inverts a given Translation3d across the field's center. This is useful for transforming
      * 3D translations from one alliance's perspective to the other.
@@ -85,11 +70,12 @@ public class RobotUtils {
      * @param trans The 3D translation to invert.
      * @return The inverted 3D translation.
      */
-    public static Translation3d invertTrans3d(Translation3d trans) {
-        return new Translation3d(
-            GeneralConstants.fieldLength - trans.getX(),
-            GeneralConstants.fieldWidth - trans.getY(),
-            trans.getZ()
+    public static Pose3d invertPose(Pose3d pose) {
+        return new Pose3d(
+            FieldGeometry.fieldLength - pose.getX(),
+            FieldGeometry.fieldWidth - pose.getY(),
+            pose.getZ(),
+            pose.getRotation().rotateBy(new Rotation3d(Rotation2d.k180deg))
         );
     }
 
@@ -100,28 +86,12 @@ public class RobotUtils {
      * @param trans The 3D translation to invert.
      * @return The 3D translation transformed to the current alliance's perspective.
      */
-    public static Translation3d invertToAlliance(Translation3d trans) {
+    public static Pose3d invertToAlliance(Pose3d pose) {
         if (onRedAlliance()) {
-            return invertTrans3d(trans);
+            return invertPose(pose);
         } else {
-            return trans;
+            return pose;
         }
-    }
-
-    public static Translation3d[] invertToAlliance(Translation3d[] poses) {
-        Translation3d[] newPoses=new Translation3d[poses.length];
-        for(int i=0;i<poses.length;i++){
-            newPoses[i]=invertToAlliance(poses[i]);
-        }
-        return newPoses;
-    }
-
-    public static Translation3d[][] invertToAlliance(Translation3d[][] poses) {
-        Translation3d[][] newPoses=new Translation3d[poses.length][];
-        for(int i=0;i<poses.length;i++){
-            newPoses[i]=invertToAlliance(poses[i]);
-        }
-        return newPoses;
     }
 
     /**

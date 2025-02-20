@@ -15,17 +15,20 @@ public final class SwerveSystemConstants {
     // Weight for how much to consider rotation vs translation when finding closest state
     // Higher values mean rotation differences matter more
     public static final double rotationWeight = 1.0; // meters per radian
+    // 0.32 arm source
+    // 0.48 arm L3
+    // elevator L2 0.15
 
     private static final double wristStraight = Units.degreesToRadians(0);    // 90 - 90 = 0 (vertical)
     private static final double wristDown = Units.degreesToRadians(-90);      // 0 - 90 = -90 (horizontal)
 
     // Basic states without specific robot positions
     private static final SwerveSystem.SwerveSystemState baseGroundIntake = new SwerveSystem.SwerveSystemState(
-        Units.degreesToRadians(-120),  // From ArmConstants.groundIntakeGoal
-        0.5,                       // From ElevatorConstants.groundIntakeGoal
-        Units.degreesToRadians(-45),                  // From WristConstants.pos1 (down)
+        -2.0,  // From ArmConstants.groundIntakeGoal
+        0.41,                       // From ElevatorConstants.groundIntakeGoal
+        -1.39,                  // From WristConstants.pos1 (down)
         null                        // Robot position determined at runtime
-    );
+    );   
 
     private static final SwerveSystem.SwerveSystemState baseDefaultState = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(0),  // From ArmConstants.defaultGoal (vertical)
@@ -86,22 +89,22 @@ public final class SwerveSystemConstants {
     public static SwerveSystem.SwerveSystemState[][] getScoringStates() {
         SwerveSystem.SwerveSystemState[][] states = new SwerveSystem.SwerveSystemState[4][FieldGeometry.reefSides*2];
         double[] armAngles = {
-            Units.degreesToRadians(45),   // L1 (135 - 90)
-            Units.degreesToRadians(35),   // L2 (135 - 90)
-            Units.degreesToRadians(35),   // L3 (135 - 90)
-            Units.degreesToRadians(35)    // L4 (120 - 90)
+            0.66,   // L1 (135 - 90)
+            0.34,   // L2 (135 - 90)
+            0.34,   // L3 (135 - 90)
+            0.4    // L4 (120 - 90)
         };
         double[] elevatorHeights = {
-            0.06,  // L1
-            0.0803,  // L2
-            0.41,  // L3
-            1.21   // L4
+            0.01,  // L1
+            0.12,  // L2
+            0.59,  // L3
+            1.35   // L4
         };
         double[] wristAngles = {
-            Units.degreesToRadians(0),   // L1 (135 - 90)
-            Units.degreesToRadians(0),   // L2 (135 - 90)
-            Units.degreesToRadians(0),   // L3 (135 - 90)
-            Units.degreesToRadians(24.2)    // L4 (120 - 90)
+            0.19,   // L1 (135 - 90)
+            0.25,   // L2 (135 - 90)
+            0.25,   // L3 (135 - 90)
+            0.27    // L4 (120 - 90)
         };
 
         for (int level = 0; level < states.length; level++) {

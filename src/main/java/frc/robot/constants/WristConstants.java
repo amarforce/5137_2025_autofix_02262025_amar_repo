@@ -8,7 +8,7 @@ import frc.robot.Robot;
 public class WristConstants {
     // Motor ID
     public static final int motorId = Robot.isSimulation() ? 23 : 3;
-    public static final double gearRatio = 12.0;
+    public static final double gearRatio = 16.0;
 
     // Encoder ID
     public static final int encoderId = 0;
@@ -39,7 +39,7 @@ public class WristConstants {
     public static final double wristTolerance = Units.degreesToRadians(1);
 
     // Simulation constants
-    public static final double momentOfInertia = 0.155;
+    public static final double momentOfInertia = 0.5219;
     public static final double wristLength = 0.1524;
     public static final DCMotor motorSim = DCMotor.getKrakenX60(1);
 

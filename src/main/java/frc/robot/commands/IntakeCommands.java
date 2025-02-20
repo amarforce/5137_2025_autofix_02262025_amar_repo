@@ -1,5 +1,7 @@
 package frc.robot.commands;
 
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -32,6 +34,16 @@ public class IntakeCommands {
     public Command stop() {
         return new InstantCommand(() -> intake.stop());
     }
+
+    /**
+     * Creates a command that stops the intake.
+     *
+     * @return A command that, when executed, stops the intake motor.
+     */
+    public Command setSpeed(DoubleSupplier speed) {
+        return new InstantCommand(() -> intake.setSpeed(speed.getAsDouble()));
+    }
+
 
     /**
      * Creates a command that runs the intake at a specified speed until a switch is triggered.

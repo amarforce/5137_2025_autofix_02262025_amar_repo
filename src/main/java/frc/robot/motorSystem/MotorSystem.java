@@ -9,11 +9,13 @@ import com.ctre.phoenix6.StatusSignal;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 
 public class MotorSystem {
     private List<EnhancedTalonFX> motors;
     private EnhancedEncoder encoder;
+    private double appliedVoltage;
 
     public MotorSystem(List<EnhancedTalonFX> motors, EnhancedEncoder encoder){
         this.motors=motors;
@@ -29,6 +31,7 @@ public class MotorSystem {
     }
 
     public void setVoltage(Voltage v){
+        appliedVoltage=v.magnitude();
         motors.forEach(m->m.setVoltage(v.magnitude()));
     }
 
@@ -68,6 +71,7 @@ public class MotorSystem {
             motors.get(i).log(prefix + "/motor" + (motors.size() > 1 ? (i + 1) : ""));
         }
         encoder.log(prefix + "/encoder");
+        SmartDashboard.putNumber(prefix+"/appliedVoltage", appliedVoltage);
     }
 
     public void simulationPeriodic(MechanismSim sim, double period) {

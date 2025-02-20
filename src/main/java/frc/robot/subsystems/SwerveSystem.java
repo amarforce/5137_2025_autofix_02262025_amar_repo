@@ -193,7 +193,7 @@ public class SwerveSystem extends SubsystemBase {
             wrist.setGoal(state.wristPosition);
         }
         if(swerve!=null){
-            swerve.setTargetPose(state.botPosition);
+           // swerve.setTargetPose(state.botPosition);
         }
     }
 

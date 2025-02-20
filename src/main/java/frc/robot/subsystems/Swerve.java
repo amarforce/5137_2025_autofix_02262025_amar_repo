@@ -251,7 +251,10 @@ public class Swerve extends SubsystemBase {
     public void setTargetPose(Pose2d target){
         if(target!=targetPose){
             targetPose=target;
-            startAuto(AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints));
+            if(targetPose!=null){
+                startAuto(AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints));
+
+            }
         }
     }
 

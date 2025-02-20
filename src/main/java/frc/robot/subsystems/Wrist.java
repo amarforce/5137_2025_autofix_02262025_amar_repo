@@ -265,8 +265,9 @@ public class Wrist extends SubsystemBase {
      * Determines the safe wrist position based on arm's current and goal positions.
      * Retracts wrist if arm is moving through danger zone.
      */
+    // 
     private double getSafeGoal(double armAngle, double armGoal) {
-        if (willArmPathIntersectDangerZone(armAngle, armGoal)) {
+        if (willArmPathIntersectDangerZone(armAngle, armGoal) || Math.abs(armAngle-armGoal)>0.5) {
             return WristConstants.minAngle;
         }
         return desiredGoal;
@@ -299,12 +300,13 @@ public class Wrist extends SubsystemBase {
         try {
             motorSystem.periodic();
 
+            double wristRotation = getMeasurement();
+
             // Update telemetry
             telemetry();
         
             // Calculate PID control outputs with arm position compensation
             double armRotation = arm != null ? arm.getMeasurement() : 0;
-            double wristRotation = getMeasurement();
             
             // Update goal based on arm's current position and goal
             goal = getSafeGoal(armRotation, arm.getGoal());

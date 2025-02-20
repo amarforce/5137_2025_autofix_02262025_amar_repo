@@ -16,7 +16,7 @@ public final class FieldGeometry {
     private static final double startingCoralInset = 0.65;
     private static final double startingCoralHeight = 1.12;
     private static final double startingCoralPitch = Math.PI/4;
-    private static final double startingCoralYaw = 0.9;
+    private static final double startingCoralYaw = 0.94;
     private static final int startingCoralsPerLine = 20; // -10 to 10
     private static final double startingCoralSpacing = 0.1; // 1/10th meter spacing
 

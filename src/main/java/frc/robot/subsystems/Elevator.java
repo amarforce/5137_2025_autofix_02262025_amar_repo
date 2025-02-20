@@ -5,7 +5,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -22,8 +22,6 @@ import frc.robot.motorSystem.MotorSystem;
 import frc.robot.motorSystem.ElevatorMechanismSim;
 
 import java.util.List;
-
-import com.ctre.phoenix6.controls.Follower;
 
 /**
  * The Elevator subsystem controls a two-motor elevator mechanism.
@@ -48,7 +46,7 @@ public class Elevator extends SubsystemBase {
     private final MotorSystem motorSystem;
     
     /** PID controller for elevator position control */
-    private final PIDController controller;
+    private final ProfiledPIDController controller;
     
     /** Feedforward controller for gravity compensation and dynamics */
     private final ElevatorFeedforward feedforward;
@@ -95,10 +93,11 @@ public class Elevator extends SubsystemBase {
         motorSystem = new MotorSystem(List.of(leftMotor, rightMotor), elevatorEncoder);
         
         // Initialize PID controller
-        controller = new PIDController(
+        controller = new ProfiledPIDController(
             ElevatorConstants.kP,
             ElevatorConstants.kI,
-            ElevatorConstants.kD
+            ElevatorConstants.kD,
+            ElevatorConstants.pidConstraints
         );
         controller.setTolerance(ElevatorConstants.elevatorTolerance);
         
@@ -238,8 +237,10 @@ public class Elevator extends SubsystemBase {
     private void telemetry() {
         SmartDashboard.putNumber("elevator/height", getMeasurement());
         SmartDashboard.putNumber("elevator/goal", getGoal());
+        SmartDashboard.putNumber("elevator/setpoint", controller.getSetpoint().position);
+        SmartDashboard.putNumber("elevator/setpointVelocity",controller.getSetpoint().velocity);
         SmartDashboard.putNumber("elevator/velocity", getVelocity());
-        SmartDashboard.putNumber("elevator/error", controller.getError());
+        SmartDashboard.putNumber("elevator/error", controller.getPositionError());
         SmartDashboard.putData("elevator/controller", controller);
         motorSystem.log("elevator");
     }
@@ -252,13 +253,14 @@ public class Elevator extends SubsystemBase {
     public void periodic() {
         try {
             motorSystem.periodic();
+            double measurement=getMeasurement();
 
             // Update telemetry
             telemetry();
 
             // Calculate feedforward and PID control outputs
-            double feed = feedforward.calculate(0); // Constant gravity compensation
-            double voltage = controller.calculate(getMeasurement(), goal) + feed;
+            double feed = feedforward.calculate(controller.getSetpoint().velocity);
+            double voltage = controller.calculate(measurement, goal) + feed;
             
             // Apply the calculated voltage to the motors
             setVoltage(Volts.of(voltage));

@@ -30,6 +30,7 @@ import frc.robot.other.CageChoice;
 import frc.robot.other.RobotUtils;
 import frc.robot.subsystems.*;
 import frc.robot.commands.*;
+import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.constants.SwerveSystemConstants;
 
@@ -93,11 +94,11 @@ public class RobotContainer {
 			
 			// Initialize subsystems
 			//initVision();
-			//initSwerve();
+			initSwerve();
 			initElevator();
-			//initArm();
-			//initWrist();
-			//initIntake();
+			initArm();
+			initWrist();
+			initIntake();
 			//initHang();
 			//initLED();
 			
@@ -188,11 +189,11 @@ public class RobotContainer {
 
 		// Configure intake bindings
 		operator.L2()
-			.onTrue(intakeCommands.outtake())
+			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
 		operator.R2()
-			.onTrue(intakeCommands.intake())
+			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 	}
 

@@ -1,7 +1,14 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.LinearQuadraticRegulator;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -47,7 +54,7 @@ public class Arm extends SubsystemBase {
     private final MotorSystem motorSystem;
     
     /** PID controller for arm position control */
-    private final ProfiledPIDController controller;
+    // private final ProfiledPIDController controller;
     
     /** Feedforward controller for gravity compensation and dynamics */
     private final ArmFeedforward feedforward;
@@ -63,6 +70,12 @@ public class Arm extends SubsystemBase {
 
     /** System identification routine for parameter tuning */
     private final SysIdRoutine sysIdRoutine;
+
+    // linear quadratic regulator
+    // first N2 = dimension of state space of the arm, position and velocity
+    // N1 = number of inputs to the arm, voltage
+    // second N2 = number of accessible outputs, position and velocity
+    private LinearQuadraticRegulator<N2,N1,N2> lqr;
         
     /**
      * Constructor for the Arm subsystem.
@@ -79,21 +92,27 @@ public class Arm extends SubsystemBase {
         );
         EnhancedEncoder armEncoder = new EnhancedEncoder(
             ArmConstants.encoderId, 
-            (2*Math.PI)/ArmConstants.encoderRatio, 
+            (2*Math.PI)/ArmConstants.encoderRatio,
             ArmConstants.encoderOffset
         );
+
+        // Create the plant, simulates the arm movement
+        LinearSystem<N2,N1,N2> plant=LinearSystemId.createSingleJointedArmSystem(ArmConstants.motorSim, ArmConstants.momentOfInertia, ArmConstants.gearRatio);
         
+        // Initializes the linear-quadratic regulator
+        lqr=new LinearQuadraticRegulator<N2,N1,N2>(plant,VecBuilder.fill(ArmConstants.posWeight,ArmConstants.velWeight),VecBuilder.fill(ArmConstants.volWeight),GeneralConstants.simPeriod);
+
         // Create motor system
         motorSystem = new MotorSystem(List.of(armMotor), armEncoder);
         
         // Initialize PID controller
-        controller = new ProfiledPIDController(
-            ArmConstants.kP, 
-            ArmConstants.kI, 
-            ArmConstants.kD, 
-            ArmConstants.pidConstraints
-        );
-        controller.setTolerance(ArmConstants.armTolerance);
+        // controller = new ProfiledPIDController(
+        //     ArmConstants.kP, 
+        //     ArmConstants.kI, 
+        //     ArmConstants.kD, 
+        //     ArmConstants.pidConstraints
+        // );
+        // controller.setTolerance(ArmConstants.armTolerance);
         
         // Initialize feedforward controller
         feedforward = new ArmFeedforward(
@@ -204,6 +223,10 @@ public class Arm extends SubsystemBase {
         return motorSystem.getAcceleration();
     }
 
+    public double getError(){
+        return Math.abs(goal-getMeasurement());
+    }
+
     /**
      * Check if the arm is at its target position.
      * 
@@ -211,7 +234,7 @@ public class Arm extends SubsystemBase {
      *         false otherwise.
      */
     public boolean atSetpoint() {
-        return controller.atSetpoint();
+        return getError()<ArmConstants.armTolerance;
     }
 
     /**
@@ -232,11 +255,11 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("arm/angle", getMeasurement());
         SmartDashboard.putNumber("arm/degrees", Units.radiansToDegrees(getMeasurement()));
         SmartDashboard.putNumber("arm/goal", getGoal());
-        SmartDashboard.putNumber("arm/setpoint", controller.getSetpoint().position);
-        SmartDashboard.putNumber("arm/setpointVelocity",controller.getSetpoint().velocity);
+        // SmartDashboard.putNumber("arm/setpoint", controller.getSetpoint().position);
+        // SmartDashboard.putNumber("arm/setpointVelocity",controller.getSetpoint().velocity);
         SmartDashboard.putNumber("arm/velocity", getVelocity());
-        SmartDashboard.putNumber("arm/error", controller.getPositionError());
-        SmartDashboard.putData("arm/controller", controller);
+        SmartDashboard.putNumber("arm/error", getError());
+        // SmartDashboard.putData("arm/controller", controller);
         motorSystem.log("arm");
     }
 
@@ -248,16 +271,19 @@ public class Arm extends SubsystemBase {
     public void periodic() {
         try {
             motorSystem.periodic();
+            double measurement=getMeasurement();
+            double velocity=getVelocity();
 
             // Update telemetry
             telemetry();
-            
+
             // Calculate feedforward and PID control outputs
             double feed = feedforward.calculate(
-                controller.getSetpoint().position + ArmConstants.feedOffset, // Offset so that 0 = horizontal
-                controller.getSetpoint().velocity
+                goal + ArmConstants.feedOffset, // Offset so that 0 = horizontal
+                0
             );
-            double voltage = controller.calculate(getMeasurement(), goal) + feed;
+            double lqrOutput=lqr.calculate(VecBuilder.fill(measurement-goal,velocity)).get(0,0);
+            double voltage=lqrOutput+feed;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));

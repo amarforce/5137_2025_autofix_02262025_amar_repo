@@ -30,7 +30,11 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -65,7 +69,7 @@ public class Swerve extends SubsystemBase {
     // Target pose
     private Pose2d targetPose=new Pose2d();
 
-    
+    private StructArrayPublisher<Pose2d> estPosePublisher = NetworkTableInstance.getDefault().getStructArrayTopic("SmartDashboard/estimatedPoses",Pose2d.struct).publish();
 
     private Command currentAuto;
     /**
@@ -283,10 +287,14 @@ public class Swerve extends SubsystemBase {
         try{
             if(vision!=null){
                 List<EstimatedRobotPose> newPoses = vision.getNewPoses();
-                for (EstimatedRobotPose newPose : newPoses) {
-                    swerve.addVisionMeasurement(newPose.estimatedPose.toPose2d(), newPose.timestampSeconds);
+                Pose2d[] estPoses=new Pose2d[newPoses.size()];
+                for(int i=0;i<newPoses.size();i++){
+                    estPoses[i]=newPoses.get(i).estimatedPose.toPose2d();
                 }
-    
+                estPosePublisher.set(estPoses);
+                for (EstimatedRobotPose newPose : newPoses) {
+                    swerve.addVisionMeasurement(newPose.estimatedPose.toPose2d(), Utils.fpgaToCurrentTime(newPose.timestampSeconds));
+                }
                 vision.processNewObjects(this.getPose());
                 field.setRobotPose(this.getPose());
                 if(Robot.isSimulation()){

@@ -33,7 +33,7 @@
             "y": 12,
             "drive_motor": {
                 "id": 1,
-                "inverted": false
+                "inverted": true
             },
             "angle_motor": {
                 "id": 5,
@@ -50,7 +50,7 @@
             "y": -12,
             "drive_motor": {
                 "id": 2,
-                "inverted": true
+                "inverted": false
             },
             "angle_motor": {
                 "id": 6,
@@ -67,7 +67,7 @@
             "y": 12,
             "drive_motor": {
                 "id": 3,
-                "inverted": false
+                "inverted": true
             },
             "angle_motor": {
                 "id": 7,
@@ -84,7 +84,7 @@
             "y": -12,
             "drive_motor": {
                 "id": 4,
-                "inverted": true
+                "inverted": false
             },
             "angle_motor": {
                 "id": 8,

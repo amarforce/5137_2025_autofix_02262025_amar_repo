@@ -3,11 +3,10 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.LinearQuadraticRegulator;
-import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
@@ -34,27 +33,32 @@ import java.util.List;
 
 /**
  * The Arm subsystem controls a single-jointed robotic arm using a TalonFX motor controller.
- * It provides position control through a combination of PID and feedforward control.
+ * It implements advanced control through a combination of Linear Quadratic Regulator (LQR),
+ * feedforward control, and slew rate limiting.
  * 
  * Features:
- * - Position control using ProfiledPIDController for smooth motion
+ * - State-space control using Linear Quadratic Regulator (LQR) for optimal control
  * - Gravity compensation and feedforward control for accurate positioning
+ * - Slew rate limiting to prevent aggressive voltage changes
  * - Simulation support using SingleJointedArmSim
  * - System identification capabilities for tuning
  * - Telemetry output for debugging and monitoring
+ * - Voltage and position safety limits
  * 
  * The arm's position is measured in radians, where:
  * - 0 radians = vertical position
  * - Positive angles = forward from vertical
  * - Negative angles = backward from vertical
+ * 
+ * Control Architecture:
+ * - LQR provides optimal state feedback control based on position and velocity
+ * - Feedforward compensates for gravity and system dynamics
+ * - Slew rate limiter smooths voltage transitions to prevent jerky motion
  */
 public class Arm extends SubsystemBase {
     
     /** Motor system that handles both the motor and encoder */
     private final MotorSystem motorSystem;
-    
-    /** PID controller for arm position control */
-    // private final ProfiledPIDController controller;
     
     /** Feedforward controller for gravity compensation and dynamics */
     private final ArmFeedforward feedforward;
@@ -76,10 +80,21 @@ public class Arm extends SubsystemBase {
     // N1 = number of inputs to the arm, voltage
     // second N2 = number of accessible outputs, position and velocity
     private LinearQuadraticRegulator<N2,N1,N2> lqr;
+
+    private final SlewRateLimiter limiter;
         
     /**
      * Constructor for the Arm subsystem.
      * Initializes all control systems, motors, encoders, and simulation components.
+     * 
+     * Sets up:
+     * - Motor and encoder with appropriate gear ratios
+     * - Linear system plant model for the arm
+     * - LQR controller with configured weights for position, velocity and voltage
+     * - Slew rate limiter for smooth voltage transitions
+     * - Feedforward controller for gravity compensation
+     * - Simulation components for testing
+     * - System identification routine for parameter tuning
      */
     public Arm() {
         // Create motor and encoder
@@ -102,17 +117,10 @@ public class Arm extends SubsystemBase {
         // Initializes the linear-quadratic regulator
         lqr=new LinearQuadraticRegulator<N2,N1,N2>(plant,VecBuilder.fill(ArmConstants.posWeight,ArmConstants.velWeight),VecBuilder.fill(ArmConstants.volWeight),GeneralConstants.simPeriod);
 
+        limiter=new SlewRateLimiter(ArmConstants.maxVoltageRate,-ArmConstants.maxVoltageRate,0.0);
+
         // Create motor system
         motorSystem = new MotorSystem(List.of(armMotor), armEncoder);
-        
-        // Initialize PID controller
-        // controller = new ProfiledPIDController(
-        //     ArmConstants.kP, 
-        //     ArmConstants.kI, 
-        //     ArmConstants.kD, 
-        //     ArmConstants.pidConstraints
-        // );
-        // controller.setTolerance(ArmConstants.armTolerance);
         
         // Initialize feedforward controller
         feedforward = new ArmFeedforward(
@@ -255,17 +263,21 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("arm/angle", getMeasurement());
         SmartDashboard.putNumber("arm/degrees", Units.radiansToDegrees(getMeasurement()));
         SmartDashboard.putNumber("arm/goal", getGoal());
-        // SmartDashboard.putNumber("arm/setpoint", controller.getSetpoint().position);
-        // SmartDashboard.putNumber("arm/setpointVelocity",controller.getSetpoint().velocity);
         SmartDashboard.putNumber("arm/velocity", getVelocity());
         SmartDashboard.putNumber("arm/error", getError());
-        // SmartDashboard.putData("arm/controller", controller);
         motorSystem.log("arm");
     }
 
     /**
      * Periodic method called every loop iteration.
-     * Updates the arm's position using PID and feedforward control.
+     * Updates the arm's position using LQR state feedback control and feedforward.
+     * The control flow:
+     * 1. Updates motor system and gets current state (position/velocity)
+     * 2. Updates telemetry data
+     * 3. Calculates LQR output based on current state and goal
+     * 4. Applies feedforward compensation
+     * 5. Limits voltage rate of change
+     * 6. Applies final voltage command to motor
      */
     @Override
     public void periodic() {
@@ -277,13 +289,13 @@ public class Arm extends SubsystemBase {
             // Update telemetry
             telemetry();
 
+            double desiredVoltage=lqr.calculate(VecBuilder.fill(measurement,velocity),VecBuilder.fill(goal,0.0)).get(0,0);
             // Calculate feedforward and PID control outputs
             double feed = feedforward.calculate(
                 goal + ArmConstants.feedOffset, // Offset so that 0 = horizontal
                 0
             );
-            double lqrOutput=lqr.calculate(VecBuilder.fill(measurement-goal,velocity)).get(0,0);
-            double voltage=lqrOutput+feed;
+            double voltage=limiter.calculate(desiredVoltage)+feed;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));

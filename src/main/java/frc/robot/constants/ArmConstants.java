@@ -17,11 +17,6 @@ public class ArmConstants {
     public static final double encoderOffset = 0.66;
 
     public static final double feedOffset = Units.degreesToRadians(90);
-    
-    // PID constants
-    // public static final double kP = 10.0;
-    // public static final double kI = 0;
-    // public static final double kD = 0.5;
 
     // Feedforward constants
     public static final double kS = Robot.isSimulation()?0.0:0.135;
@@ -50,6 +45,8 @@ public class ArmConstants {
 
     // 1/volWeight^2 = how much to value voltage error
     public static final double volWeight = 0.5;
+
+    public static final double maxVoltageRate = 16;
 
     // minimizes int_0^inf ((pos-goal)/posWeight)^2 + (vel/velWeight)^2 + (vol/volWeight)^2 dt
 }

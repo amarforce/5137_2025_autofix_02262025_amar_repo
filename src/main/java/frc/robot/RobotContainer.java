@@ -30,6 +30,7 @@ import frc.robot.other.CageChoice;
 import frc.robot.other.RobotUtils;
 import frc.robot.subsystems.*;
 import frc.robot.commands.*;
+import frc.robot.constants.HangConstants;
 import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.constants.SwerveSystemConstants;
@@ -93,19 +94,19 @@ public class RobotContainer {
 			initGamepieces();
 			
 			// Initialize subsystems
-			//initVision();
+			initVision();
 			initSwerve();
-			initElevator();
-			initArm();
-			initWrist();
+			//initElevator();
+			//initArm();
+			//initWrist();
 			initIntake();
-			//initHang();
+			initHang();
 			//initLED();
 			
 			// Initialize combined systems and commands
 			initSwerveSystem();
 			initMultiCommands();
-			initAdditionalComponents();
+			//initAdditionalComponents();
 
 			// Configure SysId bindings for elevator
 			//configureSysIdBindings(elevatorCommands);
@@ -201,7 +202,7 @@ public class RobotContainer {
 		hang = new Hang();
 		hangCommands = new HangCommands(hang);
 		hang.setDefaultCommand(hangCommands.setSpeed(()->{
-			return MathUtil.applyDeadband(operator.getLeftX(),0.1)/10;
+			return MathUtil.applyDeadband(operator.getLeftX(),0.1)*HangConstants.hangSpeed;
 		}));
 	}
 

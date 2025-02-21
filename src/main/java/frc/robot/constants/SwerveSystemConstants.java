@@ -63,8 +63,8 @@ public final class SwerveSystemConstants {
         SwerveSystem.SwerveSystemState[] states = new SwerveSystem.SwerveSystemState[RobotPositions.stations.length];
         for (int i = 0; i < states.length; i++) {
             states[i] = new SwerveSystem.SwerveSystemState(
-                Units.degreesToRadians(-25.1),  // 45 - 90 = -45 degrees
-                0.1,                        // From ElevatorConstants.sourceGoal
+                -0.43,  // 45 - 90 = -45 degrees
+                0.17,                        // From ElevatorConstants.sourceGoal
                 Units.degreesToRadians(-113.6),              // From WristConstants.pos2 (straight)
                 RobotPositions.stations[i].alliancePos()
             );
@@ -96,7 +96,7 @@ public final class SwerveSystemConstants {
         };
         double[] elevatorHeights = {
             0.01,  // L1
-            0.12,  // L2
+            0.14,  // L2
             0.59,  // L3
             1.35   // L4
         };

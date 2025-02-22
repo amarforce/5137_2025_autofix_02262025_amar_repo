@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import frc.robot.Robot;
 import frc.robot.constants.SwerveConstants;
+import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.other.DetectedObject;
 import frc.robot.other.RobotUtils;
 import frc.robot.other.SwerveFactory;
@@ -16,7 +17,6 @@ import org.photonvision.EstimatedRobotPose;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -50,7 +50,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
  */
 public class Swerve extends SubsystemBase {
 
-    private SwerveDrivetrain<TalonFX, TalonFX, CANcoder> swerve; // Swerve drivetrain instance
+    private SwerveDrivetrain<EnhancedTalonFX, EnhancedTalonFX, CANcoder> swerve; // Swerve drivetrain instance
     private Vision vision; // Vision subsystem for pose estimation and object detection
 
     private double maxSpeed; // Maximum translational speed of the robot
@@ -305,10 +305,11 @@ public class Swerve extends SubsystemBase {
 
     private void telemetry(SwerveDriveState state){
         SmartDashboard.putNumber("driveState/odometryPeriod", state.OdometryPeriod);
-
         for (int i = 0; i < 4; ++i) {
-            SmartDashboard.putNumberArray("driveState/moduleStates/"+i, new double[]{state.ModuleStates[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
-            SmartDashboard.putNumberArray("driveState/moduleTargets/"+i, new double[]{state.ModuleTargets[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
+            SmartDashboard.putNumberArray("driveState/module"+i+"/state", new double[]{state.ModuleStates[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
+            SmartDashboard.putNumberArray("driveState/module"+i+"/target", new double[]{state.ModuleTargets[i].speedMetersPerSecond,state.ModuleStates[i].angle.getRadians()});
+            swerve.getModule(i).getDriveMotor().log("driveState/module"+i+"/driveMotor");
+            swerve.getModule(i).getSteerMotor().log("driveState/module"+i+"/steerMotor");
         }
     }
 

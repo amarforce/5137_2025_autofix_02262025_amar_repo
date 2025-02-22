@@ -14,6 +14,10 @@ public class EnhancedTalonFX extends TalonFX{
     private double mul;
     private TalonFXSimState sim;
 
+    public EnhancedTalonFX(int port,String canBus){
+        this(port,canBus,1,false,false);
+    }
+
     public EnhancedTalonFX(int port,String canBus,double mul,boolean inverted,boolean brake){
         super(port,canBus);
         var currentConfigs = new MotorOutputConfigs();

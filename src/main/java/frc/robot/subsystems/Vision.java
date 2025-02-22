@@ -13,8 +13,6 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.util.datalog.DataLog;
-import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.FieldGeometry;
@@ -47,10 +45,9 @@ public class Vision extends SubsystemBase {
         // Load the AprilTag field layout from the default field
         fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-        DataLog dataLog = DataLogManager.getLog();
         // Initialize AprilTag cameras with their respective positions and the field layout
-        AprilTagCamera blatCamera = new AprilTagCamera("BackLeft_AT", VisionConstants.robotToBLATCamera, fieldLayout, new StringLogEntry(dataLog, "BackLeftAT"));
-        AprilTagCamera bratCamera = new AprilTagCamera("BackRight_AT", VisionConstants.robotToBRATCamera, fieldLayout, new StringLogEntry(dataLog, "BackRightAT"));
+        AprilTagCamera blatCamera = new AprilTagCamera("BackLeft_AT", VisionConstants.robotToBLATCamera, fieldLayout);
+        AprilTagCamera bratCamera = new AprilTagCamera("BackRight_AT", VisionConstants.robotToBRATCamera, fieldLayout);
         aprilTagCameras = new AprilTagCamera[]{blatCamera, bratCamera};
 
         // Initialize object cameras with their respective positions

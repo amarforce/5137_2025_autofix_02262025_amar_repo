@@ -16,6 +16,7 @@ public class MultiCommands {
     // Command groups for each subsystem
     private SwerveSystemCommands swerveSystemCommands;
     private IntakeCommands intakeCommands;
+    @SuppressWarnings("unused")
     private SwerveCommands swerveCommands;
     @SuppressWarnings("unused")
     private HangCommands hangCommands;

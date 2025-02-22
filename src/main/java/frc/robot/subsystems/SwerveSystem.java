@@ -6,7 +6,6 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
 import frc.robot.constants.ArmConstants;
 import frc.robot.constants.GamepieceConstants;
 import frc.robot.constants.SwerveSystemConstants;
@@ -193,6 +192,7 @@ public class SwerveSystem extends SubsystemBase {
             wrist.setGoal(state.wristPosition);
         }
         if(swerve!=null){
+            // Uncomment at your own risk
             //swerve.setTargetPose(state.botPosition);
         }
     }

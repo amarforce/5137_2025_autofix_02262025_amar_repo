@@ -138,7 +138,6 @@ public class SwerveSystem extends SubsystemBase {
 
     public void algaeIntake(){
         if(gamepieces!=null){
-            System.out.println("x");
             currentPiece=gamepieces.getClosestAlgae(getCurrentWristPose());
         }
     }

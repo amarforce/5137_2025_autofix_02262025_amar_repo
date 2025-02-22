@@ -21,10 +21,13 @@ public class WristConstants {
 
     public static final double feedOffset = Units.degreesToRadians(90);
     
-    // PID constants
-    public static final double kP = 3;
-    public static final double kI = 0;
-    public static final double kD = 0.2;
+    // LQR constants
+    // 1/posWeight^2 = how much to value position error
+    public static final double posWeight = 0.1;
+    // 1/velWeight^2 = how much to value velocity error
+    public static final double velWeight = 3;
+    // 1/volWeight^2 = how much to value voltage error
+    public static final double volWeight = 3;
 
     // Feedforward constants
     public static final double kS = Robot.isSimulation()?0.0:0.16;
@@ -45,4 +48,8 @@ public class WristConstants {
 
     public static final double armDangerMin = Units.degreesToRadians(-110);
     public static final double armDangerMax = Units.degreesToRadians(-45);
+
+    // Trapezoid Profile constants
+    public static final double maxGoalVelocity = 10;  // radians per second
+    public static final double maxGoalAcceleration = 5;  // radians per second squared
 }

@@ -3,11 +3,11 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.LinearQuadraticRegulator;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -81,7 +81,8 @@ public class Arm extends SubsystemBase {
     // second N2 = number of accessible outputs, position and velocity
     private LinearQuadraticRegulator<N2,N1,N2> lqr;
 
-    private final SlewRateLimiter limiter;
+    private final TrapezoidProfile goalProfile;
+    private TrapezoidProfile.State goalState;
         
     /**
      * Constructor for the Arm subsystem.
@@ -114,10 +115,7 @@ public class Arm extends SubsystemBase {
         // Create the plant, simulates the arm movement
         LinearSystem<N2,N1,N2> plant=LinearSystemId.createSingleJointedArmSystem(ArmConstants.motorSim, ArmConstants.momentOfInertia, ArmConstants.gearRatio);
         
-        // Initializes the linear-quadratic regulator
-        lqr=new LinearQuadraticRegulator<N2,N1,N2>(plant,VecBuilder.fill(ArmConstants.posWeight,ArmConstants.velWeight),VecBuilder.fill(ArmConstants.volWeight),GeneralConstants.simPeriod);
-
-        limiter=new SlewRateLimiter(ArmConstants.maxVoltageRate,-ArmConstants.maxVoltageRate,0.0);
+        
 
         // Create motor system
         motorSystem = new MotorSystem(List.of(armMotor), armEncoder);
@@ -164,6 +162,17 @@ public class Arm extends SubsystemBase {
                 this
             )
         );
+
+        // Initializes the linear-quadratic regulator
+        lqr=new LinearQuadraticRegulator<N2,N1,N2>(plant,VecBuilder.fill(ArmConstants.posWeight,ArmConstants.velWeight),VecBuilder.fill(ArmConstants.volWeight),GeneralConstants.simPeriod);
+
+        goalProfile = new TrapezoidProfile(
+            new TrapezoidProfile.Constraints(
+                ArmConstants.maxGoalVelocity,
+                ArmConstants.maxGoalAcceleration
+            )
+        );
+        goalState = new TrapezoidProfile.State(getMeasurement(), 0);
     }
 
     /**
@@ -232,7 +241,11 @@ public class Arm extends SubsystemBase {
     }
 
     public double getError(){
-        return Math.abs(goal-getMeasurement());
+        return Math.abs(getMeasurement()-getGoal());
+    }
+
+    public double getProfileError(){
+        return Math.abs(getMeasurement()-goalState.position);
     }
 
     /**
@@ -265,6 +278,9 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("arm/goal", getGoal());
         SmartDashboard.putNumber("arm/velocity", getVelocity());
         SmartDashboard.putNumber("arm/error", getError());
+        SmartDashboard.putNumber("arm/profileError", getProfileError());
+        SmartDashboard.putNumber("arm/profileAngle",goalState.position);
+        SmartDashboard.putNumber("arm/profileVelocity",goalState.velocity);
         motorSystem.log("arm");
     }
 
@@ -289,13 +305,24 @@ public class Arm extends SubsystemBase {
             // Update telemetry
             telemetry();
 
-            double desiredVoltage=lqr.calculate(VecBuilder.fill(measurement,velocity),VecBuilder.fill(goal,0.0)).get(0,0);
+             // Generate smooth goal trajectory
+            goalState = goalProfile.calculate(
+                GeneralConstants.simPeriod,
+                goalState,
+                new TrapezoidProfile.State(goal, 0)  // Target state
+            );
+            
+            // Use profile state as the goal for LQR
+            double voltage = lqr.calculate(
+                VecBuilder.fill(measurement, velocity),
+                VecBuilder.fill(goalState.position, goalState.velocity)
+            ).get(0,0);
+
             // Calculate feedforward and PID control outputs
-            double feed = feedforward.calculate(
+            voltage+=feedforward.calculate(
                 goal + ArmConstants.feedOffset, // Offset so that 0 = horizontal
                 0
             );
-            double voltage=limiter.calculate(desiredVoltage)+feed;
             
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));

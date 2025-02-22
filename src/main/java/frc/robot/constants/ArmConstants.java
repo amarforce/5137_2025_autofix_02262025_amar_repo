@@ -41,12 +41,12 @@ public class ArmConstants {
     public static final double posWeight = 0.1;
 
     // 1/velWeight^2 = how much to value velocity error
-    public static final double velWeight = 1;
+    public static final double velWeight = 3;
 
     // 1/volWeight^2 = how much to value voltage error
-    public static final double volWeight = 0.5;
+    public static final double volWeight = 3;
 
-    public static final double maxVoltageRate = 16;
-
+    public static final double maxGoalVelocity = 10;
+    public static final double maxGoalAcceleration = 2;
     // minimizes int_0^inf ((pos-goal)/posWeight)^2 + (vel/velWeight)^2 + (vol/volWeight)^2 dt
 }

@@ -96,17 +96,17 @@ public class RobotContainer {
 			// Initialize subsystems
 			initVision();
 			initSwerve();
-			//initElevator();
-			//initArm();
-			//initWrist();
+			initElevator();
+			initArm();
+			initWrist();
 			initIntake();
 			initHang();
-			//initLED();
+			initLED();
 			
 			// Initialize combined systems and commands
 			initSwerveSystem();
 			initMultiCommands();
-			//initAdditionalComponents();
+			initAdditionalComponents();
 
 			// Configure SysId bindings for elevator
 			//configureSysIdBindings(elevatorCommands);
@@ -237,10 +237,9 @@ public class RobotContainer {
 	private void initMultiCommands() {
 		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommands);
 		driver.triangle().onTrue(multiCommands.getCoralFromSource()); // e
-		driver.square().onTrue(multiCommands.getAlgae(()->0)); // x
-		driver.circle().onTrue(multiCommands.placeCoral(()->2,()->0)); // t
-		driver.cross().onTrue(multiCommands.placeAlgae()); // p
-		
+		driver.square().onTrue(multiCommands.placeCoral(()->1,()->1)); // x
+		driver.circle().onTrue(multiCommands.placeCoral(()->1,()->0)); // t
+		driver.cross().onTrue(multiCommands.placeCoral(()->3,()->0)); // p
 	}
 
 	private void initAdditionalComponents() {

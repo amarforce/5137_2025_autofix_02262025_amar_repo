@@ -1,7 +1,13 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.LinearQuadraticRegulator;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -52,9 +58,6 @@ public class Wrist extends SubsystemBase {
     /** Motor system that handles both the motor and encoder */
     private final MotorSystem motorSystem;
     
-    /** PID controller for wrist position control */
-    private final ProfiledPIDController controller;
-    
     /** Feedforward controller for gravity compensation and dynamics */
     private final ArmFeedforward feedforward;
     
@@ -75,6 +78,12 @@ public class Wrist extends SubsystemBase {
 
     /** Reference to the main arm this wrist is attached to */
     private final Arm arm;
+
+    // Linear quadratic regulator
+    private LinearQuadraticRegulator<N2,N1,N2> lqr;
+
+    private final TrapezoidProfile goalProfile;
+    private TrapezoidProfile.State goalState;
         
     /**
      * Constructor for the Wrist subsystem.
@@ -100,17 +109,15 @@ public class Wrist extends SubsystemBase {
             WristConstants.encoderOffset
         );
         
+        // Create the plant, simulates the wrist movement
+        LinearSystem<N2,N1,N2> plant = LinearSystemId.createSingleJointedArmSystem(
+            WristConstants.motorSim, 
+            WristConstants.momentOfInertia, 
+            WristConstants.gearRatio
+        );
+
         // Create motor system
         motorSystem = new MotorSystem(List.of(wristMotor), wristEncoder);
-        
-        // Initialize PID controller
-        controller = new ProfiledPIDController(
-            WristConstants.kP,
-            WristConstants.kI,
-            WristConstants.kD,
-            WristConstants.pidConstraints
-        );
-        controller.setTolerance(WristConstants.wristTolerance);
         
         // Initialize feedforward controller
         feedforward = new ArmFeedforward(
@@ -138,9 +145,9 @@ public class Wrist extends SubsystemBase {
         // Initialize system identification routine
         sysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
-                Volts.of(0.2).div(Seconds.of(1.0)),  // Slower ramp rate for wrist
-                Volts.of(1),                         // Lower voltage to prevent oscillation
-                null                                 // Use default timeout
+                Volts.of(0.2).div(Seconds.of(1.0)),
+                Volts.of(1),
+                null
             ),
             new SysIdRoutine.Mechanism(
                 this::setVoltage,
@@ -154,6 +161,23 @@ public class Wrist extends SubsystemBase {
                 this
             )
         );
+
+        // Initialize LQR controller
+        lqr = new LinearQuadraticRegulator<N2,N1,N2>(
+            plant,
+            VecBuilder.fill(WristConstants.posWeight, WristConstants.velWeight),  // State cost
+            VecBuilder.fill(WristConstants.volWeight),  // Input cost
+            GeneralConstants.simPeriod
+        );
+
+        // Initialize goal profiler
+        goalProfile = new TrapezoidProfile(
+            new TrapezoidProfile.Constraints(
+                WristConstants.maxGoalVelocity,
+                WristConstants.maxGoalAcceleration
+            )
+        );
+        goalState = new TrapezoidProfile.State(getMeasurement(), 0);
     }
 
     /**
@@ -237,7 +261,7 @@ public class Wrist extends SubsystemBase {
      *         false otherwise.
      */
     public boolean atSetpoint() {
-        return controller.atSetpoint();
+        return Math.abs(goal - getMeasurement()) < WristConstants.wristTolerance;
     }
 
     /**
@@ -273,6 +297,13 @@ public class Wrist extends SubsystemBase {
         return desiredGoal;
     }
 
+    public double getError(){
+        return Math.abs(getMeasurement()-getGoal());
+    }
+
+    public double getProfileError(){
+        return Math.abs(getMeasurement()-goalState.position);
+    }
     /**
      * Display telemetry data on SmartDashboard.
      * Outputs current position, goal, velocity, and error information
@@ -282,11 +313,11 @@ public class Wrist extends SubsystemBase {
         SmartDashboard.putNumber("wrist/angle", getMeasurement());
         SmartDashboard.putNumber("wrist/degrees", Units.radiansToDegrees(getMeasurement()));
         SmartDashboard.putNumber("wrist/goal", getGoal());
-        SmartDashboard.putNumber("wrist/setpoint", controller.getSetpoint().position);
-        SmartDashboard.putNumber("wrist/setpointVelocity", controller.getSetpoint().velocity);
         SmartDashboard.putNumber("wrist/velocity", getVelocity());
-        SmartDashboard.putNumber("wrist/error", controller.getPositionError());
-        SmartDashboard.putData("wrist/controller", controller);
+        SmartDashboard.putNumber("wrist/error", getError());
+        SmartDashboard.putNumber("wrist/profileError", getProfileError());
+        SmartDashboard.putNumber("wrist/profileAngle",goalState.position);
+        SmartDashboard.putNumber("wrist/profileVelocity",goalState.velocity);
         motorSystem.log("wrist");
     }
 
@@ -300,23 +331,36 @@ public class Wrist extends SubsystemBase {
         try {
             motorSystem.periodic();
 
-            double wristRotation = getMeasurement();
+            double measurement = getMeasurement();
+            double velocity = getVelocity();
 
             // Update telemetry
             telemetry();
         
-            // Calculate PID control outputs with arm position compensation
+            // Calculate arm compensation
             double armRotation = arm != null ? arm.getMeasurement() : 0;
             
             // Update goal based on arm's current position and goal
             goal = getSafeGoal(armRotation, arm.getGoal());
             
-            // Calculate feedforward with combined arm and wrist angles
-            double feed = feedforward.calculate(
-                controller.getSetpoint().position + armRotation + WristConstants.feedOffset,
-                controller.getSetpoint().velocity
+            // Generate smooth goal trajectory
+            goalState = goalProfile.calculate(
+                GeneralConstants.simPeriod,
+                goalState,
+                new TrapezoidProfile.State(goal, 0)
             );
-            double voltage = controller.calculate(wristRotation, goal) + feed;
+
+            // Use profile state as the goal for LQR
+            double voltage = lqr.calculate(
+                VecBuilder.fill(measurement, velocity),
+                VecBuilder.fill(goalState.position, goalState.velocity)
+            ).get(0, 0);
+
+            // Add feedforward with combined arm and wrist angles
+            voltage += feedforward.calculate(
+                goalState.position + armRotation + WristConstants.feedOffset,
+                goalState.velocity
+            );
 
             // Apply the calculated voltage to the motor
             setVoltage(Volts.of(voltage));

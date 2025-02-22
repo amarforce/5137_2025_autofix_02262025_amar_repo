@@ -96,9 +96,9 @@ public final class SwerveSystemConstants {
         };
         double[] elevatorHeights = {
             0.01,  // L1
-            0.14,  // L2
-            0.59,  // L3
-            1.35   // L4
+            0.06,  // L2
+            0.46,  // L3
+            1.11   // L4
         };
         double[] wristAngles = {
             0.19,   // L1 (135 - 90)

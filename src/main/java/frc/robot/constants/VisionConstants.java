@@ -12,18 +12,4 @@ public class VisionConstants {
     public static final String[] classNames = {"Algae","Coral"};
 
     public static final double objectMarginOfError = 0.1;
-
-    // public static final Translation2d reefA = new Translation2d(3.75, 4.19);
-    // public static final Translation2d reefB = new Translation2d(3.75, 3.86);
-    // public static final Translation2d reefC = new Translation2d(4.00, 3.50);
-    // public static final Translation2d reefD = new Translation2d(4.25, 3.30);
-    // public static final Translation2d reefE = new Translation2d(4.70, 3.30);
-    // public static final Translation2d reefF = new Translation2d(4.95, 3.50);
-    // public static final Translation2d reefG = new Translation2d(5.25, 3.86);
-    // public static final Translation2d reefH = new Translation2d(5.25, 4.19);
-    // public static final Translation2d reefI = new Translation2d(4.95, 4.60);
-    // public static final Translation2d reefJ = new Translation2d(4.70, 4.80);
-    // public static final Translation2d reefK = new Translation2d(4.25, 4.80);
-    // public static final Translation2d reefL = new Translation2d(4.00, 4.60);
-    
 }

@@ -66,6 +66,10 @@ public class SwerveSystemCommands {
         return moveToState(()->SwerveSystemConstants.getProcessor());
     }
 
+    public Command moveToDefault(){
+        return moveToState(()->SwerveSystemConstants.getDefaultState());
+    }
+
     private SwerveSystemState levelState;
     public Command moveToLevel(int level){
         return new SequentialCommandGroup(

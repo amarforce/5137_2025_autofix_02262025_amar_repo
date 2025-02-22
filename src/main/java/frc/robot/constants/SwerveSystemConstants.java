@@ -19,6 +19,7 @@ public final class SwerveSystemConstants {
     // 0.48 arm L3
     // elevator L2 0.15
 
+    private static final double wristUp = Units.degreesToRadians(90);
     private static final double wristStraight = Units.degreesToRadians(0);    // 90 - 90 = 0 (vertical)
     private static final double wristDown = Units.degreesToRadians(-90);      // 0 - 90 = -90 (horizontal)
 
@@ -33,7 +34,7 @@ public final class SwerveSystemConstants {
     private static final SwerveSystem.SwerveSystemState baseDefaultState = new SwerveSystem.SwerveSystemState(
         Units.degreesToRadians(0),  // From ArmConstants.defaultGoal (vertical)
         0.05,                         // From ElevatorConstants.defaultGoal
-        wristStraight,                   // From WristConstants.pos1 (down)
+        wristUp,                   // From WristConstants.pos1 (down)
         null                         // Robot position determined at runtime
     );
 

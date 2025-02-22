@@ -94,18 +94,18 @@ public class RobotContainer {
 			initGamepieces();
 			
 			// Initialize subsystems
-			initVision();
+			//initVision();
 			initSwerve();
-			//initElevator();
-			//initArm();
-			//initWrist();
+			initElevator();
+			initArm();
+			initWrist();
 			initIntake();
 			initHang();
 			//initLED();
 			
 			// Initialize combined systems and commands
 			initSwerveSystem();
-			initMultiCommands();
+			//initMultiCommands();
 			//initAdditionalComponents();
 
 			// Configure SysId bindings for elevator
@@ -122,7 +122,7 @@ public class RobotContainer {
 	private void initControllers() {
 		driver = new CommandPS5Controller(0);
 		operator = new CommandPS5Controller(1);
-		sysIdTest = new CommandPS5Controller(2);
+		//sysIdTest = new CommandPS5Controller(2);
 	}
 
 	private void initReef() {
@@ -152,7 +152,7 @@ public class RobotContainer {
 			() -> true)
 		);
 
-		driver.cross().whileTrue(swerveCommands.lock());
+		//driver.cross().whileTrue(swerveCommands.lock());
 		driver.options().onTrue(swerveCommands.resetGyro());
 	}
 
@@ -162,8 +162,6 @@ public class RobotContainer {
 
 		// Configure elevator bindings
 		elevator.setDefaultCommand(elevatorCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getLeftY(),0.1) / 50));
-
-		
 	}
 
 	private void initArm() {
@@ -172,7 +170,6 @@ public class RobotContainer {
 
 		// Configure arm bindings
 		arm.setDefaultCommand(armCommands.changeGoal(() -> -operator.getRightX() / 50));
-		
 	}
 
 	private void initWrist() {
@@ -189,12 +186,12 @@ public class RobotContainer {
 		intakeCommands = new IntakeCommands(intake);
 
 		// Configure intake bindings
-		operator.L2()
-			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
+		operator.L2().or(driver.L2())
+			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
-		operator.R2()
-			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
+		operator.R2().or(driver.R2())
+			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 	}
 
@@ -218,10 +215,11 @@ public class RobotContainer {
 		//driver.triangle().onTrue(swerveSystemCommands.moveToSource());
 		//driver.circle().onTrue(swerveSystemCommands.moveToProcessor());
 
-		operator.triangle().onTrue(swerveSystemCommands.moveToLevel(3));
-		operator.circle().onTrue(swerveSystemCommands.moveToLevel(2));
-		operator.square().onTrue(swerveSystemCommands.moveToLevel(1));
-		operator.cross().onTrue(swerveSystemCommands.moveToLevel(0));
+		driver.triangle().onTrue(swerveSystemCommands.moveToLevel(3));
+		driver.square().onTrue(swerveSystemCommands.moveToLevel(2));
+		driver.circle().onTrue(swerveSystemCommands.moveToLevel(1));
+		driver.cross().onTrue(swerveSystemCommands.moveToLevel(0));
+		driver.povDown().onTrue(swerveSystemCommands.moveToDefault());
 
 		driver.L1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getGroundIntake()));
 		driver.R1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));

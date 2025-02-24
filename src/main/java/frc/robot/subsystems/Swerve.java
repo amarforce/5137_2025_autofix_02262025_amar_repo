@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import frc.robot.Robot;
+import frc.robot.constants.ArmConstants;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.other.DetectedObject;
@@ -119,8 +120,6 @@ public class Swerve extends SubsystemBase {
                 () -> RobotUtils.onRedAlliance(), // Method to check if the robot is on the red alliance
                 this
         );
-
-        
 
         // Start simulation thread if in simulation
         if (Robot.isSimulation()) {

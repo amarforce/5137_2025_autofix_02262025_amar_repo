@@ -3,6 +3,8 @@ package frc.robot;
 import java.io.File;
 import java.util.function.Supplier;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
@@ -94,19 +96,19 @@ public class RobotContainer {
 			initGamepieces();
 			
 			// Initialize subsystems
-			//initVision();
+			initVision();
 			initSwerve();
 			initElevator();
 			initArm();
 			initWrist();
 			initIntake();
-			initHang();
-			initLED();
+			//initHang();
+			//initLED();
 			
 			// Initialize combined systems and commands
 			initSwerveSystem();
-			initMultiCommands();
-			initAdditionalComponents();
+			//initMultiCommands();
+			//initAdditionalComponents();
 
 			// Configure SysId bindings for elevator
 			//configureSysIdBindings(elevatorCommands);
@@ -215,11 +217,11 @@ public class RobotContainer {
 		//driver.triangle().onTrue(swerveSystemCommands.moveToSource());
 		//driver.circle().onTrue(swerveSystemCommands.moveToProcessor());
 
-		driver.triangle().onTrue(swerveSystemCommands.moveToLevel(3));
-		driver.square().onTrue(swerveSystemCommands.moveToLevel(2));
-		driver.circle().onTrue(swerveSystemCommands.moveToLevel(1));
-		driver.cross().onTrue(swerveSystemCommands.moveToLevel(0));
-		driver.povDown().onTrue(swerveSystemCommands.moveToDefault());
+		driver.triangle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(3));
+		driver.square().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(2));
+		driver.circle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(1));
+		driver.cross().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(0));
+		driver.povDown().and(driver.R2()).onTrue(swerveSystemCommands.moveToDefault());
 
 		driver.L1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getGroundIntake()));
 		driver.R1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));
@@ -272,6 +274,6 @@ public class RobotContainer {
 		if (autoFactory != null) {
 			return autoFactory.getAuto();
 		}
-		return new InstantCommand();
+		return AutoBuilder.buildAuto("Forward");
 	}
 }

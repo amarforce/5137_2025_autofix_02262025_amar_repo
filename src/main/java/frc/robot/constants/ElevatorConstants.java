@@ -31,9 +31,9 @@ public class ElevatorConstants {
     // Simulation constants
     public static final double gearRatio = 7.5; // gear ratio
     public static final double carriageMass = 13.0; // in kg
-    public static final double drumRadius = 0.0254; // in meters
+    public static final double drumRadius = 0.023; // in meters
     public static final double minHeight = 0; // in meters
-    public static final double maxHeight = 1.35; // in meters // actually 1.4
+    public static final double maxHeight = 1.15; // in meters // actually 1.4
     public static final DCMotor motorSim = DCMotor.getFalcon500(2);
 
     // Motion Profile constants

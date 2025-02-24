@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import frc.robot.Robot;
-import frc.robot.constants.ArmConstants;
 import frc.robot.constants.SwerveConstants;
 import frc.robot.motorSystem.EnhancedTalonFX;
 import frc.robot.other.DetectedObject;

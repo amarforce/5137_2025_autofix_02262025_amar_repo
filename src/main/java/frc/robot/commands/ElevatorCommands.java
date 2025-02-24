@@ -3,6 +3,7 @@ package frc.robot.commands;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Elevator;
@@ -40,7 +41,12 @@ public class ElevatorCommands implements SysIdCommands{
      * @return A command that adjusts the elevator's goal when executed.
      */
     public Command changeGoal(DoubleSupplier change) {
-        return new InstantCommand(() -> elevator.setGoal(elevator.getGoal() + change.getAsDouble()), elevator);
+        return new FunctionalCommand(
+            () -> {},
+            () -> elevator.setGoal(elevator.getGoal() + change.getAsDouble()),
+            (Boolean onEnd) -> {},
+            () -> {return false;},
+            elevator);
     }
 
     /**

@@ -3,6 +3,7 @@ package frc.robot.commands;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.Hang;
 
@@ -25,7 +26,12 @@ public class HangCommands {
     }
 
     public Command setSpeed(DoubleSupplier speed){
-        return new InstantCommand(()->hang.setSpeed(speed.getAsDouble()),hang);
+        return new FunctionalCommand(
+            () -> {},
+            () -> hang.setSpeed(speed.getAsDouble()),
+            (Boolean onEnd) -> {},
+            () -> {return false;},
+            hang);
     }
 
     public Command stop(){

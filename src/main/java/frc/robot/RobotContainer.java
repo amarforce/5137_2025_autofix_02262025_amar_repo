@@ -102,7 +102,7 @@ public class RobotContainer {
 			initArm();
 			initWrist();
 			initIntake();
-			//initHang();
+			initHang();
 			//initLED();
 			
 			// Initialize combined systems and commands
@@ -179,8 +179,8 @@ public class RobotContainer {
 		wristCommands = new WristCommands(wrist);
 
 		// Configure wrist bindings
-		operator.L1().whileTrue(wristCommands.changeGoal(()->0.1));
-		operator.R1().whileTrue(wristCommands.changeGoal(()->-0.1));
+		operator.L1().whileTrue(wristCommands.changeGoal(()->0.02));
+		operator.R1().whileTrue(wristCommands.changeGoal(()->-0.02));
 	}
 
 	private void initIntake() {

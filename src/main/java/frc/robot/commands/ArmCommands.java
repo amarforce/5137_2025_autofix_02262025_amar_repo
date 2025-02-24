@@ -3,6 +3,7 @@ package frc.robot.commands;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Arm;
@@ -42,7 +43,12 @@ public class ArmCommands implements SysIdCommands{
      * @return A command that adjusts the arm's goal position.
      */
     public Command changeGoal(DoubleSupplier change) {
-        return new InstantCommand(() -> arm.setGoal(arm.getGoal() + change.getAsDouble()), arm);
+        return new FunctionalCommand(
+            () -> {},
+            () -> arm.setGoal(arm.getGoal() + change.getAsDouble()),
+            (Boolean onEnd) -> {},
+            () -> {return false;},
+            arm);
     }
 
     /**

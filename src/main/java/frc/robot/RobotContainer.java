@@ -107,7 +107,7 @@ public class RobotContainer {
 			
 			// Initialize combined systems and commands
 			initSwerveSystem();
-			//initMultiCommands();
+			initMultiCommands();
 			//initAdditionalComponents();
 
 			// Configure SysId bindings for elevator
@@ -148,13 +148,13 @@ public class RobotContainer {
 
 		// Configure swerve bindings
 		swerve.setDefaultCommand(swerveCommands.drive(
-			() -> -driver.getLeftY(), 
-			() -> -driver.getLeftX(), 
-			() -> driver.getRightX(),
+			() -> -MathUtil.applyDeadband(driver.getLeftY(), 0.1), 
+			() -> -MathUtil.applyDeadband(driver.getLeftX(), 0.1), 
+			() -> MathUtil.applyDeadband(driver.getRightX(), 0.1),
 			() -> true)
 		);
 
-		//driver.cross().whileTrue(swerveCommands.lock());
+		driver.cross().and(driver.R2().negate()).whileTrue(swerveCommands.lock());
 		driver.options().onTrue(swerveCommands.resetGyro());
 	}
 
@@ -171,7 +171,7 @@ public class RobotContainer {
 		armCommands = new ArmCommands(arm);
 
 		// Configure arm bindings
-		arm.setDefaultCommand(armCommands.changeGoal(() -> -operator.getRightX() / 50));
+		arm.setDefaultCommand(armCommands.changeGoal(() -> -MathUtil.applyDeadband(operator.getRightX(), 0.1) / 50));
 	}
 
 	private void initWrist() {
@@ -188,11 +188,11 @@ public class RobotContainer {
 		intakeCommands = new IntakeCommands(intake);
 
 		// Configure intake bindings
-		operator.L2().or(driver.L2())
+		operator.L2().or(driver.L2().and(driver.R2().negate()))
 			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
-		operator.R2().or(driver.R2())
+		operator.R2().or(driver.L2().and(driver.R2()))
 			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 	}
@@ -224,7 +224,6 @@ public class RobotContainer {
 		driver.povDown().and(driver.R2()).onTrue(swerveSystemCommands.moveToDefault());
 
 		driver.L1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getGroundIntake()));
-		driver.R1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));
 
 		// operator.povUp().onTrue(swerveSystemCommands.moveToGround(()->new Pose2d()));
 		// operator.povDown().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));
@@ -236,10 +235,8 @@ public class RobotContainer {
 
 	private void initMultiCommands() {
 		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommands);
-		driver.triangle().onTrue(multiCommands.getCoralFromSource()); // e
-		driver.square().onTrue(multiCommands.placeCoral(()->1,()->1)); // x
-		driver.circle().onTrue(multiCommands.placeCoral(()->1,()->0)); // t
-		driver.cross().onTrue(multiCommands.placeCoral(()->3,()->0)); // p
+
+		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
 	}
 
 	private void initAdditionalComponents() {

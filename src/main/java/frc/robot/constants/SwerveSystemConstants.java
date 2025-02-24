@@ -10,7 +10,7 @@ import frc.robot.elastic.Reef;
  * This class centralizes all the goal positions for the entire arm system.
  */
 public final class SwerveSystemConstants {
-    public static final double timeout = 5; // seconds
+    public static final double timeout = 1; // seconds
     
     // Weight for how much to consider rotation vs translation when finding closest state
     // Higher values mean rotation differences matter more

@@ -17,10 +17,10 @@ public class SwerveConstants {
 
     public static final double translationKP = 1.0;
     public static final double translationKI = 0.0;
-    public static final double translationKD = 0.0;
-    public static final double rotationKP = 1.0;
+    public static final double translationKD = 0.4;
+    public static final double rotationKP = 2.0;
     public static final double rotationKI = 0.0;
-    public static final double rotationKD = 0.0;
+    public static final double rotationKD = 0.4;
 
     public static final PathConstraints constraints = new PathConstraints(
         MetersPerSecond.of(0.5),

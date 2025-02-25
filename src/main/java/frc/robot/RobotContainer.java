@@ -98,11 +98,11 @@ public class RobotContainer {
 			// Initialize subsystems
 			initVision();
 			initSwerve();
-			initElevator();
-			initArm();
-			initWrist();
-			initIntake();
-			initHang();
+			//initElevator();
+			//initArm();
+			//initWrist();
+			//initIntake();
+			//initHang();
 			//initLED();
 			
 			// Initialize combined systems and commands
@@ -150,7 +150,7 @@ public class RobotContainer {
 		swerve.setDefaultCommand(swerveCommands.drive(
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
 			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
-			() -> Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
+			() -> -Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
 			() -> true)
 		);
 

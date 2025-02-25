@@ -193,7 +193,7 @@ public class SwerveSystem extends SubsystemBase {
         }
         if(swerve!=null){
             // Uncomment at your own risk
-            //swerve.setTargetPose(state.botPosition);
+            swerve.setTargetPose(state.botPosition);
         }
     }
 

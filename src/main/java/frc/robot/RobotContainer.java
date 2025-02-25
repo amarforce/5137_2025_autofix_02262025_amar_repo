@@ -148,9 +148,9 @@ public class RobotContainer {
 
 		// Configure swerve bindings
 		swerve.setDefaultCommand(swerveCommands.drive(
-			() -> -MathUtil.applyDeadband(driver.getLeftY(), 0.1), 
-			() -> -MathUtil.applyDeadband(driver.getLeftX(), 0.1), 
-			() -> MathUtil.applyDeadband(driver.getRightX(), 0.1),
+			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftY(), 0.05), 1), 
+			() -> -Math.pow(MathUtil.applyDeadband(driver.getLeftX(), 0.05), 1), 
+			() -> Math.pow(MathUtil.applyDeadband(driver.getRightX(), 0.05), 1),
 			() -> true)
 		);
 
@@ -189,11 +189,11 @@ public class RobotContainer {
 
 		// Configure intake bindings
 		operator.L2().or(driver.L2().and(driver.R2().negate()))
-			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
+			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
 		operator.R2().or(driver.L2().and(driver.R2()))
-			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
+			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 	}
 
@@ -221,9 +221,9 @@ public class RobotContainer {
 		driver.square().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(2));
 		driver.circle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(1));
 		driver.cross().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(0));
-		driver.povDown().and(driver.R2()).onTrue(swerveSystemCommands.moveToDefault());
+		driver.povDown().onTrue(swerveSystemCommands.moveToDefault());
 
-		driver.L1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getGroundIntake()));
+		//driver.L1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getGroundIntake()));
 
 		// operator.povUp().onTrue(swerveSystemCommands.moveToGround(()->new Pose2d()));
 		// operator.povDown().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getSourceStates()[0]));

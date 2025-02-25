@@ -34,7 +34,7 @@ public class ArmConstants {
     public static final double maxAngle = Units.degreesToRadians(35);
     public static final double momentOfInertia = 4.8944;
     public static final double armLength = 0.594;
-    public static final DCMotor motorSim = DCMotor.getKrakenX60(1);
+    public static final DCMotor motorSim = DCMotor.getKrakenX60Foc(1);
 
     // 1/posWeight^2 = how much to value position error
     public static final double posWeight = 0.1;

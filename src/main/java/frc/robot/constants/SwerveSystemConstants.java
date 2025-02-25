@@ -102,10 +102,10 @@ public final class SwerveSystemConstants {
             1.11   // L4
         };
         double[] wristAngles = {
-            0.19,   // L1 (135 - 90)
-            0.25,   // L2 (135 - 90)
-            0.25,   // L3 (135 - 90)
-            0.27    // L4 (120 - 90)
+            0.1,   // L1 (135 - 90)
+            0.1,   // L2 (135 - 90)
+            0.1,   // L3 (135 - 90)
+            0.1    // L4 (120 - 90)
         };
 
         for (int level = 0; level < states.length; level++) {

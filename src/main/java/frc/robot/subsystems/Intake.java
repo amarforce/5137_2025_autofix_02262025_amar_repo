@@ -23,7 +23,7 @@ public class Intake extends SubsystemBase {
             "rio",
             1,
             true,
-            false
+            true
         );
     }
     

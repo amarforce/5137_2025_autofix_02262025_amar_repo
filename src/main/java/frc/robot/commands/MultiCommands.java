@@ -36,6 +36,16 @@ public class MultiCommands {
     /**
      * Command to retrieve coral based on the robot's current pose.
      */
+    public Command moveToDefault() {
+        return new ParallelCommandGroup(
+            swerveSystemCommands.moveToDefault(),
+            intakeCommands.stop()
+        );
+    }
+
+    /**
+     * Command to retrieve coral based on the robot's current pose.
+     */
     public Command getCoralFromSource() {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToSource(),
@@ -62,6 +72,14 @@ public class MultiCommands {
         return new SequentialCommandGroup(
             swerveSystemCommands.moveToAlgae(side),
             new ParallelCommandGroup(intakeCommands.intake(),swerveSystemCommands.algaeIntake())
+            //,swerveCommands.driveBack()
+        );
+    }
+
+    public Command getAlgae() {
+        return new SequentialCommandGroup(
+            swerveSystemCommands.moveToAlgae(),
+            new ParallelCommandGroup(intakeCommands.setSpeed(() -> IntakeConstants.intakeSpeed),swerveSystemCommands.algaeIntake())
             //,swerveCommands.driveBack()
         );
     }

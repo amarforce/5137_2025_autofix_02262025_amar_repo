@@ -4,6 +4,7 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Intake;
@@ -32,7 +33,9 @@ public class IntakeCommands {
      * @return A command that, when executed, stops the intake motor.
      */
     public Command stop() {
-        return new InstantCommand(() -> intake.stop());
+        Command command = new InstantCommand(() -> intake.stop());
+        command.addRequirements(intake);
+        return command;
     }
 
     /**
@@ -41,7 +44,9 @@ public class IntakeCommands {
      * @return A command that, when executed, stops the intake motor.
      */
     public Command setSpeed(DoubleSupplier speed) {
-        return new InstantCommand(() -> intake.setSpeed(speed.getAsDouble()));
+        Command command = new InstantCommand(() -> intake.setSpeed(speed.getAsDouble()));
+        command.addRequirements(intake);
+        return command;
     }
 
 
@@ -52,11 +57,32 @@ public class IntakeCommands {
      * @return A command that runs the intake until the switch is triggered.
      */
     public Command intake() {
-        return new SequentialCommandGroup(
+        Command command = new SequentialCommandGroup(
             new InstantCommand(() -> intake.setSpeed(IntakeConstants.intakeSpeed)), // Start the intake
             new WaitCommand(IntakeConstants.intakeTime),                                                   // Wait for 1 second
             stop()                                                                // Stop the intake
         );
+        command.addRequirements(intake);
+        return command;
+    }
+
+    /**
+     * Creates a command that will pulse the intake.
+     * The command will pulse the intake until overriden.
+     *
+     * @return A command that runs the intake until the switch is triggered.
+     */
+    public Command pulseIntake() {
+        Command command = new RepeatCommand(
+            new SequentialCommandGroup(
+                setSpeed(() -> IntakeConstants.intakeSpeed),
+                new WaitCommand(0.1),
+                stop(),
+                new WaitCommand(0.4)
+            )                                                          // Stop the intake
+        );
+        command.addRequirements(intake);
+        return command;
     }
 
     /**
@@ -66,10 +92,12 @@ public class IntakeCommands {
      * @return A command that outtakes for 1 second and then stops.
      */
     public Command outtake() {
-        return new SequentialCommandGroup(
+        Command command = new SequentialCommandGroup(
             new InstantCommand(() -> intake.setSpeed(-IntakeConstants.intakeSpeed)), // Start the intake
             new WaitCommand(IntakeConstants.outtakeTime),                                                   // Wait for 1 second
             stop()                                                                // Stop the intake
         );
+        command.addRequirements(intake);
+        return command;
     }
 }

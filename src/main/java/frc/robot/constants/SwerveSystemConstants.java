@@ -20,7 +20,6 @@ public final class SwerveSystemConstants {
     // elevator L2 0.15
 
     private static final double wristUp = Units.degreesToRadians(90);
-    private static final double wristStraight = Units.degreesToRadians(0);    // 90 - 90 = 0 (vertical)
     private static final double wristDown = Units.degreesToRadians(-90);      // 0 - 90 = -90 (horizontal)
 
     // Basic states without specific robot positions
@@ -54,8 +53,8 @@ public final class SwerveSystemConstants {
     public static SwerveSystem.SwerveSystemState getProcessor() {
         return new SwerveSystem.SwerveSystemState(
             Units.degreesToRadians(-95),  // 75 - 90 = -15 degrees
-            0.4,
-            wristDown,
+            0.65,
+            Units.degreesToRadians(-45),
             RobotPositions.processor.alliancePos()
         );
     }
@@ -76,11 +75,10 @@ public final class SwerveSystemConstants {
     public static SwerveSystem.SwerveSystemState[] getAlgaeStates() {
         SwerveSystem.SwerveSystemState[] states = new SwerveSystem.SwerveSystemState[FieldGeometry.reefSides];
         for (int i = 0; i < states.length; i++) {
-            boolean isLow = Reef.isAlgaeLow(i);
             states[i] = new SwerveSystem.SwerveSystemState(
-                Units.degreesToRadians(30),  // 30 - 90 = -60, 120 - 90 = 30
-                0.43,                                       // From ElevatorConstants.algaeGoal
-                wristStraight,                             // From WristConstants.pos2 (straight)
+                Units.degreesToRadians(-55),  // 30 - 90 = -60, 120 - 90 = 30
+                Reef.isAlgaeLow(i) ? 0.43 : 0.9,
+                Units.degreesToRadians(-115),                             // From WristConstants.minAngle
                 RobotPositions.centerReef[i].alliancePos()
             );
         }

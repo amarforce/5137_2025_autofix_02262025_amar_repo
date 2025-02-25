@@ -58,6 +58,10 @@ public class SwerveSystemCommands {
         return moveToState(()->SwerveSystemConstants.getAlgaeStates()[side.get()]);
     }
 
+    public Command moveToAlgae() {
+        return moveToState(()->swerveSystem.getClosestState(SwerveSystemConstants.getAlgaeStates()));
+    }
+
     public Command moveToBranch(Supplier<Integer> level,Supplier<Integer> branch){
         return moveToState(()->SwerveSystemConstants.getScoringStates()[level.get()][branch.get()]);
     }

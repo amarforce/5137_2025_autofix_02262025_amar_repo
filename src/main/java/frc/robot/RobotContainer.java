@@ -98,10 +98,10 @@ public class RobotContainer {
 			// Initialize subsystems
 			initVision();
 			initSwerve();
-			//initElevator();
-			//initArm();
-			//initWrist();
-			//initIntake();
+			initElevator();
+			initArm();
+			initWrist();
+			initIntake();
 			//initHang();
 			//initLED();
 			
@@ -192,7 +192,7 @@ public class RobotContainer {
 			.onTrue(intakeCommands.setSpeed(()->IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 
-		operator.R2().or(driver.L2().and(driver.R2()))
+		operator.R2().or(driver.R1()).or(driver.L2().and(driver.R2()))
 			.onTrue(intakeCommands.setSpeed(()->-IntakeConstants.intakeSpeed))
 			.onFalse(intakeCommands.stop());
 	}
@@ -213,15 +213,12 @@ public class RobotContainer {
 		swerveSystem = new SwerveSystem(arm, elevator, wrist, swerve, gamepieces);
 		swerveSystemCommands = new SwerveSystemCommands(swerveSystem);
 
-		// Configure swerve system bindings
-		//driver.triangle().onTrue(swerveSystemCommands.moveToSource());
-		//driver.circle().onTrue(swerveSystemCommands.moveToProcessor());
+		driver.square().and(driver.R2().negate()).onTrue(swerveSystemCommands.moveToProcessor());
 
 		driver.triangle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(3));
 		driver.square().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(2));
 		driver.circle().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(1));
 		driver.cross().and(driver.R2()).onTrue(swerveSystemCommands.moveToLevel(0));
-		driver.povDown().onTrue(swerveSystemCommands.moveToDefault());
 
 		//driver.L1().onTrue(swerveSystemCommands.moveToState(()->SwerveSystemConstants.getGroundIntake()));
 
@@ -237,6 +234,17 @@ public class RobotContainer {
 		multiCommands = new MultiCommands(swerveSystemCommands, swerveCommands, intakeCommands, hangCommands);
 
 		driver.triangle().and(driver.R2().negate()).onTrue(multiCommands.getCoralFromSource());
+		driver.circle().and(driver.R2().negate()).onTrue(multiCommands.getAlgae());
+
+		driver.triangle().negate()
+		.and(driver.square().negate())
+		.and(driver.circle().negate())
+		.and(driver.cross().negate())
+		.onTrue(multiCommands.moveToDefault());
+
+		driver.L1()
+		.toggleOnTrue(intakeCommands.pulseIntake())
+		.onTrue(wristCommands.setGoal(() -> Units.degreesToRadians(-90)));
 	}
 
 	private void initAdditionalComponents() {

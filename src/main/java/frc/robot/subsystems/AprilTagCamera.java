@@ -109,6 +109,7 @@ public class AprilTagCamera extends SubsystemBase {
         try{
             // Get all unread results from the camera
             var results = cam.getAllUnreadResults();
+            
             // Iterate through each result
             for (PhotonPipelineResult res : results) {
                 // Update the estimated pose using the current result

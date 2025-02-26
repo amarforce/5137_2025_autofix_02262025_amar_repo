@@ -20,16 +20,22 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.IdealStartingState;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
@@ -255,6 +261,11 @@ public class Swerve extends SubsystemBase {
                 startAuto(AutoBuilder.pathfindToPose(targetPose, SwerveConstants.constraints));
             }
         }
+    }
+
+    public void followPath(Pose2d target) {
+        PathPlannerPath path = new PathPlannerPath(List.of(new Waypoint(new Translation2d(), getPose().getTranslation(), new Translation2d()), new Waypoint(new Translation2d(), target.getTranslation(), new Translation2d())), SwerveConstants.constraints, new IdealStartingState(0.0, getPose().getRotation()), new GoalEndState(0.0, target.getRotation()), false);
+        startAuto(AutoBuilder.pathfindThenFollowPath(path, SwerveConstants.constraints));
     }
 
     public boolean atTarget(){

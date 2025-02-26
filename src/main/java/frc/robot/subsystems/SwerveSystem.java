@@ -191,9 +191,9 @@ public class SwerveSystem extends SubsystemBase {
         if(wrist!=null){
             wrist.setGoal(state.wristPosition);
         }
-        if(swerve!=null){
+        if(swerve!=null && state.botPosition != null){
             // Uncomment at your own risk
-            //swerve.setTargetPose(state.botPosition);
+            //swerve.followPath(state.botPosition);
         }
     }
 

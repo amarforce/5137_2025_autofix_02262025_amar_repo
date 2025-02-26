@@ -18,15 +18,15 @@ public class SwerveConstants {
     public static final double translationKP = 1.0;
     public static final double translationKI = 0.0;
     public static final double translationKD = 0.4;
-    public static final double rotationKP = 1.0;
+    public static final double rotationKP = 2.0;
     public static final double rotationKI = 0.0;
     public static final double rotationKD = 0.4;
 
     public static final PathConstraints constraints = new PathConstraints(
         MetersPerSecond.of(0.5),
-        MetersPerSecondPerSecond.of(0.5),
+        MetersPerSecondPerSecond.of(1.0),
         RadiansPerSecond.of(1.5*Math.PI),
-        RadiansPerSecondPerSecond.of(Math.PI));
+        RadiansPerSecondPerSecond.of(2*Math.PI));
 
     public static final double coralExpirationTime = 5;
 

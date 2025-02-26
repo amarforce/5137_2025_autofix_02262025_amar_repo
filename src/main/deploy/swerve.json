@@ -16,8 +16,8 @@
     },
     "drive_inertia": 0.01,
     "steer_inertia": 0.01,
-    "drive_friction_voltage": 0.2,
-    "steer_friction_voltage": 0.2,
+    "drive_friction_voltage": 0.4,
+    "steer_friction_voltage": 0.4,
     "drive_ratio": 6.122448979591837,
     "steer_ratio": 21.428571428571427,
     "couple_ratio": 3.5714285714285716,
@@ -25,7 +25,7 @@
     "slip_current": 120.0,
     "max_speed": 5.21,
     "max_angular_speed": 4.71,
-    "current_limit": 60.0,
+    "current_limit": 40.0,
     "gyro_id": 0,
     "modules": {
         "front_left": {

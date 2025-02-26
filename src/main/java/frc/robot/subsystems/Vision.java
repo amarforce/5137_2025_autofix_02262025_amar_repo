@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.simulation.VisionSystemSim;
@@ -19,6 +20,7 @@ import frc.robot.constants.FieldGeometry;
 import frc.robot.constants.VisionConstants;
 import frc.robot.elastic.Reef;
 import frc.robot.other.DetectedObject;
+import frc.robot.other.DetectedObjectPool;
 
 /**
  * The Vision subsystem is responsible for managing the robot's vision processing,
@@ -31,6 +33,8 @@ public class Vision extends SubsystemBase {
     private ObjectCamera[] objectCameras; // Array of cameras used for object detection
 
     private ArrayList<DetectedObject> objects;
+    private final List<DetectedObject> reusableObjectList = new ArrayList<>();
+    private final DetectedObjectPool objectPool = new DetectedObjectPool();
 
     private VisionSystemSim visionSim; // Simulation object for vision system
 
@@ -87,11 +91,22 @@ public class Vision extends SubsystemBase {
      * @return A list of DetectedObject objects representing the new objects.
      */
     private List<DetectedObject> getNewObjects(Pose2d robotPose) {
-        var res = new ArrayList<DetectedObject>();
+        reusableObjectList.clear();
         for (ObjectCamera cam : objectCameras) {
-            res.addAll(cam.getNewObjects(robotPose));
+            reusableObjectList.addAll(cam.getNewObjects(robotPose));
         }
-        return res;
+        return reusableObjectList;
+    }
+
+    public List<DetectedObject> getGroundCoral(double expirationTime) {
+        reusableObjectList.clear();
+        double currentTime = Utils.getCurrentTimeSeconds();
+        for (DetectedObject object : objects) {
+            if (currentTime - object.getDetectionTime() < expirationTime) {
+                reusableObjectList.add(object);
+            }
+        }
+        return Collections.unmodifiableList(reusableObjectList);
     }
 
     /**

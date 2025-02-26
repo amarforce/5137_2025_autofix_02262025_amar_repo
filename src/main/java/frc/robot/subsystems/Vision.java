@@ -27,17 +27,20 @@ import frc.robot.other.DetectedObjectPool;
  * including AprilTag detection, object detection, and simulation updates.
  */
 public class Vision extends SubsystemBase {
-    private AprilTagFieldLayout fieldLayout; // Layout of AprilTags on the field
+    // Constants for logging throttling
+    private static final long VISION_LOG_INTERVAL = 1000; // 1 second interval
+    private long lastVisionLogTime = 0;
 
+    private AprilTagFieldLayout fieldLayout; // Layout of AprilTags on the field
     private AprilTagCamera[] aprilTagCameras; // Array of cameras used for AprilTag detection
     private ObjectCamera[] objectCameras; // Array of cameras used for object detection
 
-    private ArrayList<DetectedObject> objects;
+    // Object tracking and pooling
+    private ArrayList<DetectedObject> objects = new ArrayList<>();
     private final List<DetectedObject> reusableObjectList = new ArrayList<>();
-    private final DetectedObjectPool objectPool = new DetectedObjectPool();
+    private final DetectedObjectPool objectPool = new DetectedObjectPool(); // Object pool to reduce allocations
 
     private VisionSystemSim visionSim; // Simulation object for vision system
-
     private Reef reef; // Reference to the Reef object for coral placement tracking
 
     /**
@@ -115,18 +118,34 @@ public class Vision extends SubsystemBase {
      * @param robotPose The current pose of the robot.
      */
     public void processNewObjects(Pose2d robotPose) {
-        List<DetectedObject> objects = getNewObjects(robotPose);
-        for (DetectedObject object : objects) {
+        long currentTime = System.currentTimeMillis();
+        boolean shouldLog = currentTime - lastVisionLogTime >= VISION_LOG_INTERVAL;
+        
+        List<DetectedObject> newObjects = getNewObjects(robotPose);
+        if (!newObjects.isEmpty() && shouldLog) {
+            DataLogManager.log(String.format("Processing %d new detected objects", newObjects.size()));
+            lastVisionLogTime = currentTime;
+        }
+
+        for (DetectedObject object : newObjects) {
             // Only process objects classified as "Coral"
             if (!object.getClassName().equals("Coral")) {
+                objectPool.release(object); // Return non-coral objects to pool
                 continue;
             }
+            
             Translation3d coralPos = object.getPose().getTranslation();
             Pair<Integer, Integer> coralLoc = checkObjectOnReef(coralPos);
+            
             if (coralLoc != null) {
                 // Update the Reef to indicate that a coral has been placed
                 reef.setCoralPlaced(coralLoc.getFirst(), coralLoc.getSecond(), true);
-            }else{
+                if (shouldLog) {
+                    DataLogManager.log(String.format("Coral placed at branch %d, level %d", 
+                        coralLoc.getFirst(), coralLoc.getSecond()));
+                }
+                objectPool.release(object); // Return to pool after processing
+            } else {
                 // Coral is on ground
                 objects.add(object);
             }
